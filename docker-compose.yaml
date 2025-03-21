@@ -1,0 +1,46 @@
+version: '3.9'
+services:
+  sgu-auth-service:
+    image: sgu-auth-service
+    build: .
+    ports:
+      - "8082:8082"
+    container_name: sgu-auth-service
+    command: mvn spring-boot:run
+    networks:
+      - sgu-networks
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://backend-db:5432/prae
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+    depends_on:
+      - backend-db
+      - keycloak
+    volumes:
+      - ./storage:/app/storage
+
+  backend-db:
+    image: postgres:16.0
+    restart: always
+    environment:
+      POSTGRES_DB: prae
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      TZ: America/Sao_Paulo
+    ports:
+      - "5435:5432"
+    expose:
+      - "5432"
+    networks:
+      - sgu-networks
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+volumes:
+  pg-data:
+    driver: local
+
+networks:
+  sgu-networks:
+    external: true
