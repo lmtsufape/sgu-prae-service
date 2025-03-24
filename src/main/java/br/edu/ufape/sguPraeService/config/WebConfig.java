@@ -32,7 +32,7 @@ public class WebConfig {
                 )
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api-doc/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 ).oauth2ResourceServer(auth -> auth.jwt(token -> token.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter())))
                 .cors(Customizer.withDefaults());
         return http.build();
