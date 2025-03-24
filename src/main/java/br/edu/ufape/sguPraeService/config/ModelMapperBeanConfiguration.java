@@ -1,4 +1,4 @@
-package br.edu.ufape.sgupraeservice.config;
+package br.edu.ufape.sguPraeService.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

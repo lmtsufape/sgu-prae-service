@@ -1,4 +1,4 @@
-package br.edu.ufape.sgupraeservice.config;
+package br.edu.ufape.sguPraeService.config;
 
 
 import io.swagger.v3.oas.models.Components;
