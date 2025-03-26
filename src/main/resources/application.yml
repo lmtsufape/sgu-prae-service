@@ -42,6 +42,10 @@ keycloak:
   auth-server-url: http://localhost:9090/
   realm: sgu-ufape
 
+common:
+  front: http://localhost:3000/, https://sgiufape.vercel.app/
+
+
 logging:
   level:
     org:
