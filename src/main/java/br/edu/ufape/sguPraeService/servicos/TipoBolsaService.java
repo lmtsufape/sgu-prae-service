@@ -22,7 +22,7 @@ public class TipoBolsaService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public TipoBolsa salvar(TipoBolsa entity) { return this.modelMapper.map(entity, TipoBolsa.class); }
+    public TipoBolsa salvar(TipoBolsa entity) { return tipoBolsaRepository.save(entity); }
 
     @Override
     public TipoBolsa editar(Long id, TipoBolsa entity) throws TipoBolsaNotFoundException {
