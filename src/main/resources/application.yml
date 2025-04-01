@@ -67,14 +67,3 @@ spring:
 keycloak:
   auth-server-url: http://keycloak:8080/
   realm: sgu-ufape
-
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://discovery:8761/eureka/
-    registerWithEureka: true
-    fetchRegistry: true
-  instance:
-    hostname: sgu-prae-service
-    prefer-ip-address: false
