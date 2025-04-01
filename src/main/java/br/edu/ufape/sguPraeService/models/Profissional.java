@@ -16,5 +16,5 @@ public class Profissional {
     @Column(nullable = false)
     private String especialidade;
 
-    private boolean ativo = true;
+    private Boolean ativo = true;
 }
