@@ -1,3 +1,7 @@
+server:
+  port: 8082
+  error:
+    include-stacktrace: never
 spring:
   application.name: sgu-prae-service
   web:
