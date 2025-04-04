@@ -2,6 +2,7 @@ package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoEtnia.TipoEtniaRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoEtnia.TipoEtniaResponse;
+import br.edu.ufape.sguPraeService.exceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.TipoEtnia;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class TipoEtniaController {
     private final ModelMapper modelMapper;
 
     @GetMapping("/{id}")
-    public ResponseEntity<TipoEtniaResponse> buscarTipoEtnia(@PathVariable Long id) {
+    public ResponseEntity<TipoEtniaResponse> buscarTipoEtnia(@PathVariable Long id) throws TipoEtniaNotFoundException {
         TipoEtnia tipoEtnia = fachada.buscarTipoEtnia(id);
         if (tipoEtnia == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -44,7 +45,7 @@ public class TipoEtniaController {
     }
 
     @PatchMapping("/{id}/editar")
-    public ResponseEntity<TipoEtniaResponse> atualizarTipoEtnia(@PathVariable Long id, @RequestBody TipoEtniaRequest tipoEtniaRequest) {
+    public ResponseEntity<TipoEtniaResponse> atualizarTipoEtnia(@PathVariable Long id, @RequestBody TipoEtniaRequest tipoEtniaRequest) throws TipoEtniaNotFoundException {
         TipoEtnia tipoEtnia = tipoEtniaRequest.convertToEntity(tipoEtniaRequest, modelMapper);
         TipoEtnia tipoEtniaAtualizado = fachada.atualizarTipoEtnia(id, tipoEtnia);
         if (tipoEtniaAtualizado == null) {
@@ -54,7 +55,7 @@ public class TipoEtniaController {
     }
 
     @DeleteMapping("/{id}/deletar")
-    public ResponseEntity<Void> deletarTipoEtnia(@PathVariable Long id) {
+    public ResponseEntity<Void> deletarTipoEtnia(@PathVariable Long id) throws TipoEtniaNotFoundException {
         fachada.deletarTipoEtnia(id);
         return ResponseEntity.noContent().build();
     }

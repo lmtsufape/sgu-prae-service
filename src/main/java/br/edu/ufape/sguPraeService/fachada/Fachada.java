@@ -4,6 +4,7 @@ package br.edu.ufape.sguPraeService.fachada;
 import br.edu.ufape.sguPraeService.exceptions.EnderecoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.ProfissionalNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.servicos.interfaces.*;
 import lombok.RequiredArgsConstructor;
@@ -58,18 +59,19 @@ public class Fachada {
         return estudanteService.atualizarEstudante(id, estudante);
     }
 
-    public void deletarEstudante(Long id) {
+    public void deletarEstudante(Long id) throws EstudanteNotFoundException {
         estudanteService.deletarEstudante(id);
     }
 
 
     // ================== TipoEtnia  ================== //
 
+
     public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
         return tipoEtniaService.salvarTipoEtnia(tipoEtnia);
     }
 
-    public TipoEtnia buscarTipoEtnia(Long id) {
+    public TipoEtnia buscarTipoEtnia(Long id) throws TipoEtniaNotFoundException {
         return tipoEtniaService.buscarTipoEtnia(id);
     }
 
@@ -77,11 +79,11 @@ public class Fachada {
         return tipoEtniaService.listarTiposEtnia();
     }
 
-    public TipoEtnia atualizarTipoEtnia(Long id, TipoEtnia tipoEtnia) {
+    public TipoEtnia atualizarTipoEtnia(Long id, TipoEtnia tipoEtnia) throws TipoEtniaNotFoundException {
         return tipoEtniaService.atualizarTipoEtnia(id, tipoEtnia);
     }
 
-    public void deletarTipoEtnia(Long id) {
+    public void deletarTipoEtnia(Long id) throws TipoEtniaNotFoundException {
         tipoEtniaService.deletarTipoEtnia(id);
     }
 

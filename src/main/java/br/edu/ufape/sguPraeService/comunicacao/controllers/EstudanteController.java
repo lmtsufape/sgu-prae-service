@@ -56,7 +56,7 @@ public class EstudanteController {
     }
 
     @DeleteMapping("/{id}/deletar")
-    public ResponseEntity<Void> deletarEstudante(@PathVariable Long id) {
+    public ResponseEntity<Void> deletarEstudante(@PathVariable Long id) throws EstudanteNotFoundException{
         fachada.deletarEstudante(id);
         return ResponseEntity.noContent().build();
     }

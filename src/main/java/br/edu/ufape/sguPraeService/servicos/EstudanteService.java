@@ -15,34 +15,69 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     private final EstudanteRepository estudanteRepository;
     private final ModelMapper modelMapper;
 
+    @Override
     public Estudante salvarEstudante(Estudante estudante) {
-        if (!estudante.isDeficiente()) {
+        if (estudante.getContatoFamilia() == null) {
+            throw new IllegalArgumentException("Contato da família deve conter no mínimo 10 caracteres.");
+        }
+
+        if (estudante.getTipoEtnia() == null) {
+            throw new IllegalArgumentException("Tipo de etnia é obrigatório.");
+        }
+
+        if (estudante.isDeficiente()) {
+            if (estudante.getTipoDeficiencia() == null || estudante.getTipoDeficiencia().isBlank()) {
+                throw new IllegalArgumentException("Tipo de deficiência deve ser informado para estudantes com deficiência.");
+            }
+        } else {
             estudante.setTipoDeficiencia(null);
         }
+
         return estudanteRepository.save(estudante);
     }
 
-    public Estudante buscarEstudante(Long id) throws EstudanteNotFoundException{
-        return estudanteRepository.findById(id).orElseThrow(EstudanteNotFoundException::new);
+    @Override
+    public Estudante buscarEstudante(Long id) throws EstudanteNotFoundException {
+        return estudanteRepository.findById(id)
+                .orElseThrow(EstudanteNotFoundException::new);
     }
 
+    @Override
     public List<Estudante> listarEstudantes() {
         return estudanteRepository.findAll();
     }
 
-    public Estudante atualizarEstudante(Long id, Estudante estudante) throws EstudanteNotFoundException{
-        Estudante estudanteExistente = estudanteRepository.findById(id).orElseThrow(EstudanteNotFoundException::new);
-        if (estudanteExistente != null) {
-            modelMapper.map(estudante, estudanteExistente);
-            if (!estudanteExistente.isDeficiente()) {
-                estudanteExistente.setTipoDeficiencia(null);
-            }
-            return estudanteRepository.save(estudanteExistente);
+    @Override
+    public Estudante atualizarEstudante(Long id, Estudante estudante) throws EstudanteNotFoundException {
+        Estudante existente = estudanteRepository.findById(id)
+                .orElseThrow(EstudanteNotFoundException::new);
+
+        if (estudante.getContatoFamilia() == null) {
+            throw new IllegalArgumentException("Contato da família deve conter no mínimo 10 caracteres.");
         }
-        return null;
+
+        if (estudante.getTipoEtnia() == null) {
+            throw new IllegalArgumentException("Tipo de etnia é obrigatório.");
+        }
+
+        if (estudante.isDeficiente()) {
+            if (estudante.getTipoDeficiencia() == null || estudante.getTipoDeficiencia().isBlank()) {
+                throw new IllegalArgumentException("Tipo de deficiência deve ser informado para estudantes com deficiência.");
+            }
+        } else {
+            estudante.setTipoDeficiencia(null);
+        }
+
+        modelMapper.map(estudante, existente);
+
+        return estudanteRepository.save(existente);
     }
 
-    public void deletarEstudante(Long id) {
+    @Override
+    public void deletarEstudante(Long id) throws EstudanteNotFoundException {
+        if (!estudanteRepository.existsById(id)) {
+            throw new EstudanteNotFoundException();
+        }
         estudanteRepository.deleteById(id);
     }
 }

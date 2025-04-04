@@ -13,5 +13,5 @@ public interface EstudanteService {
 
     Estudante atualizarEstudante(Long id, Estudante estudante) throws EstudanteNotFoundException;
 
-    void deletarEstudante(Long id);
+    void deletarEstudante(Long id) throws EstudanteNotFoundException;
 }
