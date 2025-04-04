@@ -1,11 +1,11 @@
 version: '3.9'
 services:
   sgu-auth-service:
-    image: sgu-auth-service
+    image: sgu-prae-service
     build: .
     ports:
       - "8082:8082"
-    container_name: sgu-auth-service
+    container_name: sgu-prae-service
     command: mvn spring-boot:run
     networks:
       - sgu-networks
