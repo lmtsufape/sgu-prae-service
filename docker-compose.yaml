@@ -1,6 +1,6 @@
 version: '3.9'
 services:
-  sgu-auth-service:
+  sgu-prae-service:
     image: sgu-prae-service
     build: .
     ports:
@@ -11,16 +11,16 @@ services:
       - sgu-networks
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://backend-db:5432/prae
+      SPRING_DATASOURCE_URL: jdbc:postgresql://sgu-prae-db:5432/prae
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
     depends_on:
-      - backend-db
-      - keycloak
+      sgu-prae-db:
+        condition: service_healthy
     volumes:
       - ./storage:/app/storage
 
-  backend-db:
+  sgu-prae-db:
     image: postgres:16.0
     restart: always
     environment:
@@ -36,6 +36,7 @@ services:
       - sgu-networks
     volumes:
       - pg-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:
   pg-data:
