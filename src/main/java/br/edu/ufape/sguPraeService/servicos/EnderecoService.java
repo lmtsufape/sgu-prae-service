@@ -1,7 +1,7 @@
 package br.edu.ufape.sguPraeService.servicos;
 
 import br.edu.ufape.sguPraeService.dados.EnderecoRepository;
-import br.edu.ufape.sguPraeService.exceptions.EnderecoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EnderecoNotFoundException;
 import br.edu.ufape.sguPraeService.models.Endereco;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

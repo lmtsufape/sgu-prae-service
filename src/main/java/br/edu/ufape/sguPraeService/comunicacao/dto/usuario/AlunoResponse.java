@@ -1,0 +1,29 @@
+package br.edu.ufape.sguPraeService.comunicacao.dto.usuario;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class AlunoResponse {
+    String nome;
+    String nomeSocial;
+    String cpf;
+    String email;
+    String telefone;
+    String matricula;
+    private Curso curso;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Curso {
+        private Long id;
+        private String nome;
+    }
+}
