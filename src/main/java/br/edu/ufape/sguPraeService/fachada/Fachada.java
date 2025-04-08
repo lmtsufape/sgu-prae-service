@@ -1,16 +1,27 @@
 package br.edu.ufape.sguPraeService.fachada;
 
 
-import br.edu.ufape.sguPraeService.exceptions.EnderecoNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.EstudanteNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.ProfissionalNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.TipoEtniaNotFoundException;
+import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EnderecoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.models.*;
+import br.edu.ufape.sguPraeService.auth.AuthServiceClient;
 import br.edu.ufape.sguPraeService.servicos.interfaces.*;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
+
 
 @Component @RequiredArgsConstructor
 public class Fachada {
@@ -19,6 +30,15 @@ public class Fachada {
     private final DadosBancariosService dadosBancariosService;
     private final TipoEtniaService tipoEtniaService;
     private final EstudanteService estudanteService;
+    private final AuthServiceClient authServiceClient;
+    private final ModelMapper modelMapper;
+    private final RabbitAuthServiceClient rabbitAuthServiceClient;
+
+    @Value("${authClient.client-id}")
+    private String clientId;
+
+    Logger logger = Logger.getLogger(Fachada.class.getName());
+
 
     // ------------------- Profissional ------------------- //
     public List<Profissional> listarProfissionais() {
@@ -43,20 +63,55 @@ public class Fachada {
 
     // ================== Estudante  ================== //
 
-    public Estudante salvarEstudante(Estudante estudante) {
-        return estudanteService.salvarEstudante(estudante);
+    @Transactional
+    public EstudanteResponse salvarEstudante(Estudante estudante, Jwt token, Long tipoEtniaId) throws TipoEtniaNotFoundException {
+        estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
+        estudante.setUserId(token.getSubject());
+
+        Estudante novoEstudante = estudanteService.salvarEstudante(estudante);
+        AlunoResponse userInfo = authServiceClient.getAlunoInfo();
+        rabbitAuthServiceClient.assignRoleToUser(token.getSubject(), clientId, "estudante");
+        EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
+        response.setAluno(userInfo);
+        return response;
     }
 
-    public Estudante buscarEstudante(Long id) throws EstudanteNotFoundException {
-        return estudanteService.buscarEstudante(id);
+    public EstudanteResponse buscarEstudante(Long id) throws EstudanteNotFoundException {
+        Estudante estudante = estudanteService.buscarEstudante(id);
+        AlunoResponse userInfo = authServiceClient.buscarAlunoPorId(estudante.getUserId());
+        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
+        response.setAluno(userInfo);
+        return response;
     }
 
-    public List<Estudante> listarEstudantes() {
-        return estudanteService.listarEstudantes();
+    public List<EstudanteResponse> listarEstudantes() {
+        List<EstudanteResponse> estudanteResponse = new ArrayList<>();
+        List<Estudante> estudantes = estudanteService.listarEstudantes();
+        if (estudantes.isEmpty()) {
+            return estudanteResponse;
+        }
+        List<String> userIds = estudantes.stream()
+                .map(Estudante::getUserId)
+                .toList();
+        logger.info("Estudantes encontrados: " + userIds);
+        List<AlunoResponse> usuarios = authServiceClient.buscarAlunos(userIds);
+        for (int i = 0; i < estudantes.size(); i++) {
+            Estudante estudante = estudantes.get(i);
+            AlunoResponse usuario = usuarios.get(i);
+            EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
+            response.setAluno(usuario);
+            estudanteResponse.add(response);
+        }
+        return estudanteResponse;
     }
 
-    public Estudante atualizarEstudante(Long id, Estudante estudante) throws EstudanteNotFoundException{
-        return estudanteService.atualizarEstudante(id, estudante);
+    public EstudanteResponse atualizarEstudante(Estudante estudante, Jwt token, Long tipoEtniaId) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+        estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
+        Estudante novoEstudante = estudanteService.atualizarEstudante(estudante, token.getSubject());
+        AlunoResponse userInfo = authServiceClient.getAlunoInfo();
+        EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
+        response.setAluno(userInfo);
+        return response;
     }
 
     public void deletarEstudante(Long id) throws EstudanteNotFoundException {

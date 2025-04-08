@@ -19,6 +19,7 @@ spring:
     username: postgres
     password: 55555
 
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -35,6 +36,10 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs
+
+authClient:
+    base-url: http://gateway:8080/auth
+    client-id: prae-application
 
 springdoc:
   api-docs:
@@ -55,6 +60,11 @@ spring:
   config:
     activate:
       on-profile: docker
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
   datasource:
     url: jdbc:postgresql://backend-db:5432/prae
     username: postgres
@@ -67,3 +77,14 @@ spring:
 keycloak:
   auth-server-url: http://keycloak:8080/
   realm: sgu-ufape
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery:8761/eureka/
+    registerWithEureka: true
+    fetchRegistry: true
+  instance:
+    hostname: sgu-prae-service
+    prefer-ip-address: false

@@ -2,7 +2,7 @@ package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoEtnia.TipoEtniaRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoEtnia.TipoEtniaResponse;
-import br.edu.ufape.sguPraeService.exceptions.TipoEtniaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.TipoEtnia;
 import lombok.RequiredArgsConstructor;

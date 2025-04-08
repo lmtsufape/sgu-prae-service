@@ -1,10 +1,13 @@
 package br.edu.ufape.sguPraeService.servicos;
 
 import br.edu.ufape.sguPraeService.dados.EstudanteRepository;
-import br.edu.ufape.sguPraeService.exceptions.EstudanteNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.ExceptionUtil;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.models.Estudante;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,25 +18,15 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     private final EstudanteRepository estudanteRepository;
     private final ModelMapper modelMapper;
 
+    @Transactional
     @Override
     public Estudante salvarEstudante(Estudante estudante) {
-        if (estudante.getContatoFamilia() == null) {
-            throw new IllegalArgumentException("Contato da família deve conter no mínimo 10 caracteres.");
+        try {
+            return estudanteRepository.save(estudante);
+        }catch (DataIntegrityViolationException e){
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
         }
 
-        if (estudante.getTipoEtnia() == null) {
-            throw new IllegalArgumentException("Tipo de etnia é obrigatório.");
-        }
-
-        if (estudante.isDeficiente()) {
-            if (estudante.getTipoDeficiencia() == null || estudante.getTipoDeficiencia().isBlank()) {
-                throw new IllegalArgumentException("Tipo de deficiência deve ser informado para estudantes com deficiência.");
-            }
-        } else {
-            estudante.setTipoDeficiencia(null);
-        }
-
-        return estudanteRepository.save(estudante);
     }
 
     @Override
@@ -44,40 +37,26 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
 
     @Override
     public List<Estudante> listarEstudantes() {
-        return estudanteRepository.findAll();
+        return estudanteRepository.findAllByAtivoTrue();
     }
 
     @Override
-    public Estudante atualizarEstudante(Long id, Estudante estudante) throws EstudanteNotFoundException {
-        Estudante existente = estudanteRepository.findById(id)
-                .orElseThrow(EstudanteNotFoundException::new);
-
-        if (estudante.getContatoFamilia() == null) {
-            throw new IllegalArgumentException("Contato da família deve conter no mínimo 10 caracteres.");
+    public Estudante atualizarEstudante(Estudante estudante, String userId) throws EstudanteNotFoundException {
+        try {
+            Estudante existente = (Estudante) estudanteRepository.findByUserId(userId)
+                    .orElseThrow(EstudanteNotFoundException::new);
+            modelMapper.map(estudante, existente);
+            return estudanteRepository.save(existente);
+        }catch (DataIntegrityViolationException e){
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
         }
 
-        if (estudante.getTipoEtnia() == null) {
-            throw new IllegalArgumentException("Tipo de etnia é obrigatório.");
-        }
-
-        if (estudante.isDeficiente()) {
-            if (estudante.getTipoDeficiencia() == null || estudante.getTipoDeficiencia().isBlank()) {
-                throw new IllegalArgumentException("Tipo de deficiência deve ser informado para estudantes com deficiência.");
-            }
-        } else {
-            estudante.setTipoDeficiencia(null);
-        }
-
-        modelMapper.map(estudante, existente);
-
-        return estudanteRepository.save(existente);
     }
 
     @Override
     public void deletarEstudante(Long id) throws EstudanteNotFoundException {
-        if (!estudanteRepository.existsById(id)) {
-            throw new EstudanteNotFoundException();
-        }
-        estudanteRepository.deleteById(id);
+        Estudante estudante = estudanteRepository.findById(id).orElseThrow(EstudanteNotFoundException::new);
+        estudante.setAtivo(false);
+        estudanteRepository.save(estudante);
     }
 }

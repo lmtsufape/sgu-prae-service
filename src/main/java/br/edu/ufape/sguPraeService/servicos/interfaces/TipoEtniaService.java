@@ -1,6 +1,6 @@
 package br.edu.ufape.sguPraeService.servicos.interfaces;
 
-import br.edu.ufape.sguPraeService.exceptions.TipoEtniaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoEtnia;
 import java.util.List;
 

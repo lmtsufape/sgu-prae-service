@@ -1,9 +1,11 @@
 package br.edu.ufape.sguPraeService.servicos;
 
 import br.edu.ufape.sguPraeService.dados.TipoEtniaRepository;
-import br.edu.ufape.sguPraeService.exceptions.TipoEtniaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.ExceptionUtil;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoEtnia;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +17,12 @@ public class TipoEtniaService implements br.edu.ufape.sguPraeService.servicos.in
 
     @Override
     public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
-        if (tipoEtnia.getTipo() == null || tipoEtnia.getTipo().trim().isEmpty()) {
-            throw new IllegalArgumentException("O tipo da etnia é obrigatório.");
+        try {
+            return tipoEtniaRepository.save(tipoEtnia);
+        }catch (DataIntegrityViolationException e){
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
         }
-        return tipoEtniaRepository.save(tipoEtnia);
+
     }
 
     @Override
@@ -33,12 +37,14 @@ public class TipoEtniaService implements br.edu.ufape.sguPraeService.servicos.in
 
     @Override
     public TipoEtnia atualizarTipoEtnia(Long id, TipoEtnia tipoEtnia) throws TipoEtniaNotFoundException {
-        TipoEtnia tipoEtniaExistente = tipoEtniaRepository.findById(id).orElseThrow(TipoEtniaNotFoundException::new);
-        if (tipoEtnia.getTipo() == null || tipoEtnia.getTipo().trim().isEmpty()) {
-            throw new IllegalArgumentException("O tipo da etnia é obrigatório.");
+        try {
+            TipoEtnia tipoEtniaExistente = tipoEtniaRepository.findById(id).orElseThrow(TipoEtniaNotFoundException::new);
+            tipoEtniaExistente.setTipo(tipoEtnia.getTipo());
+            return tipoEtniaRepository.save(tipoEtniaExistente);
+        }catch (DataIntegrityViolationException e){
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
         }
-        tipoEtniaExistente.setTipo(tipoEtnia.getTipo());
-        return tipoEtniaRepository.save(tipoEtniaExistente);
+
     }
 
     @Override

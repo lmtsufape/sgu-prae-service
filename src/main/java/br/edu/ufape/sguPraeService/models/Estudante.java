@@ -16,18 +16,17 @@ public class Estudante{
     private Long id;
     private BigDecimal rendaPercapta;
     private String contatoFamilia;
-    private boolean deficiente;
+    private boolean deficiente = false;
     private String tipoDeficiencia;
-
+    @Column(unique = true, nullable = false)
+    private String userId;
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "dados_bancarios_id", referencedColumnName = "id")
     private DadosBancarios dadosBancarios;
+    private boolean ativo = true;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "endereco_id", referencedColumnName = "id")
     private Endereco endereco;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "tipo_etnia_id", referencedColumnName = "id")
+    @ManyToOne
     private TipoEtnia tipoEtnia;
 }

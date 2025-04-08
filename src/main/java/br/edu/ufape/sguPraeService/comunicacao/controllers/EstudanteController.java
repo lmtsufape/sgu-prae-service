@@ -2,7 +2,8 @@ package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
-import br.edu.ufape.sguPraeService.exceptions.EstudanteNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import jakarta.validation.Valid;
@@ -10,10 +11,13 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/estudantes")
@@ -24,38 +28,38 @@ public class EstudanteController {
 
     @GetMapping
     public List<EstudanteResponse> listarEstudantes() {
-        return fachada.listarEstudantes().stream()
-                .map(estudante -> new EstudanteResponse(estudante, modelMapper))
-                .collect(Collectors.toList());
+        return fachada.listarEstudantes();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<EstudanteResponse> buscarEstudante(@PathVariable Long id) throws EstudanteNotFoundException {
-        Estudante estudante = fachada.buscarEstudante(id);
-        if (estudante == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return ResponseEntity.ok(new EstudanteResponse(estudante, modelMapper));
+        return ResponseEntity.ok(fachada.buscarEstudante(id));
     }
 
-    @PostMapping("/registrar")
-    public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) {
+    @PreAuthorize("hasRole('ALUNO')")
+    @PostMapping
+    public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) throws TipoEtniaNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt principal = (Jwt) authentication.getPrincipal();
+
         Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        Estudante novoEstudante = fachada.salvarEstudante(estudante);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new EstudanteResponse(novoEstudante, modelMapper));
+        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante, principal, estudanteRequest.getTipoEtniaId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
     }
 
-    @PatchMapping("/{id}/editar")
-    public ResponseEntity<EstudanteResponse> atualizarEstudante(@PathVariable Long id, @Valid @RequestBody EstudanteRequest estudanteRequest) throws EstudanteNotFoundException{
+    @PreAuthorize("hasRole('ESTUDANTE')")
+    @PatchMapping
+    public ResponseEntity<EstudanteResponse> atualizarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt principal = (Jwt) authentication.getPrincipal();
+
         Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        Estudante estudanteAtualizado = fachada.atualizarEstudante(id, estudante);
-        if (estudanteAtualizado == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        return ResponseEntity.ok(new EstudanteResponse(estudanteAtualizado, modelMapper));
+        EstudanteResponse estudanteAtualizado = fachada.atualizarEstudante(estudante, principal, estudanteRequest.getTipoEtniaId());
+
+        return ResponseEntity.ok(estudanteAtualizado);
     }
 
-    @DeleteMapping("/{id}/deletar")
+    @DeleteMapping("/{id}/")
     public ResponseEntity<Void> deletarEstudante(@PathVariable Long id) throws EstudanteNotFoundException{
         fachada.deletarEstudante(id);
         return ResponseEntity.noContent().build();
