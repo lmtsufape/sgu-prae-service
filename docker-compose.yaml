@@ -14,6 +14,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://sgu-prae-db:5432/prae
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     depends_on:
       sgu-prae-db:
         condition: service_healthy
@@ -28,10 +32,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       TZ: America/Sao_Paulo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d prae"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     ports:
       - "5435:5432"
-    expose:
-      - "5432"
     networks:
       - sgu-networks
     volumes:
