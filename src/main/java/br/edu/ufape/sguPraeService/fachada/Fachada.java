@@ -14,13 +14,14 @@ import br.edu.ufape.sguPraeService.auth.AuthServiceClient;
 import br.edu.ufape.sguPraeService.servicos.interfaces.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 
 @Component @RequiredArgsConstructor
@@ -37,7 +38,7 @@ public class Fachada {
     @Value("${authClient.client-id}")
     private String clientId;
 
-    Logger logger = Logger.getLogger(Fachada.class.getName());
+    Logger logger = LoggerFactory.getLogger(Fachada.class);
 
 
     // ------------------- Profissional ------------------- //
@@ -63,7 +64,7 @@ public class Fachada {
 
     // ================== Estudante  ================== //
 
-    @Transactional
+    @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackGetAlunoInfo")
     public EstudanteResponse salvarEstudante(Estudante estudante, Jwt token, Long tipoEtniaId) throws TipoEtniaNotFoundException {
         estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
         estudante.setUserId(token.getSubject());
@@ -93,7 +94,7 @@ public class Fachada {
         List<String> userIds = estudantes.stream()
                 .map(Estudante::getUserId)
                 .toList();
-        logger.info("Estudantes encontrados: " + userIds);
+        logger.info("Estudantes encontrados: {}", userIds);
         List<AlunoResponse> usuarios = authServiceClient.buscarAlunos(userIds);
         for (int i = 0; i < estudantes.size(); i++) {
             Estudante estudante = estudantes.get(i);
@@ -189,6 +190,26 @@ public class Fachada {
 
     public DadosBancarios atualizarDadosBancarios(Long id, DadosBancarios novosDadosBancarios) {
         return dadosBancariosService.atualizarDadosBancarios(id, novosDadosBancarios);
+    }
+
+
+
+
+    // ---------------------------- fallback ---------------------------- //
+    public EstudanteResponse fallbackGetAlunoInfo(Estudante estudante, Jwt token, Long tipoEtniaId, Throwable t) {
+        logger.warn("Falha ao buscar informações do aluno no Auth Service. Usando fallback.", t);
+
+        estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
+        estudante.setUserId(token.getSubject());
+
+        Estudante novoEstudante = estudanteService.salvarEstudante(estudante);
+        rabbitAuthServiceClient.assignRoleToUser(token.getSubject(), clientId, "estudante");
+
+        EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
+
+        response.setAluno(null);
+
+        return response;
     }
 
 

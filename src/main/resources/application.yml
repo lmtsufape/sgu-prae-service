@@ -41,6 +41,15 @@ authClient:
     base-url: http://gateway:8080/auth
     client-id: prae-application
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServiceClient:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+
 springdoc:
   api-docs:
     path: /api-doc/docs
