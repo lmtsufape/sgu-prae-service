@@ -261,6 +261,10 @@ public class Fachada {
     }
 
     // ------------------- Cronograma ------------------- //
+    public List<Cronograma> listarCronogramasPorProfissional(String userId){
+        return cronogramaService.listarPorProfissional(userId);
+    }
+
     public List<Cronograma> listarCronogramas() {
         return cronogramaService.listar();
     }
