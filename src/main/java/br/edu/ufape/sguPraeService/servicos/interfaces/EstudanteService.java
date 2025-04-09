@@ -12,9 +12,11 @@ public interface EstudanteService {
 
     Estudante buscarEstudante(Long id) throws EstudanteNotFoundException;
 
+    Estudante buscarPorUserId(String userId) throws EstudanteNotFoundException;
+
     List<Estudante> listarEstudantes();
 
-    Estudante atualizarEstudante(Estudante estudante, String userId) throws EstudanteNotFoundException;
+    Estudante atualizarEstudante(Estudante estudante, Estudante existente) throws EstudanteNotFoundException;
 
     void deletarEstudante(Long id) throws EstudanteNotFoundException;
 }

@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.dto.profissional;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 import br.edu.ufape.sguPraeService.models.Profissional;
 
 import lombok.Getter;
@@ -10,6 +11,7 @@ import org.modelmapper.ModelMapper;
 public class ProfissionalResponse {
 
     Long id;
+    FuncionarioResponse tecnico;
     String especialidade;
 
     public ProfissionalResponse(Profissional profissional, ModelMapper modelMapper){

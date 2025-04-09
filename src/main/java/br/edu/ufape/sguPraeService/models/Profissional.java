@@ -13,6 +13,9 @@ public class Profissional {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String userId;
+
     @Column(nullable = false)
     private String especialidade;
 
