@@ -2,22 +2,24 @@ package br.edu.ufape.sguPraeService.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDate;
 
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
-public class Profissional {
+public class Agendamento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String userId;
+    private LocalDate data;
 
-    @Column(nullable = false)
-    private String especialidade;
+    @OneToOne
+    private Vaga vaga;
 
-    private Boolean ativo = true;
+    @ManyToOne
+    private Estudante estudante;
 }

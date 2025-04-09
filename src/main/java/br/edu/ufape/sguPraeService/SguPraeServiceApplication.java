@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
-@EnableFeignClients(basePackages = "br.edu.ufape.sguPraeService.auth")
+@EnableFeignClients
 public class SguPraeServiceApplication {
 
     public static void main(String[] args) {
@@ -13,3 +13,4 @@ public class SguPraeServiceApplication {
     }
 
 }
+

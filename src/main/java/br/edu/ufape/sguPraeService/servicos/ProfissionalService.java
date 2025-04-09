@@ -1,9 +1,11 @@
 package br.edu.ufape.sguPraeService.servicos;
 
-import br.edu.ufape.sguPraeService.exceptions.ProfissionalNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.ExceptionUtil;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
 import br.edu.ufape.sguPraeService.models.Profissional;
 import br.edu.ufape.sguPraeService.dados.ProfissionalRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
@@ -24,15 +26,29 @@ public class ProfissionalService implements br.edu.ufape.sguPraeService.servicos
     }
 
     @Override
-    public Profissional salvar(Profissional entity) {
-        return repository.save(entity);
+    public Profissional buscarPorUserId(String id) throws ProfissionalNotFoundException {
+        return repository.findByUserId(id).orElseThrow(ProfissionalNotFoundException::new);
     }
 
     @Override
-    public Profissional editar(Long id, Profissional entity) throws ProfissionalNotFoundException {
-        Profissional profissional = buscar(id);
-        modelMapper.map(entity, profissional);
-        return repository.save(profissional);
+    public Profissional salvar(Profissional entity) {
+        try {
+            return repository.save(entity);
+        }catch (DataIntegrityViolationException e){
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
+        }
+
+    }
+
+    @Override
+    public Profissional editar(String userId, Profissional entity) throws ProfissionalNotFoundException {
+        try{
+            Profissional profissional = repository.findByUserId(userId).orElseThrow(ProfissionalNotFoundException::new);
+            modelMapper.map(entity, profissional);
+            return repository.save(profissional);
+        }catch (DataIntegrityViolationException e){
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
+        }
 
     }
 

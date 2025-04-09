@@ -36,15 +36,19 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
+    public Estudante buscarPorUserId(String userId) throws EstudanteNotFoundException {
+        return (Estudante) estudanteRepository.findByUserId(userId)
+                .orElseThrow(EstudanteNotFoundException::new);
+    }
+
+    @Override
     public List<Estudante> listarEstudantes() {
         return estudanteRepository.findAllByAtivoTrue();
     }
 
     @Override
-    public Estudante atualizarEstudante(Estudante estudante, String userId) throws EstudanteNotFoundException {
+    public Estudante atualizarEstudante(Estudante estudante, Estudante existente) throws EstudanteNotFoundException {
         try {
-            Estudante existente = (Estudante) estudanteRepository.findByUserId(userId)
-                    .orElseThrow(EstudanteNotFoundException::new);
             modelMapper.map(estudante, existente);
             return estudanteRepository.save(existente);
         }catch (DataIntegrityViolationException e){

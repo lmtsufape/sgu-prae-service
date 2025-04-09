@@ -6,18 +6,19 @@ import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalTime;
+
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
-public class Profissional {
+public class Vaga {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String userId;
+    private LocalTime horaInicio;
 
-    @Column(nullable = false)
-    private String especialidade;
+    private LocalTime horaFim;
 
-    private Boolean ativo = true;
+    private boolean disponivel = true;
+
 }
