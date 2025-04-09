@@ -49,9 +49,7 @@ public class TipoEtniaService implements br.edu.ufape.sguPraeService.servicos.in
 
     @Override
     public void deletarTipoEtnia(Long id) throws TipoEtniaNotFoundException {
-        if (!tipoEtniaRepository.existsById(id)) {
-            throw new TipoEtniaNotFoundException();
-        }
+        tipoEtniaRepository.findById(id).orElseThrow(TipoEtniaNotFoundException::new);
         tipoEtniaRepository.deleteById(id);
     }
 }
