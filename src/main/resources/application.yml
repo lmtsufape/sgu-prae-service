@@ -36,10 +36,18 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs
+  cloud:
+    openfeign:
+      client:
+        config:
+            default:
+                connect-timeout: 5000
+                read-timeout: 20000
 
 authClient:
     base-url: http://gateway:8080/auth
     client-id: prae-application
+
 
 resilience4j:
   circuitbreaker:
