@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
@@ -63,5 +64,17 @@ public class EstudanteController {
     public ResponseEntity<Void> deletarEstudante(@PathVariable Long id) throws EstudanteNotFoundException{
         fachada.deletarEstudante(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/credores")
+    public ResponseEntity<List<CredorResponse>> listarCredoresComAuxiliosAtivos() {
+        List<CredorResponse> credores = fachada.listarCredoresComAuxiliosAtivos();
+        return ResponseEntity.ok(credores);
+    }
+
+    @GetMapping("/credores/auxilio/{id}")
+    public ResponseEntity<List<CredorResponse>> listarCredoresPorAuxilio(@PathVariable Long id) {
+        List<CredorResponse> credores = fachada.listarCredoresPorAuxilio(id);
+        return ResponseEntity.ok(credores);
     }
 }
