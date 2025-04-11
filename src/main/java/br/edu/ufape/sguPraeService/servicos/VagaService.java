@@ -26,7 +26,8 @@
          return repository.findById(id).orElseThrow(VagaNotFoundException::new);
      }
 
-     private Vaga salvar(Vaga entity) {
+     @Override
+     public Vaga salvar(Vaga entity) {
          return repository.save(entity);
      }
  
@@ -37,14 +38,15 @@
          return repository.save(vaga);
      }
 
+
      @Override
-     public List<Vaga> gerarVagas(List<LocalTime> horarios, LocalTime tempoAtendimento){
+     public List<Vaga> gerarVagas(List<LocalTime> horarios, LocalTime tempoAtendimento) {
          return horarios.stream()
                  .map(horario -> {
                      Vaga vaga = new Vaga();
                      vaga.setHoraInicio(horario);
                      vaga.setHoraFim(horario.plusMinutes(tempoAtendimento.toSecondOfDay() / 60));
-                     return salvar(vaga);
+                     return vaga;
                  })
                  .collect(Collectors.toList());
      }

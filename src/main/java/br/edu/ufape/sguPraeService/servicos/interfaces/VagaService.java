@@ -11,6 +11,8 @@ public interface VagaService {
 
     Vaga buscar(Long id) throws VagaNotFoundException;
 
+    Vaga salvar(Vaga entity);
+
     Vaga editar(Long id, Vaga entity) throws VagaNotFoundException;
 
     List<Vaga> gerarVagas(List<LocalTime> horarios, LocalTime tempoAtendimento);

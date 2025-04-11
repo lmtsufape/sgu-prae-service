@@ -2,18 +2,16 @@ package br.edu.ufape.sguPraeService.fachada;
 
 
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
+import br.edu.ufape.sguPraeService.auth.utils.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EnderecoNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
+import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.servicos.interfaces.*;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
 import br.edu.ufape.sguPraeService.models.Cronograma;
 import br.edu.ufape.sguPraeService.models.Profissional;
 import br.edu.ufape.sguPraeService.models.TipoAtendimento;
@@ -22,16 +20,19 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 @Component @RequiredArgsConstructor
@@ -47,6 +48,10 @@ public class Fachada {
     private final AuthServiceHandler authServiceHandler;
     private final ModelMapper modelMapper;
     private final RabbitAuthServiceClient rabbitAuthServiceClient;
+    private final AuthenticatedUserProvider authenticatedUserProvider;
+    private final AgendamentoService agendamentoService;
+    private final CancelamentoService cancelamentoService;
+
 
     @Value("${authClient.client-id}")
     private String clientId;
@@ -277,13 +282,91 @@ public class Fachada {
         return cronogramaService.buscar(id);
     }
 
+    @Transactional
     public Cronograma salvarCronograma(Cronograma cronograma, Long tipoAtendimentoId, String userId) throws TipoAtendimentoNotFoundException {
         TipoAtendimento tipoAtendimento = buscarTipoAtendimento(tipoAtendimentoId);
         Profissional profissional = profissionalService.buscarPorUserId(userId);
         cronograma.setProfissional(profissional);
         cronograma.setTipoAtendimento(tipoAtendimento);
-        cronograma.setVagas(vagaService.gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento()));
+        List<Vaga> vagas = vagaService.gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
+        vagas.forEach(vaga -> vaga.setCronograma(cronograma));
+        cronograma.setVagas(vagas);
         return cronogramaService.salvar(cronograma);
     }
+
+    // ------------------- Agendamento ------------------- //
+
+    @Transactional
+    public Agendamento agendarVaga(Long id) throws VagaNotFoundException, UnavailableVagaException {
+        try {
+            Vaga vaga = vagaService.buscar(id);
+            Estudante estudante = estudanteService.buscarPorUserId(authenticatedUserProvider.getUserId());
+
+            if (vaga.isDisponivel()) {
+                vaga.setDisponivel(false);
+                vagaService.salvar(vaga);
+                return agendamentoService.agendar(vaga, estudante);
+            }
+
+            throw new UnavailableVagaException();
+
+        } catch (ObjectOptimisticLockingFailureException e) {
+            throw new UnavailableVagaException();
+        }
+    }
+
+    @Transactional
+    public CancelamentoAgendamento cancelarAgendamento(Long id, CancelamentoAgendamento cancelamento) throws AgendamentoNotFoundException {
+        Agendamento agendamento = agendamentoService.buscar(id);
+        if(!Objects.equals(agendamento.getEstudante().getUserId(), authenticatedUserProvider.getUserId())
+                && !Objects.equals(agendamento.getVaga().getCronograma().getProfissional().getUserId(),
+                authenticatedUserProvider.getUserId())){
+            throw new GlobalAccessDeniedException("Você não tem permissão para acessar este recurso");
+        }
+
+        Vaga vaga = agendamento.getVaga();
+        vaga.setDisponivel(true);
+        vagaService.salvar(vaga);
+        agendamento.setAtivo(false);
+        agendamentoService.salvar(agendamento);
+        cancelamento.setAgendamento(agendamento);
+        return cancelamentoService.salvar(cancelamento);
+    }
+
+    public Agendamento buscarAgendamento(Long id) throws AgendamentoNotFoundException {
+        return agendamentoService.buscar(id);
+    }
+
+    public List<Agendamento> listarAgendamentosPorEstudante(Long estudanteId) {
+        Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+        return agendamentoService.listarAgendamentosPorEstudante(estudante);
+    }
+
+    public List<Agendamento> listarAgendamentosPorProfissional(Long userId) {
+        Profissional profissional = profissionalService.buscar(userId);
+        return agendamentoService.listarPorProfissional(profissional);
+    }
+
+    public List<Agendamento> listarAgendamentoPorEstudanteAtual(){
+        return agendamentoService.listarAgendamentosEstudanteAtual();
+    }
+
+    public List<Agendamento> listarAgendamentoPorProfissionalAtual(){
+        return agendamentoService.listarPorProfissionalAtual();
+    }
+
+    public List<CancelamentoAgendamento> listarCancelamentosPorEstudanteAtual(){
+        return cancelamentoService.ListarPorEstudanteAtual();
+    }
+
+    public List<CancelamentoAgendamento> listarCancelamentosPorProfissionalAtual(){
+        return cancelamentoService.ListarPorProfissionalAtual();
+    }
+
+    public CancelamentoAgendamento buscarCancelamento(Long id) throws CancelamentoNotFoundException {
+        return cancelamentoService.buscar(id);
+    }
+
+
 
 }

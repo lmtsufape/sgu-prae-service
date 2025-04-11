@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.models;
 
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
+
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class Agendamento {
@@ -15,9 +17,13 @@ public class Agendamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private LocalDate data;
 
-    @OneToOne
+
+    private boolean ativo = true;
+
+    @ManyToOne
     private Vaga vaga;
 
     @ManyToOne
