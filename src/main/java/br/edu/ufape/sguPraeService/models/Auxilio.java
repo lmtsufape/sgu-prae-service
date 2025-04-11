@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
@@ -30,4 +31,8 @@ public class Auxilio {
 
     @OneToOne
     private Documento termo;
+
+    @ManyToMany(mappedBy = "auxilios", cascade = CascadeType.ALL)
+    private List<Estudante> estudantes;
+
 }
