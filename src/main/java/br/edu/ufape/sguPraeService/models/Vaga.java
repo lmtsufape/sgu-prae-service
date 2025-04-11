@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -20,5 +21,14 @@ public class Vaga {
     private LocalTime horaFim;
 
     private boolean disponivel = true;
+
+
+    //Evitar o Race Condition
+    @Version
+    private Long version;
+
+    @ManyToOne
+    @JsonBackReference
+    private Cronograma cronograma;
 
 }

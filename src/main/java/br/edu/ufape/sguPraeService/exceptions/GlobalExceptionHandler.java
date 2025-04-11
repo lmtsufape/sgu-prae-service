@@ -27,7 +27,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handleUniqueConstraintViolation(UniqueConstraintViolationException ex) {
         Map<String, String> response = new HashMap<>();
-        response.put("field", ex.getField());
+        response.put("constraint", ex.getField());
         response.put("message", ex.getMessage());
         return response;
     }
