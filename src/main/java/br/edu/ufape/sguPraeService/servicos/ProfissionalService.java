@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
+import java.util.UUID;
 
 @Service @RequiredArgsConstructor
 public class ProfissionalService implements br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService {
@@ -26,7 +27,7 @@ public class ProfissionalService implements br.edu.ufape.sguPraeService.servicos
     }
 
     @Override
-    public Profissional buscarPorUserId(String id) throws ProfissionalNotFoundException {
+    public Profissional buscarPorUserId(UUID id) throws ProfissionalNotFoundException {
         return repository.findByUserId(id).orElseThrow(ProfissionalNotFoundException::new);
     }
 
@@ -41,7 +42,7 @@ public class ProfissionalService implements br.edu.ufape.sguPraeService.servicos
     }
 
     @Override
-    public Profissional editar(String userId, Profissional entity) throws ProfissionalNotFoundException {
+    public Profissional editar(UUID userId, Profissional entity) throws ProfissionalNotFoundException {
         try{
             Profissional profissional = repository.findByUserId(userId).orElseThrow(ProfissionalNotFoundException::new);
             modelMapper.map(entity, profissional);

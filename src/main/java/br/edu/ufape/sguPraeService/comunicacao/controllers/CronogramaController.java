@@ -9,9 +9,6 @@
 
  import org.modelmapper.ModelMapper;
  import org.springframework.security.access.prepost.PreAuthorize;
- import org.springframework.security.core.Authentication;
- import org.springframework.security.core.context.SecurityContextHolder;
- import org.springframework.security.oauth2.jwt.Jwt;
  import org.springframework.web.bind.annotation.*;
  import org.springframework.http.ResponseEntity;
 
@@ -48,18 +45,14 @@
      @PreAuthorize("hasRole('PROFISSIONAL')")
      @PostMapping
      public ResponseEntity<CronogramaResponse> salvar(@Valid @RequestBody CronogramaRequest entity) throws TipoAtendimentoNotFoundException {
-         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-         Jwt principal = (Jwt) authentication.getPrincipal();
-         Cronograma response = fachada.salvarCronograma(entity.convertToEntity(entity, modelMapper), entity.getTipoAtendimentoId(), principal.getSubject());
+         Cronograma response = fachada.salvarCronograma(entity.convertToEntity(entity, modelMapper), entity.getTipoAtendimentoId());
          return new ResponseEntity<>(new CronogramaResponse(response, modelMapper), HttpStatus.CREATED);
      }
 
         @PreAuthorize("hasRole('PROFISSIONAL')")
      @GetMapping("/profissional")
      public List<CronogramaResponse> listarPorProfissional() {
-         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-         Jwt principal = (Jwt) authentication.getPrincipal();
-         return fachada.listarCronogramasPorProfissional(principal.getSubject()).stream().map(cronograma -> new CronogramaResponse(cronograma, modelMapper)).toList();
+         return fachada.listarCronogramasPorProfissional().stream().map(cronograma -> new CronogramaResponse(cronograma, modelMapper)).toList();
      }
 
 //     @PatchMapping("/{id}")

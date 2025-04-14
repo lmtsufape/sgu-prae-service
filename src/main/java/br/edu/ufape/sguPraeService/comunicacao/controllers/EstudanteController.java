@@ -12,9 +12,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,22 +36,16 @@ public class EstudanteController {
     @PreAuthorize("hasRole('ALUNO')")
     @PostMapping
     public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) throws TipoEtniaNotFoundException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt principal = (Jwt) authentication.getPrincipal();
-
         Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante, principal, estudanteRequest.getTipoEtniaId());
+        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante, estudanteRequest.getTipoEtniaId());
         return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
     }
 
     @PreAuthorize("hasRole('ESTUDANTE')")
     @PatchMapping
     public ResponseEntity<EstudanteResponse> atualizarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Jwt principal = (Jwt) authentication.getPrincipal();
-
         Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        EstudanteResponse estudanteAtualizado = fachada.atualizarEstudante(estudante, principal, estudanteRequest.getTipoEtniaId());
+        EstudanteResponse estudanteAtualizado = fachada.atualizarEstudante(estudante,estudanteRequest.getTipoEtniaId());
 
         return ResponseEntity.ok(estudanteAtualizado);
     }

@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface CancelamentoService {
     CancelamentoAgendamento salvar(CancelamentoAgendamento entity);
@@ -11,9 +12,9 @@ public interface CancelamentoService {
 
     List<CancelamentoAgendamento> listar();
 
-    List<CancelamentoAgendamento> ListarCancelamentosPorEstudante(String userId);
+    List<CancelamentoAgendamento> ListarCancelamentosPorEstudante(UUID userId);
 
-    List<CancelamentoAgendamento> ListarCancelamentosPorProfissional(String userId);
+    List<CancelamentoAgendamento> ListarCancelamentosPorProfissional(UUID userId);
 
     List<CancelamentoAgendamento> ListarPorEstudanteAtual();
 

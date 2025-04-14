@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface CancelamentoAgendamentoRepository extends JpaRepository<CancelamentoAgendamento, Long> {
-  List<CancelamentoAgendamento> findAllByAgendamento_Estudante_UserId(String agendamentoEstudanteUserId);
+  List<CancelamentoAgendamento> findAllByAgendamento_Estudante_UserId(UUID agendamentoEstudanteUserId);
 
   @Query("SELECT a FROM CancelamentoAgendamento a " +
           "JOIN a.agendamento ag " +
@@ -16,5 +17,5 @@ public interface CancelamentoAgendamentoRepository extends JpaRepository<Cancela
           "JOIN v.cronograma c " +
           "JOIN c.profissional p " +
           "WHERE p.userId = :userId")
-  List<CancelamentoAgendamento> findAllByProfissionalUserId(@Param("userId") String userId);
+  List<CancelamentoAgendamento> findAllByProfissionalUserId(@Param("userId") UUID userId);
 }

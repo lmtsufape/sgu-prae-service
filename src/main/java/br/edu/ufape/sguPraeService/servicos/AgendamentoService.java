@@ -1,6 +1,7 @@
 package br.edu.ufape.sguPraeService.servicos;
 
-import br.edu.ufape.sguPraeService.auth.utils.AuthenticatedUserProvider;
+
+import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.dados.AgendamentoRepository;
 import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;

@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @Slf4j
@@ -25,12 +26,12 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarAlunoPorId")
     @Override
-    public AlunoResponse buscarAlunoPorId(String userId) {
+    public AlunoResponse buscarAlunoPorId(UUID userId) {
         return authServiceClient.buscarAlunoPorId(userId);
     }
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarAlunos")
     @Override
-    public List<AlunoResponse> buscarAlunos(List<String> userIds) {
+    public List<AlunoResponse> buscarAlunos(List<UUID> userIds) {
         return authServiceClient.buscarAlunos(userIds);
     }
 
@@ -43,14 +44,14 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarTecnicoPorId")
     @Override
-    public FuncionarioResponse buscarTecnicoPorId(String userId) {
+    public FuncionarioResponse buscarTecnicoPorId(UUID userId) {
         return authServiceClient.buscarFuncionarioPorId(userId);
     }
 
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarTecnicos")
     @Override
-    public List<FuncionarioResponse> buscarTecnicos(List<String> userIds) {
+    public List<FuncionarioResponse> buscarTecnicos(List<UUID> userIds) {
         return authServiceClient.buscarFuncionarios(userIds);
     }
 
@@ -61,13 +62,13 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
     }
 
     @Override
-    public AlunoResponse fallbackBuscarAlunoPorId(String userId, Throwable t) {
+    public AlunoResponse fallbackBuscarAlunoPorId(UUID userId, Throwable t) {
         log.warn("Não foi possível buscar aluno com id {} no AuthService", userId, t);
         return null;
     }
 
     @Override
-    public List<AlunoResponse> fallbackBuscarAlunos(List<String> userIds, Throwable t) {
+    public List<AlunoResponse> fallbackBuscarAlunos(List<UUID> userIds, Throwable t) {
         log.warn("Não foi possível buscar alunos com ids {} no AuthService", userIds, t);
         return null;
     }
@@ -79,13 +80,13 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
     }
 
     @Override
-    public FuncionarioResponse fallbackBuscarTecnicoPorId(String userId, Throwable t) {
+    public FuncionarioResponse fallbackBuscarTecnicoPorId(UUID userId, Throwable t) {
         log.warn("Não foi possível buscar técnico com id {} no AuthService", userId, t);
         return null;
     }
 
     @Override
-    public List<FuncionarioResponse> fallbackBuscarTecnicos(String userId, Throwable t) {
+    public List<FuncionarioResponse> fallbackBuscarTecnicos(UUID userId, Throwable t) {
         log.warn("Não foi possível buscar técnico com id {} no AuthService", userId, t);
         return null;
     }

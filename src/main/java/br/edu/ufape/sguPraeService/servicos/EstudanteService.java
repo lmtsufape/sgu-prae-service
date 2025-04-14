@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +37,7 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public Estudante buscarPorUserId(String userId) throws EstudanteNotFoundException {
+    public Estudante buscarPorUserId(UUID userId) throws EstudanteNotFoundException {
         return (Estudante) estudanteRepository.findByUserId(userId)
                 .orElseThrow(EstudanteNotFoundException::new);
     }
