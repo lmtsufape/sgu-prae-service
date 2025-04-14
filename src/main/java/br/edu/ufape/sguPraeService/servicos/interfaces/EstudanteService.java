@@ -5,6 +5,7 @@ import br.edu.ufape.sguPraeService.models.Estudante;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface EstudanteService {
     @Transactional
@@ -12,7 +13,7 @@ public interface EstudanteService {
 
     Estudante buscarEstudante(Long id) throws EstudanteNotFoundException;
 
-    Estudante buscarPorUserId(String userId) throws EstudanteNotFoundException;
+    Estudante buscarPorUserId(UUID userId) throws EstudanteNotFoundException;
 
     List<Estudante> listarEstudantes();
 

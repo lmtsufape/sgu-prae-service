@@ -1,6 +1,7 @@
 package br.edu.ufape.sguPraeService.fachada;
 
 
+import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
 import br.edu.ufape.sguPraeService.auth.utils.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
@@ -27,12 +28,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 
 @Component @RequiredArgsConstructor
@@ -67,7 +68,7 @@ public class Fachada {
         List<ProfissionalResponse> profissionalResponse = new ArrayList<>();
         List<Profissional> profissionais = profissionalService.listar();
         if (profissionais.isEmpty()) { return profissionalResponse; }
-        List<String> userIds = profissionais.stream().map(Profissional::getUserId).toList();
+        List<UUID> userIds = profissionais.stream().map(Profissional::getUserId).toList();
         logger.info("Profissionals encontrados: {}", userIds);
         List<FuncionarioResponse> usuarios = authServiceHandler.buscarTecnicos(userIds);
         for (int i = 0; i < profissionais.size(); i++) {
@@ -88,17 +89,19 @@ public class Fachada {
         return response;
     }
 
-    public ProfissionalResponse salvarProfissional(Profissional profissional, String userId) {
+    public ProfissionalResponse salvarProfissional(Profissional profissional) {
+        UUID userId = authenticatedUserProvider.getUserId();
         profissional.setUserId(userId);
         Profissional novoProfissional = profissionalService.salvar(profissional);
         FuncionarioResponse response = authServiceHandler.getTecnicoInfo();
-        rabbitAuthServiceClient.assignRoleToUser(userId, clientId, "profissional");
+        rabbitAuthServiceClient.assignRoleToUser(userId.toString(), clientId, "profissional");
         ProfissionalResponse profissionalResponse = new ProfissionalResponse(novoProfissional, modelMapper);
         profissionalResponse.setTecnico(response);
         return profissionalResponse;
     }
 
-    public ProfissionalResponse editarProfissional(String userId, Profissional profissional) throws ProfissionalNotFoundException {
+    public ProfissionalResponse editarProfissional(Profissional profissional) throws ProfissionalNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
         Profissional novoProfissional = profissionalService.editar(userId, profissional);
         FuncionarioResponse response = authServiceHandler.getTecnicoInfo();
         ProfissionalResponse profissionalResponse = new ProfissionalResponse(novoProfissional, modelMapper);
@@ -113,13 +116,14 @@ public class Fachada {
     // ================== Estudante  ================== //
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackSalvarEstudante")
-    public EstudanteResponse salvarEstudante(Estudante estudante, Jwt token, Long tipoEtniaId) throws TipoEtniaNotFoundException {
+    public EstudanteResponse salvarEstudante(Estudante estudante, Long tipoEtniaId) throws TipoEtniaNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
         estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
-        estudante.setUserId(token.getSubject());
+        estudante.setUserId(userId);
 
         Estudante novoEstudante = estudanteService.salvarEstudante(estudante);
         AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
-        rabbitAuthServiceClient.assignRoleToUser(token.getSubject(), clientId, "estudante");
+        rabbitAuthServiceClient.assignRoleToUser(userId.toString(), clientId, "estudante");
         EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
         response.setAluno(userInfo);
         return response;
@@ -139,7 +143,7 @@ public class Fachada {
         if (estudantes.isEmpty()) {
             return estudanteResponse;
         }
-        List<String> userIds = estudantes.stream()
+        List<UUID> userIds = estudantes.stream()
                 .map(Estudante::getUserId)
                 .toList();
         logger.info("Estudantes encontrados: {}", userIds);
@@ -154,9 +158,10 @@ public class Fachada {
         return estudanteResponse;
     }
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
-    public EstudanteResponse atualizarEstudante(Estudante estudante, Jwt token, Long tipoEtniaId) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+    public EstudanteResponse atualizarEstudante(Estudante estudante, Long tipoEtniaId) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
         estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
-        Estudante velhoEstudante = estudanteService.buscarPorUserId(token.getSubject());
+        Estudante velhoEstudante = estudanteService.buscarPorUserId(userId);
         estudante.setEndereco(enderecoService.editarEndereco(velhoEstudante.getEndereco().getId(),estudante.getEndereco()));
         Estudante novoEstudante = estudanteService.atualizarEstudante(estudante, velhoEstudante);
         EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
@@ -304,8 +309,9 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     }
 
     // ------------------- Cronograma ------------------- //
-    public List<Cronograma> listarCronogramasPorProfissional(String userId){
-        return cronogramaService.listarPorProfissional(userId);
+    public List<Cronograma> listarCronogramasPorProfissional(){
+
+        return cronogramaService.listarPorProfissional(authenticatedUserProvider.getUserId());
     }
 
     public List<Cronograma> listarCronogramas() {
@@ -321,7 +327,8 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     }
 
     @Transactional
-    public Cronograma salvarCronograma(Cronograma cronograma, Long tipoAtendimentoId, String userId) throws TipoAtendimentoNotFoundException {
+    public Cronograma salvarCronograma(Cronograma cronograma, Long tipoAtendimentoId) throws TipoAtendimentoNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
         TipoAtendimento tipoAtendimento = buscarTipoAtendimento(tipoAtendimentoId);
         Profissional profissional = profissionalService.buscarPorUserId(userId);
         cronograma.setProfissional(profissional);

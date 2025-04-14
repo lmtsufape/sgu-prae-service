@@ -1,7 +1,8 @@
 package br.edu.ufape.sguPraeService.servicos;
 
 
-import br.edu.ufape.sguPraeService.auth.utils.AuthenticatedUserProvider;
+
+import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.dados.CancelamentoAgendamentoRepository;
 import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service @RequiredArgsConstructor
 public class CancelamentoService implements br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService {
@@ -42,12 +44,12 @@ public class CancelamentoService implements br.edu.ufape.sguPraeService.servicos
     }
 
     @Override
-    public List<CancelamentoAgendamento> ListarCancelamentosPorEstudante(String userId) {
+    public List<CancelamentoAgendamento> ListarCancelamentosPorEstudante(UUID userId) {
         return cancelamentoAgendamentoRepository.findAllByAgendamento_Estudante_UserId(userId);
     }
 
     @Override
-    public List<CancelamentoAgendamento> ListarCancelamentosPorProfissional(String userId) {
+    public List<CancelamentoAgendamento> ListarCancelamentosPorProfissional(UUID userId) {
         return cancelamentoAgendamentoRepository.findAllByProfissionalUserId(userId);
     }
 

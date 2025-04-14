@@ -8,7 +8,8 @@
  import org.springframework.stereotype.Service;
 
  import java.util.List;
- 
+ import java.util.UUID;
+
  @Service
  @RequiredArgsConstructor
  public class CronogramaService implements br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService {
@@ -26,7 +27,7 @@
      }
 
      @Override
-     public List<Cronograma> listarPorProfissional(String userId) {
+     public List<Cronograma> listarPorProfissional(UUID userId) {
          return repository.findByProfissional_UserId(userId);
      }
  

@@ -4,13 +4,14 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFo
 import br.edu.ufape.sguPraeService.models.Cronograma;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface CronogramaService {
     List<Cronograma> listar();
 
     List<Cronograma> listarPorTipoAtendimento(Long id);
 
-    List<Cronograma> listarPorProfissional(String userId);
+    List<Cronograma> listarPorProfissional(UUID userId);
 
     Cronograma buscar(Long id) throws CronogramaNotFoundException;
 

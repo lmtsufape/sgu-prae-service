@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface EstudanteRepository extends JpaRepository<Estudante, Long> {
-    Optional<Object> findByUserId(String userId);
+    Optional<Object> findByUserId(UUID userId);
 
     List<Estudante> findAllByAtivoTrue();
 

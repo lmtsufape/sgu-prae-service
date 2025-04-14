@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class Profissional {
@@ -14,7 +16,7 @@ public class Profissional {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String userId;
+    private UUID userId;
 
     @Column(nullable = false)
     private String especialidade;
