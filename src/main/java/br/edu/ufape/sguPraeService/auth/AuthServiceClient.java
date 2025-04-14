@@ -10,27 +10,28 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @FeignClient(name = "authServiceClient", url = "${authClient.base-url}")
 public interface AuthServiceClient {
 
     @PostMapping("/aluno/batch")
-    List<AlunoResponse> buscarAlunos(@RequestBody List<String> userIds);
+    List<AlunoResponse> buscarAlunos(@RequestBody List<UUID> userIds);
 
     @GetMapping("/aluno/current")
     AlunoResponse getAlunoInfo();
 
-    @GetMapping("/aluno/buscar/{userId}")
-    AlunoResponse buscarAlunoPorId( @PathVariable("userId") String userId);
+    @GetMapping("/aluno/{userId}")
+    AlunoResponse buscarAlunoPorId( @PathVariable("userId") UUID userId);
 
     @PostMapping("/funcionario/batch")
-    List<FuncionarioResponse> buscarFuncionarios(@RequestBody List<String> userIds);
+    List<FuncionarioResponse> buscarFuncionarios(@RequestBody List<UUID> userIds);
 
     @GetMapping("/funcionario/current")
     FuncionarioResponse getFuncionarioInfo();
 
     @GetMapping("/funcionario/{userId}")
-    FuncionarioResponse buscarFuncionarioPorId(@PathVariable("userId") String userId);
+    FuncionarioResponse buscarFuncionarioPorId(@PathVariable("userId") UUID userId);
 
 }

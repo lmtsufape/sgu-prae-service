@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
@@ -19,7 +20,7 @@ public class Estudante{
     private boolean deficiente = false;
     private String tipoDeficiencia;
     @Column(unique = true, nullable = false)
-    private String userId;
+    private UUID userId;
     @OneToOne(cascade = CascadeType.ALL)
     private DadosBancarios dadosBancarios;
     private boolean ativo = true;
