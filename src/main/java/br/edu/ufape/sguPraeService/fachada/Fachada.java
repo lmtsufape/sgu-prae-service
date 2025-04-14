@@ -3,12 +3,13 @@ package br.edu.ufape.sguPraeService.fachada;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
+import br.edu.ufape.sguPraeService.auth.utils.AuthenticatedUserProvider;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
-import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
+import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.servicos.interfaces.*;
@@ -51,6 +52,9 @@ public class Fachada {
     private final AuthenticatedUserProvider authenticatedUserProvider;
     private final AgendamentoService agendamentoService;
     private final CancelamentoService cancelamentoService;
+    private final TipoBolsaService tipoBolsaService;
+    private final TipoAuxilioService tipoAuxilioService;
+    private final AuxilioService auxilioService;
 
 
     @Value("${authClient.client-id}")
@@ -170,6 +174,41 @@ public class Fachada {
         estudanteService.deletarEstudante(id);
     }
 
+    public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
+    List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
+    List<String> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+    List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+
+    List<CredorResponse> credores = new ArrayList<>();
+    for (int i = 0; i < estudantes.size(); i++) {
+        Estudante estudante = estudantes.get(i);
+        AlunoResponse aluno = alunos.get(i);
+
+        estudante.getAuxilios().stream()
+            .filter(Auxilio::isAtivo)
+            .forEach(auxilio -> credores.add(new CredorResponse(aluno, estudante.getDadosBancarios(), auxilio)));
+        }
+
+    return credores;
+    }
+
+public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
+    List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilioId);
+    List<String> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+    List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+
+    List<CredorResponse> credores = new ArrayList<>();
+    for (int i = 0; i < estudantes.size(); i++) {
+        Estudante estudante = estudantes.get(i);
+        AlunoResponse aluno = alunos.get(i);
+
+        estudante.getAuxilios().stream()
+            .filter(auxilio -> auxilio.getId().equals(auxilioId))
+            .forEach(auxilio -> credores.add(new CredorResponse(aluno, estudante.getDadosBancarios(), auxilio)));
+        }
+
+    return credores;
+    }
 
     // ================== TipoEtnia  ================== //
 
@@ -373,6 +412,68 @@ public class Fachada {
         return cancelamentoService.buscar(id);
     }
 
+  // ------------------- TipoBolsa ------------------- //
+    public List<TipoBolsa> listarTipoBolsas() {
+        return tipoBolsaService.listar();
+    }
+
+    public TipoBolsa buscarTipoBolsa(Long id) throws TipoBolsaNotFoundException {
+        return tipoBolsaService.buscar(id);
+    }
+
+    public TipoBolsa salvarTipoBolsa(TipoBolsa tipoBolsa) {
+        return tipoBolsaService.salvar(tipoBolsa);
+    }
+
+    public TipoBolsa editarTipoBolsa(Long id, TipoBolsa tipoBolsa) throws TipoBolsaNotFoundException {
+        return tipoBolsaService.editar(id, tipoBolsa);
+    }
+
+    public void deletarTipoBolsa(Long id) throws TipoBolsaNotFoundException {
+        tipoBolsaService.deletar(id);
+    }
+
+    // ------------------- TipoAuxilio ------------------- //
+    public List<TipoAuxilio> listarTipoAuxilios() {
+        return tipoAuxilioService.listar();
+    }
+
+    public TipoAuxilio buscarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
+        return tipoAuxilioService.buscar(id);
+    }
+
+    public TipoAuxilio salvarTipoAuxilio(TipoAuxilio tipoAuxilio) {
+        return tipoAuxilioService.salvar(tipoAuxilio);
+    }
+
+    public TipoAuxilio editarTipoAuxilio(Long id, TipoAuxilio tipoAuxilio) throws TipoAuxilioNotFoundException {
+        return tipoAuxilioService.editar(id, tipoAuxilio);
+    }
+
+    public void deletarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
+        tipoAuxilioService.deletar(id);
+    }
+
+    // ------------------- Auxilio ------------------- //
+    public List<Auxilio> listarAuxilios() {
+        return auxilioService.listar();
+    }
+
+    public Auxilio buscarAuxilio(Long id) throws AuxilioNotFoundException {
+        return auxilioService.buscar(id);
+    }
+
+    public Auxilio salvarAuxilio(Auxilio auxilio) {
+        return auxilioService.salvar(auxilio);
+    }
+
+    public Auxilio editarAuxilio(Long id, Auxilio auxilio) throws AuxilioNotFoundException {
+        return auxilioService.editar(id, auxilio);
+    }
+
+    public void deletarAuxilio(Long id) throws AuxilioNotFoundException {
+        auxilioService.deletar(id);
+    }
 
 
 }

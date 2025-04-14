@@ -64,4 +64,14 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
         estudante.setAtivo(false);
         estudanteRepository.save(estudante);
     }
+
+    @Override
+    public List<Estudante> listarEstudantesComAuxilioAtivo() {
+        return estudanteRepository.findAllWithAuxilioAtivo();
+    }
+
+    @Override
+    public List<Estudante> listarEstudantesPorAuxilioId(Long auxilioId) {
+        return estudanteRepository.findByAuxilioId(auxilioId);
+    }
 }

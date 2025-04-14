@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
@@ -30,4 +32,11 @@ public class Estudante{
 
     @ManyToOne
     private TipoEtnia tipoEtnia;
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "estudante_auxilio",
+                         joinColumns = @JoinColumn(name = "estudante_id"),
+                         inverseJoinColumns = @JoinColumn(name = "auxilio_id")
+    )
+        private List<Auxilio> auxilios;
 }

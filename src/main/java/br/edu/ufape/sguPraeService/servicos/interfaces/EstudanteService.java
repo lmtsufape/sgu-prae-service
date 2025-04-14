@@ -20,4 +20,8 @@ public interface EstudanteService {
     Estudante atualizarEstudante(Estudante estudante, Estudante existente) throws EstudanteNotFoundException;
 
     void deletarEstudante(Long id) throws EstudanteNotFoundException;
+
+    List<Estudante> listarEstudantesComAuxilioAtivo();
+
+    List<Estudante> listarEstudantesPorAuxilioId(Long auxilioId);
 }
