@@ -3,7 +3,6 @@ package br.edu.ufape.sguPraeService.fachada;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
-import br.edu.ufape.sguPraeService.auth.utils.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
@@ -176,7 +175,7 @@ public class Fachada {
 
     public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
     List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
-    List<String> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+    List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
     List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
 
     List<CredorResponse> credores = new ArrayList<>();
@@ -194,7 +193,7 @@ public class Fachada {
 
 public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilioId);
-    List<String> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+    List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
     List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
 
     List<CredorResponse> credores = new ArrayList<>();
