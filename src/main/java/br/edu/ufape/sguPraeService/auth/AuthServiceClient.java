@@ -19,6 +19,9 @@ public interface AuthServiceClient {
     @PostMapping("/aluno/batch")
     List<AlunoResponse> buscarAlunos(@RequestBody List<UUID> userIds);
 
+    @GetMapping("/curso/{id}/alunos")
+    List<AlunoResponse> listarAlunosPorCurso(@PathVariable("id") Long id);
+
     @GetMapping("/aluno/current")
     AlunoResponse getAlunoInfo();
 

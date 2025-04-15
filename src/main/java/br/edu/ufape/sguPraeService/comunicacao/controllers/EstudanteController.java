@@ -68,4 +68,9 @@ public class EstudanteController {
         List<CredorResponse> credores = fachada.listarCredoresPorAuxilio(id);
         return ResponseEntity.ok(credores);
     }
+
+    @GetMapping("/credores/curso/{id}")
+    List<CredorResponse> listarCredoresPorCurso(@PathVariable Long id) {
+        return fachada.listarCredoresPorCurso(id);
+    }
 }

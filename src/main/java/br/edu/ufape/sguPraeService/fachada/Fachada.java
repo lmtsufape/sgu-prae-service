@@ -172,10 +172,31 @@ public class Fachada {
         estudanteService.deletarEstudante(id);
     }
 
+    public List<CredorResponse> listarCredoresPorCurso(Long id) {
+        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
+        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
+
+        // Mapeia alunos por ID para acesso rápido
+        Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
+                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
+
+        List<CredorResponse> credores = new ArrayList<>();
+
+        for (Estudante estudante : estudantes) {
+            AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
+            if (aluno != null) {
+                EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+                estudanteResponse.setAluno(aluno);
+                estudante.getAuxilios().stream()
+                        .filter(Auxilio::isAtivo)
+                        .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+            }
+        }
+
+        return credores;
+    }
+
     public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
-    List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
-    List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-    List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
         List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
         List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
         List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
