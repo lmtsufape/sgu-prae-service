@@ -33,10 +33,10 @@ public class Estudante{
     @ManyToOne
     private TipoEtnia tipoEtnia;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     @JoinTable(name = "estudante_auxilio",
                          joinColumns = @JoinColumn(name = "estudante_id"),
                          inverseJoinColumns = @JoinColumn(name = "auxilio_id")
     )
-        private List<Auxilio> auxilios;
+    private List<Auxilio> auxilios;
 }

@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Getter @Setter
 public class AuxilioResponse {
-
+    Long id;
     int horasBolsa;
     LocalDate inicioBolsa;
     LocalDate fimBolsa;
