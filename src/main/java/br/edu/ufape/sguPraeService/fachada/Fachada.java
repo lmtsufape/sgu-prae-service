@@ -29,10 +29,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @Component @RequiredArgsConstructor
@@ -177,18 +176,23 @@ public class Fachada {
     List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
     List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
     List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
+        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
 
-    List<CredorResponse> credores = new ArrayList<>();
-    for (int i = 0; i < estudantes.size(); i++) {
-        Estudante estudante = estudantes.get(i);
-        AlunoResponse aluno = alunos.get(i);
+        List<CredorResponse> credores = new ArrayList<>();
 
-        estudante.getAuxilios().stream()
-            .filter(Auxilio::isAtivo)
-            .forEach(auxilio -> credores.add(new CredorResponse(aluno, estudante.getDadosBancarios(), auxilio)));
+        for (int i = 0; i < estudantes.size(); i++) {
+            Estudante estudante = estudantes.get(i);
+            AlunoResponse aluno = alunos.get(i);
+            EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+            estudanteResponse.setAluno(aluno);
+            estudante.getAuxilios().stream()
+                    .filter(Auxilio::isAtivo)
+                    .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
         }
 
-    return credores;
+        return credores;
     }
 
 public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
@@ -200,10 +204,11 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     for (int i = 0; i < estudantes.size(); i++) {
         Estudante estudante = estudantes.get(i);
         AlunoResponse aluno = alunos.get(i);
-
+        EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+        estudanteResponse.setAluno(aluno);
         estudante.getAuxilios().stream()
             .filter(auxilio -> auxilio.getId().equals(auxilioId))
-            .forEach(auxilio -> credores.add(new CredorResponse(aluno, estudante.getDadosBancarios(), auxilio)));
+            .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
         }
 
     return credores;
