@@ -17,6 +17,8 @@ public interface AuthServiceHandler {
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarAlunos")
     List<AlunoResponse> buscarAlunos(List<UUID> userIds);
 
+    List<AlunoResponse> buscarAlunosPorCurso(Long idCurso);
+
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackGetTecnicoInfo")
     FuncionarioResponse getTecnicoInfo();
 
@@ -32,6 +34,10 @@ public interface AuthServiceHandler {
     AlunoResponse fallbackBuscarAlunoPorId(UUID userId, Throwable t);
     @SuppressWarnings("unused")
     List<AlunoResponse> fallbackBuscarAlunos(List<UUID> userIds, Throwable t);
+
+    @SuppressWarnings("unused")
+    List<AlunoResponse> fallbackBuscarAlunosPorCurso(Long idCurso, Throwable t);
+
     @SuppressWarnings("unused")
     FuncionarioResponse fallbackGetTecnicoInfo(Throwable t);
     @SuppressWarnings("unused")

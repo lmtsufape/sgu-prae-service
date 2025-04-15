@@ -35,6 +35,12 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
         return authServiceClient.buscarAlunos(userIds);
     }
 
+    @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarAlunosPorCurso")
+    @Override
+    public List<AlunoResponse> buscarAlunosPorCurso(Long idCurso) {
+        return authServiceClient.listarAlunosPorCurso(idCurso);
+    }
+
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackGetTecnicoInfo")
     @Override
@@ -70,6 +76,12 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
     @Override
     public List<AlunoResponse> fallbackBuscarAlunos(List<UUID> userIds, Throwable t) {
         log.warn("Não foi possível buscar alunos com ids {} no AuthService", userIds, t);
+        return null;
+    }
+
+    @Override
+    public List<AlunoResponse> fallbackBuscarAlunosPorCurso(Long idCurso, Throwable t) {
+        log.warn("Não foi possível buscar alunos do curso com id {} no AuthService", idCurso, t);
         return null;
     }
 

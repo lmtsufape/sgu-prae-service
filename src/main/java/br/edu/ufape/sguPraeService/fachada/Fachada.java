@@ -29,10 +29,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @Component @RequiredArgsConstructor
@@ -173,22 +172,48 @@ public class Fachada {
         estudanteService.deletarEstudante(id);
     }
 
-    public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
-    List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
-    List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-    List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+    public List<CredorResponse> listarCredoresPorCurso(Long id) {
+        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
+        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
 
-    List<CredorResponse> credores = new ArrayList<>();
-    for (int i = 0; i < estudantes.size(); i++) {
-        Estudante estudante = estudantes.get(i);
-        AlunoResponse aluno = alunos.get(i);
+        // Mapeia alunos por ID para acesso rápido
+        Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
+                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
-        estudante.getAuxilios().stream()
-            .filter(Auxilio::isAtivo)
-            .forEach(auxilio -> credores.add(new CredorResponse(aluno, estudante.getDadosBancarios(), auxilio)));
+        List<CredorResponse> credores = new ArrayList<>();
+
+        for (Estudante estudante : estudantes) {
+            AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
+            if (aluno != null) {
+                EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+                estudanteResponse.setAluno(aluno);
+                estudante.getAuxilios().stream()
+                        .filter(Auxilio::isAtivo)
+                        .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+            }
         }
 
-    return credores;
+        return credores;
+    }
+
+    public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
+        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
+        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+
+        List<CredorResponse> credores = new ArrayList<>();
+
+        for (int i = 0; i < estudantes.size(); i++) {
+            Estudante estudante = estudantes.get(i);
+            AlunoResponse aluno = alunos.get(i);
+            EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+            estudanteResponse.setAluno(aluno);
+            estudante.getAuxilios().stream()
+                    .filter(Auxilio::isAtivo)
+                    .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+        }
+
+        return credores;
     }
 
 public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
@@ -200,10 +225,11 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     for (int i = 0; i < estudantes.size(); i++) {
         Estudante estudante = estudantes.get(i);
         AlunoResponse aluno = alunos.get(i);
-
+        EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+        estudanteResponse.setAluno(aluno);
         estudante.getAuxilios().stream()
             .filter(auxilio -> auxilio.getId().equals(auxilioId))
-            .forEach(auxilio -> credores.add(new CredorResponse(aluno, estudante.getDadosBancarios(), auxilio)));
+            .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
         }
 
     return credores;
