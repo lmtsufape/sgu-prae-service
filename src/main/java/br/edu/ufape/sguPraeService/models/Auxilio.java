@@ -17,7 +17,7 @@ public class Auxilio {
     private Long id;
 
     @OneToOne
-    private TipoBolsa tipoBolsa;
+    private TipoAuxilio tipoAuxilio;
 
     private int horasBolsa;
     private LocalDate inicioBolsa;

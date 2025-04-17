@@ -500,5 +500,11 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         auxilioService.deletar(id);
     }
 
+    public List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException {
+        return auxilioService.listarPagosPorMes();
+    }
 
+    public List<Auxilio> listarAuxiliosPorTipo(Long tipoId) throws AuxilioNotFoundException {
+        return auxilioService.listarPorTipo(tipoId);
+    }
 }

@@ -37,5 +37,15 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
         auxilio.setAtivo(false);
         auxilioRepository.save(auxilio);
     }
+
+    @Override
+    public List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException {
+        return auxilioRepository.findByAtivoTrue();
+    }
+
+    @Override
+    public List<Auxilio> listarPorTipo(Long tipoId) throws AuxilioNotFoundException {
+        return auxilioRepository.findByTipoAuxilioId(tipoId);
+    }
 }
 

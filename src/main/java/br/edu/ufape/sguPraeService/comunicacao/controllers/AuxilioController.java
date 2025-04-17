@@ -48,4 +48,25 @@ public class AuxilioController {
         fachada.deletarAuxilio(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/pagos")
+    public ResponseEntity<List<AuxilioResponse>> listarPagosPorMes() throws AuxilioNotFoundException {
+        List<Auxilio> auxilios = fachada.listarPagosPorMes();
+        return ResponseEntity.ok(
+                auxilios.stream()
+                        .map(aux -> new AuxilioResponse(aux, modelMapper))
+                        .toList()
+        );
+    }
+
+    @GetMapping("/tipo/{id}")
+    public ResponseEntity<List<AuxilioResponse>> listarPorTipo(@PathVariable Long id) throws AuxilioNotFoundException {
+        List<Auxilio> auxilios = fachada.listarAuxiliosPorTipo(id);
+        return ResponseEntity.ok(
+                auxilios.stream()
+                        .map(aux -> new AuxilioResponse(aux, modelMapper))
+                        .toList()
+        );
+    }
+
 }
