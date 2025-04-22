@@ -196,6 +196,12 @@ public class Fachada {
         return credores;
     }
 
+    public List<AlunoResponse> listarCredoresParaPublicacao() {
+        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
+        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+        return authServiceHandler.buscarAlunos(userIds);
+    }
+
     public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
         List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
         List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();

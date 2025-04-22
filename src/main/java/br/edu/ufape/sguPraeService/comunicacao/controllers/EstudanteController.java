@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.comunicacao.controllers;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.PublicacaoResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
@@ -69,6 +70,11 @@ public class EstudanteController {
         return ResponseEntity.ok(credores);
     }
 
+    @GetMapping("/credores/publicacao")
+    public ResponseEntity<List<PublicacaoResponse>> listarCrediresParaPublicacao() {
+        List<PublicacaoResponse> publicacoes = fachada.listarCredoresParaPublicacao().stream().map(alunoResponse -> new PublicacaoResponse(alunoResponse, modelMapper)).toList();
+        return ResponseEntity.ok(publicacoes);
+    }
     @GetMapping("/credores/curso/{id}")
     List<CredorResponse> listarCredoresPorCurso(@PathVariable Long id) {
         return fachada.listarCredoresPorCurso(id);
