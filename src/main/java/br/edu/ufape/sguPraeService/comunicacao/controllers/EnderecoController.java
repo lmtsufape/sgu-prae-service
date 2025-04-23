@@ -33,14 +33,14 @@ public class EnderecoController {
                 .collect(Collectors.toList());
     }
 
-    @PostMapping("/registrar")
+    @PostMapping
     public ResponseEntity<EnderecoResponse> criarEndereco(@RequestBody EnderecoRequest enderecoRequest) {
         Endereco endereco = enderecoRequest.convertToEntity(enderecoRequest, modelMapper);
         Endereco novoEndereco = fachada.criarEndereco(endereco);
         return new ResponseEntity<>(new EnderecoResponse(novoEndereco, modelMapper), HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}/editar")
+    @PatchMapping("/{id}")
     public ResponseEntity<EnderecoResponse> editarEndereco(@PathVariable Long id, @RequestBody EnderecoRequest enderecoRequest) {
         Endereco endereco = enderecoRequest.convertToEntity(enderecoRequest, modelMapper);
         Endereco enderecoAtualizado = fachada.editarEndereco(id, endereco);
@@ -50,7 +50,7 @@ public class EnderecoController {
         return new ResponseEntity<>(new EnderecoResponse(enderecoAtualizado, modelMapper), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}/deletar")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluirEndereco(@PathVariable Long id) {
         fachada.excluirEndereco(id);
         return ResponseEntity.noContent().build();
