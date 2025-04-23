@@ -37,14 +37,14 @@ public class TipoEtniaController {
                 .collect(Collectors.toList());
     }
 
-    @PostMapping("registrar")
+    @PostMapping
     public ResponseEntity<TipoEtniaResponse> criarTipoEtnia(@RequestBody TipoEtniaRequest tipoEtniaRequest) {
         TipoEtnia tipoEtnia = tipoEtniaRequest.convertToEntity(tipoEtniaRequest, modelMapper);
         TipoEtnia novoTipoEtnia = fachada.salvarTipoEtnia(tipoEtnia);
         return new ResponseEntity<>(new TipoEtniaResponse(novoTipoEtnia, modelMapper), HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}/editar")
+    @PatchMapping("/{id}")
     public ResponseEntity<TipoEtniaResponse> atualizarTipoEtnia(@PathVariable Long id, @RequestBody TipoEtniaRequest tipoEtniaRequest) throws TipoEtniaNotFoundException {
         TipoEtnia tipoEtnia = tipoEtniaRequest.convertToEntity(tipoEtniaRequest, modelMapper);
         TipoEtnia tipoEtniaAtualizado = fachada.atualizarTipoEtnia(id, tipoEtnia);
@@ -54,7 +54,7 @@ public class TipoEtniaController {
         return new ResponseEntity<>(new TipoEtniaResponse(tipoEtniaAtualizado, modelMapper), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}/deletar")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarTipoEtnia(@PathVariable Long id) throws TipoEtniaNotFoundException {
         fachada.deletarTipoEtnia(id);
         return ResponseEntity.noContent().build();
