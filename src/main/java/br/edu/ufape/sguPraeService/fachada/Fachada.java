@@ -5,6 +5,8 @@ import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioAuxilioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteAssistidoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
@@ -240,6 +242,39 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
 
     return credores;
     }
+
+    public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId) throws EstudanteNotFoundException {
+        Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+
+        if (estudante == null) {
+            throw new EstudanteNotFoundException();
+        }
+
+        if (estudante.getAuxilios() == null || estudante.getAuxilios().stream().noneMatch(Auxilio::isAtivo)) {
+            throw new EstudanteSemAuxilioAtivoException();
+        }
+
+        List<RelatorioAuxilioResponse> auxilios = estudante.getAuxilios().stream()
+                .filter(Auxilio::isAtivo)
+                .map(auxilio -> new RelatorioAuxilioResponse(
+                        auxilio.getTipoAuxilio().getTipo(),
+                        auxilio.getValorBolsa(),
+                        auxilio.getInicioBolsa(),
+                        auxilio.getFimBolsa()
+                ))
+                .collect(Collectors.toList());
+
+        return new RelatorioEstudanteAssistidoResponse(
+                null,
+                estudante.getRendaPercapta(),
+                estudante.getContatoFamilia(),
+                estudante.isDeficiente(),
+                estudante.getTipoDeficiencia(),
+                estudante.getTipoEtnia() != null ? estudante.getTipoEtnia().getTipo() : null,
+                auxilios
+        );
+    }
+
 
     // ================== TipoEtnia  ================== //
 
