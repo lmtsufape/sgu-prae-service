@@ -1,27 +1,14 @@
 package br.edu.ufape.sguPraeService.fachada;
 
 
-import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
-import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.*;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.*;
-import br.edu.ufape.sguPraeService.models.*;
-import br.edu.ufape.sguPraeService.servicos.interfaces.*;
-import br.edu.ufape.sguPraeService.models.Cronograma;
-import br.edu.ufape.sguPraeService.models.Profissional;
-import br.edu.ufape.sguPraeService.models.TipoAtendimento;
-import br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +16,60 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
+import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
+import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
+import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EnderecoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.VagaNotFoundException;
+import br.edu.ufape.sguPraeService.models.Agendamento;
+import br.edu.ufape.sguPraeService.models.Auxilio;
+import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
+import br.edu.ufape.sguPraeService.models.Cronograma;
+import br.edu.ufape.sguPraeService.models.DadosBancarios;
+import br.edu.ufape.sguPraeService.models.Endereco;
+import br.edu.ufape.sguPraeService.models.Estudante;
+import br.edu.ufape.sguPraeService.models.Pagamento;
+import br.edu.ufape.sguPraeService.models.Profissional;
+import br.edu.ufape.sguPraeService.models.TipoAtendimento;
+import br.edu.ufape.sguPraeService.models.TipoAuxilio;
+import br.edu.ufape.sguPraeService.models.TipoBolsa;
+import br.edu.ufape.sguPraeService.models.TipoEtnia;
+import br.edu.ufape.sguPraeService.models.Vaga;
+import br.edu.ufape.sguPraeService.servicos.interfaces.AgendamentoService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
+import br.edu.ufape.sguPraeService.servicos.interfaces.AuxilioService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.DadosBancariosService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.EnderecoService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.EstudanteService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAuxilioService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.TipoBolsaService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.TipoEtniaService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 
 @Component @RequiredArgsConstructor
@@ -53,6 +91,7 @@ public class Fachada {
     private final TipoBolsaService tipoBolsaService;
     private final TipoAuxilioService tipoAuxilioService;
     private final AuxilioService auxilioService;
+    private final PagamentoService pagamentoService;
 
 
     @Value("${authClient.client-id}")
@@ -489,22 +528,74 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     public List<Auxilio> listarAuxilios() {
         return auxilioService.listar();
     }
+    
+    public List<Auxilio> listarAuxiliosPorEstudanteId(Long estudanteId) throws EstudanteNotFoundException {
+        return estudanteService.buscarEstudante(estudanteId).getAuxilios();
+    }
 
     public Auxilio buscarAuxilio(Long id) throws AuxilioNotFoundException {
         return auxilioService.buscar(id);
     }
 
-    public Auxilio salvarAuxilio(Auxilio auxilio) {
-        return auxilioService.salvar(auxilio);
+    public Auxilio salvarAuxilio(Auxilio auxilio, Long estudanteId) throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
+    	Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+    	auxilio.setId(null);
+    	TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
+    	auxilio.setTipoAuxilio(tipoAuxilio);
+    	TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
+    	auxilio.setTipoBolsa(tipoBolsa);
+    	auxilio.setTipoAuxilio(buscarTipoAuxilio(estudanteId));
+    	auxilio = auxilioService.salvar(auxilio);
+    	estudante.addAuxilio(auxilio);
+    	estudanteService.atualizarEstudante(estudante, estudante);
+        return auxilio;
     }
 
-    public Auxilio editarAuxilio(Long id, Auxilio auxilio) throws AuxilioNotFoundException {
-        return auxilioService.editar(id, auxilio);
+    public Auxilio editarAuxilio(Long id, Auxilio auxilio) throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
+    	Auxilio aux = buscarAuxilio(id);
+    	auxilio.setId(id);
+    	auxilio.getTermo().setId(aux.getTermo().getId());
+ 
+    	TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
+    	auxilio.setTipoAuxilio(tipoAuxilio);
+    	
+    	TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
+    	auxilio.setTipoBolsa(tipoBolsa);
+    	
+    	return auxilioService.editar(id, auxilio);
     }
 
     public void deletarAuxilio(Long id) throws AuxilioNotFoundException {
         auxilioService.deletar(id);
     }
+    
+ // ------------------- Pagamento ------------------- //
+    public List<Pagamento> listarPagamentos() {
+        return pagamentoService.listar();
+    }
+    
+    public List<Pagamento> listarPagamentosPorAuxilioId(Long auxilioId) throws AuxilioNotFoundException {
+        return auxilioService.buscar(auxilioId).getPagamentos();
+    }
 
+    public Pagamento buscarPagamento(Long id) throws PagamentoNotFoundException {
+        return pagamentoService.buscar(id);
+    }
 
+    public Pagamento salvarPagamento(Long auxilioId, Pagamento pagamento) throws AuxilioNotFoundException {
+    	pagamento.setId(null);
+    	pagamento = pagamentoService.salvar(pagamento);
+    	Auxilio auxilio = buscarAuxilio(auxilioId);
+    	auxilio.addPagamento(pagamento);
+    	auxilioService.editar(auxilioId, auxilio);
+    	return pagamento;
+    }
+
+    public Pagamento editarPagamento(Long id, Pagamento pagamento) throws PagamentoNotFoundException {
+        return pagamentoService.editar(id, pagamento);
+    }
+
+    public void deletarPagamento(Long id) throws PagamentoNotFoundException {
+        pagamentoService.deletar(id);
+    }
 }

@@ -1,13 +1,22 @@
 package br.edu.ufape.sguPraeService.models;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
@@ -16,7 +25,10 @@ public class Auxilio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne
+    private TipoAuxilio tipoAuxilio;
+    
+    @ManyToOne(optional = true)
     private TipoBolsa tipoBolsa;
 
     private int horasBolsa;
@@ -27,7 +39,13 @@ public class Auxilio {
     private boolean status = true;
     private boolean ativo = true;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Documento termo;
-
+    
+    @OneToMany
+    private List<Pagamento> pagamentos= new ArrayList<>();
+    
+    public void addPagamento(Pagamento pagamento) {
+    	pagamentos.add(pagamento);
+    }
 }

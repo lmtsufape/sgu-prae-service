@@ -22,7 +22,7 @@ public class TipoAuxilioService implements br.edu.ufape.sguPraeService.servicos.
     }
 
     @Override
-    public TipoAuxilio salvar(TipoAuxilio entity) { return this.modelMapper.map(entity, TipoAuxilio.class); }
+    public TipoAuxilio salvar(TipoAuxilio entity) { return tipoAuxilioRepository.save(entity); }
 
     @Override
     public TipoAuxilio editar(Long id, TipoAuxilio entity) throws TipoAuxilioNotFoundException {
