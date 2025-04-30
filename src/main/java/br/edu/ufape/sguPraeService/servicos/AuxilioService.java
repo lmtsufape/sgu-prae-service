@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+
 import java.util.List;
 
 @Service
@@ -47,21 +44,4 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 		auxilio.setAtivo(false);
 		auxilioRepository.save(auxilio);
 	}
-
-	@Override
-    public BigDecimal calcularValorProporcional(Auxilio auxilio, LocalDate inicio, LocalDate fim) {
-        LocalDate dataInicio = auxilio.getInicioBolsa().isBefore(inicio) ? inicio : auxilio.getInicioBolsa();
-        LocalDate dataFim = auxilio.getFimBolsa().isAfter(fim) ? fim : auxilio.getFimBolsa();
-
-        if (dataInicio.isAfter(dataFim)) {
-            return BigDecimal.ZERO;
-        }
-
-        long diasNoPeriodo = ChronoUnit.DAYS.between(dataInicio, dataFim.plusDays(1));
-        long diasTotais = ChronoUnit.DAYS.between(auxilio.getInicioBolsa(), auxilio.getFimBolsa().plusDays(1));
-
-        return auxilio.getValorBolsa()
-                .multiply(BigDecimal.valueOf(diasNoPeriodo))
-                .divide(BigDecimal.valueOf(diasTotais), RoundingMode.HALF_UP);
-    }
 }

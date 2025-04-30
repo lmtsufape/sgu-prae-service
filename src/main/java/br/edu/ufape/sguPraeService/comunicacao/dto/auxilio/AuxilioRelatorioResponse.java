@@ -11,6 +11,8 @@ import java.util.List;
 public class AuxilioRelatorioResponse {
     private Long auxilioId;
     private String descricaoBolsa;
+    private BigDecimal valorBolsa;
+    private List<PagamentoRelatorioResponse> pagamentos;
     private BigDecimal totalGasto;
     private List<EstudanteRelatorioResponse> estudantes;
 }

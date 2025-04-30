@@ -63,7 +63,7 @@ public class AuxilioController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/relatorio-financeiro")
+    @GetMapping("/relatorio/financeiro")
     public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
             @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate inicio,
             @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fim) {

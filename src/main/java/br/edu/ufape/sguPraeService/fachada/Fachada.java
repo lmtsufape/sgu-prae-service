@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.AuxilioRelatorioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.EstudanteRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.PagamentoRelatorioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.RelatorioFinanceiroResponse;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -581,18 +582,30 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
                     && !aux.getInicioBolsa().isAfter(fim)
                     && !aux.getFimBolsa().isBefore(inicio))
             .toList();
+
     List<AuxilioRelatorioResponse> detalhes = new ArrayList<>();
     BigDecimal totalGeral = BigDecimal.ZERO;
 
     for (Auxilio auxilio : auxilios) {
         List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilio.getId());
         List<EstudanteRelatorioResponse> estudantesDto = new ArrayList<>();
-        BigDecimal totalAuxilio = BigDecimal.ZERO;
+
+        List<Pagamento> pagamentosFiltrados = auxilio.getPagamentos().stream()
+    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+    .toList();
+
+        BigDecimal totalAuxilio = auxilio.getPagamentos().stream()
+    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+    .map(Pagamento::getValor)
+    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<PagamentoRelatorioResponse> pagamentosDto = pagamentosFiltrados.stream()
+    .map(p -> new PagamentoRelatorioResponse(p.getValor(), p.getData()))
+    .toList();
 
         for (Estudante estudante : estudantes) {
             var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
-            BigDecimal valor = auxilioService.calcularValorProporcional(auxilio, inicio, fim);
-            totalAuxilio = totalAuxilio.add(valor);
+
             estudantesDto.add(new EstudanteRelatorioResponse(
                     aluno.getNome(),
                     aluno.getCpf(),
@@ -606,13 +619,15 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         detalhes.add(new AuxilioRelatorioResponse(
                 auxilio.getId(),
                 auxilio.getTipoBolsa().getDescricao(),
+                auxilio.getValorBolsa(),
+                pagamentosDto,
                 totalAuxilio,
                 estudantesDto
         ));
     }
     return new RelatorioFinanceiroResponse(detalhes, totalGeral);
-    }
-    
+}
+
  // ------------------- Pagamento ------------------- //
     public List<Pagamento> listarPagamentos() {
         return pagamentoService.listar();
