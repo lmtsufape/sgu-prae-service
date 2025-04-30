@@ -42,12 +42,6 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 		auxilio.setAtivo(false);
 		auxilioRepository.save(auxilio);
 	}
-    @Override
-    public void deletar(Long id) throws AuxilioNotFoundException {
-        Auxilio auxilio = buscar(id);
-        auxilio.setAtivo(false);
-        auxilioRepository.save(auxilio);
-    }
 
     @Override
     public List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException {
