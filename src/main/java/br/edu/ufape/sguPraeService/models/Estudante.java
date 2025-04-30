@@ -12,7 +12,6 @@ import java.util.UUID;
 
 @Entity
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-
 public class Estudante{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,4 +38,8 @@ public class Estudante{
                          inverseJoinColumns = @JoinColumn(name = "auxilio_id")
     )
     private List<Auxilio> auxilios;
+    
+    public void addAuxilio(Auxilio auxilio) {
+    	this.auxilios.add(auxilio);
+    }
 }

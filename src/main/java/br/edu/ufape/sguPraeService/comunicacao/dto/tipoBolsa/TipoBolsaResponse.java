@@ -3,10 +3,11 @@ package br.edu.ufape.sguPraeService.comunicacao.dto.tipoBolsa;
 import br.edu.ufape.sguPraeService.models.TipoBolsa;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
 
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor
 public class TipoBolsaResponse {
 
     Long id;

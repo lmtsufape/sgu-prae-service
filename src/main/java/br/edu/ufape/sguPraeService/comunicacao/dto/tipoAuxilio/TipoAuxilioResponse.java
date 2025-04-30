@@ -1,11 +1,12 @@
 package br.edu.ufape.sguPraeService.comunicacao.dto.tipoAuxilio;
 import br.edu.ufape.sguPraeService.models.TipoAuxilio;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
 import java.math.BigDecimal;
 
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor
 public class TipoAuxilioResponse {
 
     Long id;
