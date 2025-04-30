@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import br.edu.ufape.sguPraeService.exceptions.*;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,11 +26,6 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteA
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
-import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
