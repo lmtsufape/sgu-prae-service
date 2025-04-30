@@ -363,8 +363,12 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
 
     // ================== Dados Bancarios  ================== //
 
-    public DadosBancarios salvarDadosBancarios(DadosBancarios dadosBancarios) {
-        return dadosBancariosService.salvarDadosBancarios(dadosBancarios);
+    public DadosBancarios salvarDadosBancarios(Long idEstudante, DadosBancarios dadosBancarios) {
+        Estudante estudante = estudanteService.buscarEstudante(idEstudante);
+        DadosBancarios salvo = dadosBancariosService.salvarDadosBancarios(dadosBancarios);
+        estudante.setDadosBancarios(salvo);
+        estudanteService.salvarEstudante(estudante);
+        return salvo;
     }
 
     public List<DadosBancarios> listarDadosBancarios() {

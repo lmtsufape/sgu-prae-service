@@ -9,7 +9,6 @@ import org.modelmapper.ModelMapper;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class DadosBancariosRequest {
-    private Long id;
     private String nomeTitular;
     private String conta;
     private String agencia;
