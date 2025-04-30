@@ -41,7 +41,7 @@ public class DadosBancariosController {
     @PostMapping("/registrar")
     public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@RequestParam Long idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
-        DadosBancarios novoDadosBancarios = fachada.salvarDadosBancarios(dadosBancarios);
+        DadosBancarios novoDadosBancarios = fachada.salvarDadosBancarios(idEstudante, dadosBancarios);
         return new ResponseEntity<>(new DadosBancariosResponse(novoDadosBancarios, modelMapper), HttpStatus.CREATED);
     }
 
