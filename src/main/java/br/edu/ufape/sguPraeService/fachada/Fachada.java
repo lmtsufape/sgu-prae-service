@@ -299,8 +299,10 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
                 ))
                 .collect(Collectors.toList());
 
+        var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
+
         return new RelatorioEstudanteAssistidoResponse(
-                null,
+                aluno.getNome(),
                 estudante.getRendaPercapta(),
                 estudante.getContatoFamilia(),
                 estudante.isDeficiente(),
@@ -337,25 +339,25 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
 
     // ================== Endereco  ================== //
 
-    public List<Endereco> listarEnderecos() {
-        return enderecoService.listarEnderecos();
-    }
-
-    public Endereco buscarEndereco(Long id) {
-        try {
-            return enderecoService.buscarEndereco(id);
-        } catch (EnderecoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Endereco criarEndereco(Endereco endereco) {
-        return enderecoService.criarEndereco(endereco);
-    }
-
-    public void excluirEndereco(Long id) {
-        enderecoService.excluirEndereco(id);
-    }
+//    public List<Endereco> listarEnderecos() {
+//        return enderecoService.listarEnderecos();
+//    }
+//
+//    public Endereco buscarEndereco(Long id) {
+//        try {
+//            return enderecoService.buscarEndereco(id);
+//        } catch (EnderecoNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    public Endereco criarEndereco(Endereco endereco) {
+//        return enderecoService.criarEndereco(endereco);
+//    }
+//
+//    public void excluirEndereco(Long id) {
+//        enderecoService.excluirEndereco(id);
+//    }
 
     public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {
         return enderecoService.editarEndereco(id, enderecoAtualizado);
