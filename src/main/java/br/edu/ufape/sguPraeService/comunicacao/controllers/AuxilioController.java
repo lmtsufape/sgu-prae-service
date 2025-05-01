@@ -1,4 +1,5 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.RelatorioFinanceiroResponse;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Auxilio;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.AuxilioResponse;
@@ -9,10 +10,13 @@ import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 
@@ -59,6 +63,7 @@ public class AuxilioController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+
     @GetMapping("/pagos")
     public ResponseEntity<List<AuxilioResponse>> listarPagosPorMes() throws AuxilioNotFoundException {
         List<Auxilio> auxilios = fachada.listarPagosPorMes();
@@ -79,4 +84,11 @@ public class AuxilioController {
         );
     }
 
+    @GetMapping("/relatorio/financeiro")
+    public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate inicio,
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fim) {
+        RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(inicio, fim);
+        return ResponseEntity.ok(relatorio);
+    }
 }

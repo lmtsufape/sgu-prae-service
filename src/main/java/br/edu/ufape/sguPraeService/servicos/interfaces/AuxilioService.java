@@ -2,6 +2,7 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
 import br.edu.ufape.sguPraeService.models.Auxilio;
+
 import java.util.List;
 
 public interface AuxilioService {
@@ -18,4 +19,5 @@ public interface AuxilioService {
     List<Auxilio> listarPorTipo(Long tipoId) throws AuxilioNotFoundException;
 
     List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException;
+
 }
