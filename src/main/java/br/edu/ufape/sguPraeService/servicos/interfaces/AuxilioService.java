@@ -2,6 +2,7 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
 import br.edu.ufape.sguPraeService.models.Auxilio;
+
 import java.util.List;
 
 public interface AuxilioService {
@@ -14,4 +15,5 @@ public interface AuxilioService {
     Auxilio editar(Long id, Auxilio entity) throws AuxilioNotFoundException;
 
     void deletar(Long id) throws AuxilioNotFoundException;
+
 }

@@ -1,6 +1,8 @@
 package br.edu.ufape.sguPraeService.fachada;
 
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,10 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.AuxilioRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.EstudanteRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.PagamentoRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.RelatorioFinanceiroResponse;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -568,7 +574,60 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     public void deletarAuxilio(Long id) throws AuxilioNotFoundException {
         auxilioService.deletar(id);
     }
-    
+
+    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
+    List<Auxilio> auxilios = auxilioService
+            .listar().stream()
+            .filter(aux -> aux.isAtivo() && aux.isStatus()
+                    && !aux.getInicioBolsa().isAfter(fim)
+                    && !aux.getFimBolsa().isBefore(inicio))
+            .toList();
+
+    List<AuxilioRelatorioResponse> detalhes = new ArrayList<>();
+    BigDecimal totalGeral = BigDecimal.ZERO;
+
+    for (Auxilio auxilio : auxilios) {
+        List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilio.getId());
+        List<EstudanteRelatorioResponse> estudantesDto = new ArrayList<>();
+
+        List<Pagamento> pagamentosFiltrados = auxilio.getPagamentos().stream()
+    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+    .toList();
+
+        BigDecimal totalAuxilio = auxilio.getPagamentos().stream()
+    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+    .map(Pagamento::getValor)
+    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<PagamentoRelatorioResponse> pagamentosDto = pagamentosFiltrados.stream()
+    .map(p -> new PagamentoRelatorioResponse(p.getValor(), p.getData()))
+    .toList();
+
+        for (Estudante estudante : estudantes) {
+            var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
+
+            estudantesDto.add(new EstudanteRelatorioResponse(
+                    aluno.getNome(),
+                    aluno.getCpf(),
+                    aluno.getMatricula(),
+                    aluno.getEmail(),
+                    aluno.getTelefone(),
+                    aluno.getCurso()
+            ));
+        }
+        totalGeral = totalGeral.add(totalAuxilio);
+        detalhes.add(new AuxilioRelatorioResponse(
+                auxilio.getId(),
+                auxilio.getTipoBolsa().getDescricao(),
+                auxilio.getValorBolsa(),
+                pagamentosDto,
+                totalAuxilio,
+                estudantesDto
+        ));
+    }
+    return new RelatorioFinanceiroResponse(detalhes, totalGeral);
+}
+
  // ------------------- Pagamento ------------------- //
     public List<Pagamento> listarPagamentos() {
         return pagamentoService.listar();
