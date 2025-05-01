@@ -16,25 +16,25 @@ public class EnderecoService implements br.edu.ufape.sguPraeService.servicos.int
     private final EnderecoRepository enderecoRepository;
     private final ModelMapper modelMapper;
 
-    @Override
-    public List<Endereco> listarEnderecos() {
-        return enderecoRepository.findAll();
-    }
-
-    @Override
-    public Endereco buscarEndereco(Long id) throws EnderecoNotFoundException {
-        return enderecoRepository.findById(id).orElseThrow(EnderecoNotFoundException::new);
-    }
-
-    @Override
-    public Endereco criarEndereco(Endereco endereco) {
-        return enderecoRepository.save(endereco);
-    }
-
-    @Override
-    public void excluirEndereco(Long id) {
-        enderecoRepository.deleteById(id);
-    }
+//    @Override
+//    public List<Endereco> listarEnderecos() {
+//        return enderecoRepository.findAll();
+//    }
+//
+//    @Override
+//    public Endereco buscarEndereco(Long id) throws EnderecoNotFoundException {
+//        return enderecoRepository.findById(id).orElseThrow(EnderecoNotFoundException::new);
+//    }
+//
+//    @Override
+//    public Endereco criarEndereco(Endereco endereco) {
+//        return enderecoRepository.save(endereco);
+//    }
+//
+//    @Override
+//    public void excluirEndereco(Long id) {
+//        enderecoRepository.deleteById(id);
+//    }
 
     @Override
     public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {

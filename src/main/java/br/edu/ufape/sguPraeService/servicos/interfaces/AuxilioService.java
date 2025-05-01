@@ -16,4 +16,8 @@ public interface AuxilioService {
 
     void deletar(Long id) throws AuxilioNotFoundException;
 
+    List<Auxilio> listarPorTipo(Long tipoId) throws AuxilioNotFoundException;
+
+    List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException;
+
 }

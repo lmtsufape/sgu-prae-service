@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,10 +37,11 @@ public class DadosBancariosController {
                 .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasRole('GESTOR')")
     @PostMapping("/registrar")
-    public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@RequestBody DadosBancariosRequest dadosBancariosRequest) {
+    public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@RequestParam Long idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
-        DadosBancarios novoDadosBancarios = fachada.salvarDadosBancarios(dadosBancarios);
+        DadosBancarios novoDadosBancarios = fachada.salvarDadosBancarios(idEstudante, dadosBancarios);
         return new ResponseEntity<>(new DadosBancariosResponse(novoDadosBancarios, modelMapper), HttpStatus.CREATED);
     }
 

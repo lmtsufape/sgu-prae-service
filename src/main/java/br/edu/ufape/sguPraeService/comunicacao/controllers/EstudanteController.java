@@ -1,9 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteRequest;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.PublicacaoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
@@ -79,4 +76,15 @@ public class EstudanteController {
     List<CredorResponse> listarCredoresPorCurso(@PathVariable Long id) {
         return fachada.listarCredoresPorCurso(id);
     }
+
+
+
+    @GetMapping("/{id}/relatorio")
+    public ResponseEntity<RelatorioEstudanteAssistidoResponse> gerarRelatorioAssistido(
+            @PathVariable Long id
+    ) throws EstudanteNotFoundException {
+        RelatorioEstudanteAssistidoResponse relatorio = fachada.gerarRelatorioEstudanteAssistido(id);
+        return ResponseEntity.ok(relatorio);
+    }
+
 }

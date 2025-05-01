@@ -11,6 +11,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+
+import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.AuxilioRelatorioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.EstudanteRelatorioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.PagamentoRelatorioResponse;
@@ -26,14 +28,11 @@ import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioAuxilioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteAssistidoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
-import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
@@ -286,6 +285,41 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     return credores;
     }
 
+    public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId) throws EstudanteNotFoundException {
+        Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+
+        if (estudante == null) {
+            throw new EstudanteNotFoundException();
+        }
+
+        if (estudante.getAuxilios() == null || estudante.getAuxilios().stream().noneMatch(Auxilio::isAtivo)) {
+            throw new EstudanteSemAuxilioAtivoException();
+        }
+
+        List<RelatorioAuxilioResponse> auxilios = estudante.getAuxilios().stream()
+                .filter(Auxilio::isAtivo)
+                .map(auxilio -> new RelatorioAuxilioResponse(
+                        auxilio.getTipoAuxilio().getTipo(),
+                        auxilio.getValorBolsa(),
+                        auxilio.getInicioBolsa(),
+                        auxilio.getFimBolsa()
+                ))
+                .collect(Collectors.toList());
+
+        var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
+
+        return new RelatorioEstudanteAssistidoResponse(
+                aluno.getNome(),
+                estudante.getRendaPercapta(),
+                estudante.getContatoFamilia(),
+                estudante.isDeficiente(),
+                estudante.getTipoDeficiencia(),
+                estudante.getTipoEtnia() != null ? estudante.getTipoEtnia().getTipo() : null,
+                auxilios
+        );
+    }
+
+
     // ================== TipoEtnia  ================== //
 
 
@@ -312,25 +346,25 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
 
     // ================== Endereco  ================== //
 
-    public List<Endereco> listarEnderecos() {
-        return enderecoService.listarEnderecos();
-    }
-
-    public Endereco buscarEndereco(Long id) {
-        try {
-            return enderecoService.buscarEndereco(id);
-        } catch (EnderecoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Endereco criarEndereco(Endereco endereco) {
-        return enderecoService.criarEndereco(endereco);
-    }
-
-    public void excluirEndereco(Long id) {
-        enderecoService.excluirEndereco(id);
-    }
+//    public List<Endereco> listarEnderecos() {
+//        return enderecoService.listarEnderecos();
+//    }
+//
+//    public Endereco buscarEndereco(Long id) {
+//        try {
+//            return enderecoService.buscarEndereco(id);
+//        } catch (EnderecoNotFoundException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    public Endereco criarEndereco(Endereco endereco) {
+//        return enderecoService.criarEndereco(endereco);
+//    }
+//
+//    public void excluirEndereco(Long id) {
+//        enderecoService.excluirEndereco(id);
+//    }
 
     public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {
         return enderecoService.editarEndereco(id, enderecoAtualizado);
@@ -338,8 +372,12 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
 
     // ================== Dados Bancarios  ================== //
 
-    public DadosBancarios salvarDadosBancarios(DadosBancarios dadosBancarios) {
-        return dadosBancariosService.salvarDadosBancarios(dadosBancarios);
+    public DadosBancarios salvarDadosBancarios(Long idEstudante, DadosBancarios dadosBancarios) {
+        Estudante estudante = estudanteService.buscarEstudante(idEstudante);
+        DadosBancarios salvo = dadosBancariosService.salvarDadosBancarios(dadosBancarios);
+        estudante.setDadosBancarios(salvo);
+        estudanteService.salvarEstudante(estudante);
+        return salvo;
     }
 
     public List<DadosBancarios> listarDadosBancarios() {
@@ -534,7 +572,7 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     public List<Auxilio> listarAuxilios() {
         return auxilioService.listar();
     }
-    
+
     public List<Auxilio> listarAuxiliosPorEstudanteId(Long estudanteId) throws EstudanteNotFoundException {
         return estudanteService.buscarEstudante(estudanteId).getAuxilios();
     }
@@ -561,19 +599,20 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     	Auxilio aux = buscarAuxilio(id);
     	auxilio.setId(id);
     	auxilio.getTermo().setId(aux.getTermo().getId());
- 
+
     	TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
     	auxilio.setTipoAuxilio(tipoAuxilio);
-    	
+
     	TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
     	auxilio.setTipoBolsa(tipoBolsa);
-    	
+
     	return auxilioService.editar(id, auxilio);
     }
 
     public void deletarAuxilio(Long id) throws AuxilioNotFoundException {
         auxilioService.deletar(id);
     }
+
 
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
     List<Auxilio> auxilios = auxilioService
@@ -632,15 +671,21 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     public List<Pagamento> listarPagamentos() {
         return pagamentoService.listar();
     }
-    
+
     public List<Pagamento> listarPagamentosPorAuxilioId(Long auxilioId) throws AuxilioNotFoundException {
         return auxilioService.buscar(auxilioId).getPagamentos();
     }
 
+    public List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException {
+        return auxilioService.listarPagosPorMes();
+    }
     public Pagamento buscarPagamento(Long id) throws PagamentoNotFoundException {
         return pagamentoService.buscar(id);
     }
 
+    public List<Auxilio> listarAuxiliosPorTipo(Long tipoId) throws AuxilioNotFoundException {
+        return auxilioService.listarPorTipo(tipoId);
+    }
     public Pagamento salvarPagamento(Long auxilioId, Pagamento pagamento) throws AuxilioNotFoundException {
     	pagamento.setId(null);
     	pagamento = pagamentoService.salvar(pagamento);
