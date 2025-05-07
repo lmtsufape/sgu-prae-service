@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -76,13 +77,13 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
     @Override
     public List<AlunoResponse> fallbackBuscarAlunos(List<UUID> userIds, Throwable t) {
         log.warn("Não foi possível buscar alunos com ids {} no AuthService", userIds, t);
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
     public List<AlunoResponse> fallbackBuscarAlunosPorCurso(Long idCurso, Throwable t) {
         log.warn("Não foi possível buscar alunos do curso com id {} no AuthService", idCurso, t);
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
@@ -100,6 +101,6 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
     @Override
     public List<FuncionarioResponse> fallbackBuscarTecnicos(UUID userId, Throwable t) {
         log.warn("Não foi possível buscar técnico com id {} no AuthService", userId, t);
-        return null;
+        return Collections.emptyList();
     }
 }

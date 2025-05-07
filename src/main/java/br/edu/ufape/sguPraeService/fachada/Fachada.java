@@ -17,9 +17,8 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.AuxilioRelatorioRespo
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.EstudanteRelatorioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.PagamentoRelatorioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.RelatorioFinanceiroResponse;
+import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
@@ -36,7 +35,6 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EnderecoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
@@ -76,7 +74,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-
+@Log4j2
 @Component @RequiredArgsConstructor
 public class Fachada {
     private final ProfissionalService profissionalService;
@@ -102,7 +100,6 @@ public class Fachada {
     @Value("${authClient.client-id}")
     private String clientId;
 
-    Logger logger = LoggerFactory.getLogger(Fachada.class);
 
 
     // ------------------- Profissional ------------------- //
@@ -111,7 +108,7 @@ public class Fachada {
         List<Profissional> profissionais = profissionalService.listar();
         if (profissionais.isEmpty()) { return profissionalResponse; }
         List<UUID> userIds = profissionais.stream().map(Profissional::getUserId).toList();
-        logger.info("Profissionals encontrados: {}", userIds);
+        log.info("Profissionals encontrados: {}", userIds);
         List<FuncionarioResponse> usuarios = authServiceHandler.buscarTecnicos(userIds);
         for (int i = 0; i < profissionais.size(); i++) {
             Profissional profissional = profissionais.get(i);
@@ -188,8 +185,11 @@ public class Fachada {
         List<UUID> userIds = estudantes.stream()
                 .map(Estudante::getUserId)
                 .toList();
-        logger.info("Estudantes encontrados: {}", userIds);
+        log.info("Estudantes encontrados: {}", userIds);
         List<AlunoResponse> usuarios = authServiceHandler.buscarAlunos(userIds);
+        if(usuarios.isEmpty()) {
+            return estudanteResponse;
+        }
         for (int i = 0; i < estudantes.size(); i++) {
             Estudante estudante = estudantes.get(i);
             AlunoResponse usuario = usuarios.get(i);
@@ -216,11 +216,31 @@ public class Fachada {
         estudanteService.deletarEstudante(id);
     }
 
+    public List<EstudanteResponse> listarEstudantesPorCurso(Long id) {
+        List<Estudante> estudantes = estudanteService.listarEstudantes();
+        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
+
+        Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
+                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
+
+        List<EstudanteResponse> estudantesNoCurso = new ArrayList<>();
+
+        for (Estudante estudante : estudantes) {
+            AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
+            if (aluno != null) {
+                EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+                estudanteResponse.setAluno(aluno);
+                estudantesNoCurso.add(estudanteResponse);
+            }
+        }
+
+        return estudantesNoCurso;
+    }
+
     public List<CredorResponse> listarCredoresPorCurso(Long id) {
         List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
         List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
 
-        // Mapeia alunos por ID para acesso rápido
         Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
@@ -266,24 +286,24 @@ public class Fachada {
         return credores;
     }
 
-public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
-    List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilioId);
-    List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-    List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+    public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
+        List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilioId);
+        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
 
-    List<CredorResponse> credores = new ArrayList<>();
-    for (int i = 0; i < estudantes.size(); i++) {
-        Estudante estudante = estudantes.get(i);
-        AlunoResponse aluno = alunos.get(i);
-        EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
-        estudanteResponse.setAluno(aluno);
-        estudante.getAuxilios().stream()
-            .filter(auxilio -> auxilio.getId().equals(auxilioId))
-            .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+        List<CredorResponse> credores = new ArrayList<>();
+        for (int i = 0; i < estudantes.size(); i++) {
+            Estudante estudante = estudantes.get(i);
+            AlunoResponse aluno = alunos.get(i);
+            EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+            estudanteResponse.setAluno(aluno);
+            estudante.getAuxilios().stream()
+                .filter(auxilio -> auxilio.getId().equals(auxilioId))
+                .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+            }
+
+        return credores;
         }
-
-    return credores;
-    }
 
     public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId) throws EstudanteNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
