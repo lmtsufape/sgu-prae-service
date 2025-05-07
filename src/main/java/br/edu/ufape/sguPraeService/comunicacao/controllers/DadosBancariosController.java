@@ -38,14 +38,14 @@ public class DadosBancariosController {
     }
 
     @PreAuthorize("hasRole('GESTOR')")
-    @PostMapping("/registrar")
+    @PostMapping
     public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@RequestParam Long idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
         DadosBancarios novoDadosBancarios = fachada.salvarDadosBancarios(idEstudante, dadosBancarios);
         return new ResponseEntity<>(new DadosBancariosResponse(novoDadosBancarios, modelMapper), HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}/editar")
+    @PatchMapping("/{id}")
     public ResponseEntity<DadosBancariosResponse> atualizarDadosBancarios(@PathVariable Long id, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
         DadosBancarios dadosBancariosAtualizados = fachada.atualizarDadosBancarios(id, dadosBancarios);
@@ -55,7 +55,7 @@ public class DadosBancariosController {
         return new ResponseEntity<>(new DadosBancariosResponse(dadosBancariosAtualizados, modelMapper), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}/deletar")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarDadosBancarios(@PathVariable Long id) {
         fachada.deletarDadosBancarios(id);
         return ResponseEntity.noContent().build();
