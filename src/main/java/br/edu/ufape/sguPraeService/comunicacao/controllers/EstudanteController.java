@@ -27,6 +27,11 @@ public class EstudanteController {
         return fachada.listarEstudantes();
     }
 
+    @GetMapping("/curso/{id}")
+    public List<EstudanteResponse> listarEstudantesPorCurso(@PathVariable Long id) {
+        return fachada.listarEstudantesPorCurso(id);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<EstudanteResponse> buscarEstudante(@PathVariable Long id) throws EstudanteNotFoundException {
         return ResponseEntity.ok(fachada.buscarEstudante(id));
