@@ -46,7 +46,6 @@ import br.edu.ufape.sguPraeService.models.Auxilio;
 import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
 import br.edu.ufape.sguPraeService.models.Cronograma;
 import br.edu.ufape.sguPraeService.models.DadosBancarios;
-import br.edu.ufape.sguPraeService.models.Endereco;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import br.edu.ufape.sguPraeService.models.Profissional;
