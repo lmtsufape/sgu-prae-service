@@ -32,10 +32,13 @@ public class AuxilioController {
     public List<AuxilioResponse> listar() {
         return fachada.listarAuxilios().stream().map(auxilio -> new AuxilioResponse(auxilio, modelMapper)).toList();
     }
-    
+
     @GetMapping("/estudante/{estudanteId}")
-    public List<AuxilioResponse> listarPorEstudanteId(@PathVariable Long estudanteId) throws EstudanteNotFoundException{
-        return fachada.listarAuxilios().stream().map(auxilio -> new AuxilioResponse(auxilio, modelMapper)).toList();
+    public List<AuxilioResponse> listarPorEstudanteId(@PathVariable Long estudanteId) throws EstudanteNotFoundException {
+        return fachada.listarAuxiliosPorEstudanteId(estudanteId)
+                .stream()
+                .map(auxilio -> new AuxilioResponse(auxilio, modelMapper))
+                .toList();
     }
 
     @GetMapping("/{id}")

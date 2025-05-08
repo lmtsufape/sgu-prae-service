@@ -385,10 +385,10 @@ public class Fachada {
 //    public void excluirEndereco(Long id) {
 //        enderecoService.excluirEndereco(id);
 //    }
-
-    public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {
-        return enderecoService.editarEndereco(id, enderecoAtualizado);
-    }
+//
+//    public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {
+//        return enderecoService.editarEndereco(id, enderecoAtualizado);
+//    }
 
     // ================== Dados Bancarios  ================== //
 
@@ -586,6 +586,10 @@ public class Fachada {
 
     public void deletarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
         tipoAuxilioService.deletar(id);
+    }
+
+    public void desativarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
+        tipoAuxilioService.desativar(id);
     }
 
     // ------------------- Auxilio ------------------- //

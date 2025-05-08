@@ -34,6 +34,12 @@ public class TipoAuxilioService implements br.edu.ufape.sguPraeService.servicos.
     @Override
     public void deletar(Long id) throws TipoAuxilioNotFoundException {
         TipoAuxilio tipoAuxilio = buscar(id);
+        tipoAuxilioRepository.delete(tipoAuxilio);
+    }
+
+    @Override
+    public void desativar(Long id) throws TipoAuxilioNotFoundException {
+        TipoAuxilio tipoAuxilio = buscar(id);
         tipoAuxilio.setAtivo(false);
         tipoAuxilioRepository.save(tipoAuxilio);
     }
