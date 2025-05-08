@@ -49,7 +49,7 @@ public class TipoAuxilioController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("desativar/{id}")
     public ResponseEntity<Void> desativar(@PathVariable Long id) throws TipoAuxilioNotFoundException {
         fachada.desativarTipoAuxilio(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
