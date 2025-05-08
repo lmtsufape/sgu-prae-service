@@ -48,5 +48,11 @@ public class TipoBolsaController {
         fachada.deletarTipoBolsa(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PatchMapping("desativar/{id}")
+    public ResponseEntity<Void> desativar(@PathVariable Long id) throws TipoBolsaNotFoundException {
+        fachada.desativarTipoBolsa(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
 
