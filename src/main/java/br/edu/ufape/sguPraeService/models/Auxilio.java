@@ -25,7 +25,7 @@ public class Auxilio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = true)
     private TipoAuxilio tipoAuxilio;
     
     @ManyToOne(optional = true)

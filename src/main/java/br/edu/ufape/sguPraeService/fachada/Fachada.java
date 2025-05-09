@@ -1,6 +1,5 @@
 package br.edu.ufape.sguPraeService.fachada;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,8 +75,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-
-@Component @RequiredArgsConstructor
+@Component
+@RequiredArgsConstructor
 public class Fachada {
     private final ProfissionalService profissionalService;
     private final TipoAtendimentoService tipoAtendimentoService;
@@ -99,18 +98,18 @@ public class Fachada {
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
 
-
     @Value("${authClient.client-id}")
     private String clientId;
 
     Logger logger = LoggerFactory.getLogger(Fachada.class);
 
-
     // ------------------- Profissional ------------------- //
     public List<ProfissionalResponse> listarProfissionais() {
         List<ProfissionalResponse> profissionalResponse = new ArrayList<>();
         List<Profissional> profissionais = profissionalService.listar();
-        if (profissionais.isEmpty()) { return profissionalResponse; }
+        if (profissionais.isEmpty()) {
+            return profissionalResponse;
+        }
         List<UUID> userIds = profissionais.stream().map(Profissional::getUserId).toList();
         logger.info("Profissionals encontrados: {}", userIds);
         List<FuncionarioResponse> usuarios = authServiceHandler.buscarTecnicos(userIds);
@@ -156,7 +155,7 @@ public class Fachada {
         profissionalService.deletar(id);
     }
 
-    // ================== Estudante  ================== //
+    // ================== Estudante ================== //
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackSalvarEstudante")
     public EstudanteResponse salvarEstudante(Estudante estudante, Long tipoEtniaId) throws TipoEtniaNotFoundException {
@@ -200,12 +199,15 @@ public class Fachada {
         }
         return estudanteResponse;
     }
+
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
-    public EstudanteResponse atualizarEstudante(Estudante estudante, Long tipoEtniaId) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+    public EstudanteResponse atualizarEstudante(Estudante estudante, Long tipoEtniaId)
+            throws EstudanteNotFoundException, TipoEtniaNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
         estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
         Estudante velhoEstudante = estudanteService.buscarPorUserId(userId);
-        estudante.setEndereco(enderecoService.editarEndereco(velhoEstudante.getEndereco().getId(),estudante.getEndereco()));
+        estudante.setEndereco(
+                enderecoService.editarEndereco(velhoEstudante.getEndereco().getId(), estudante.getEndereco()));
         Estudante novoEstudante = estudanteService.atualizarEstudante(estudante, velhoEstudante);
         EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
         AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
@@ -234,7 +236,8 @@ public class Fachada {
                 estudanteResponse.setAluno(aluno);
                 estudante.getAuxilios().stream()
                         .filter(Auxilio::isAtivo)
-                        .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+                        .forEach(auxilio -> credores
+                                .add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
             }
         }
 
@@ -261,33 +264,34 @@ public class Fachada {
             estudanteResponse.setAluno(aluno);
             estudante.getAuxilios().stream()
                     .filter(Auxilio::isAtivo)
-                    .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+                    .forEach(auxilio -> credores
+                            .add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
         }
 
         return credores;
     }
 
-public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
-    List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilioId);
-    List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-    List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+    public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
+        List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilioId);
+        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
 
-    List<CredorResponse> credores = new ArrayList<>();
-    for (int i = 0; i < estudantes.size(); i++) {
-        Estudante estudante = estudantes.get(i);
-        AlunoResponse aluno = alunos.get(i);
-        EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
-        estudanteResponse.setAluno(aluno);
-        estudante.getAuxilios().stream()
-            .filter(auxilio -> auxilio.getId().equals(auxilioId))
-            .forEach(auxilio -> credores.add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
+        List<CredorResponse> credores = new ArrayList<>();
+        for (int i = 0; i < estudantes.size(); i++) {
+            Estudante estudante = estudantes.get(i);
+            AlunoResponse aluno = alunos.get(i);
+            EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+            estudanteResponse.setAluno(aluno);
+            estudante.getAuxilios().stream()
+                    .filter(auxilio -> auxilio.getId().equals(auxilioId))
+                    .forEach(auxilio -> credores
+                            .add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
         }
 
-    return credores;
+        return credores;
     }
 
-    // ================== TipoEtnia  ================== //
-
+    // ================== TipoEtnia ================== //
 
     public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
         return tipoEtniaService.salvarTipoEtnia(tipoEtnia);
@@ -309,8 +313,7 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         tipoEtniaService.deletarTipoEtnia(id);
     }
 
-
-    // ================== Endereco  ================== //
+    // ================== Endereco ================== //
 
     public List<Endereco> listarEnderecos() {
         return enderecoService.listarEnderecos();
@@ -336,7 +339,7 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         return enderecoService.editarEndereco(id, enderecoAtualizado);
     }
 
-    // ================== Dados Bancarios  ================== //
+    // ================== Dados Bancarios ================== //
 
     public DadosBancarios salvarDadosBancarios(DadosBancarios dadosBancarios) {
         return dadosBancariosService.salvarDadosBancarios(dadosBancarios);
@@ -358,7 +361,6 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         return dadosBancariosService.atualizarDadosBancarios(id, novosDadosBancarios);
     }
 
-
     // ------------------- TipoAtendimento ------------------- //
     public List<TipoAtendimento> listarTipoAtendimentos() {
         return tipoAtendimentoService.listar();
@@ -372,7 +374,8 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         return tipoAtendimentoService.salvar(tipoAtendimento);
     }
 
-    public TipoAtendimento editarTipoAtendimento(Long id, TipoAtendimento tipoAtendimento) throws TipoAtendimentoNotFoundException {
+    public TipoAtendimento editarTipoAtendimento(Long id, TipoAtendimento tipoAtendimento)
+            throws TipoAtendimentoNotFoundException {
         return tipoAtendimentoService.editar(id, tipoAtendimento);
     }
 
@@ -385,7 +388,7 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     }
 
     // ------------------- Cronograma ------------------- //
-    public List<Cronograma> listarCronogramasPorProfissional(){
+    public List<Cronograma> listarCronogramasPorProfissional() {
 
         return cronogramaService.listarPorProfissional(authenticatedUserProvider.getUserId());
     }
@@ -403,7 +406,8 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     }
 
     @Transactional
-    public Cronograma salvarCronograma(Cronograma cronograma, Long tipoAtendimentoId) throws TipoAtendimentoNotFoundException {
+    public Cronograma salvarCronograma(Cronograma cronograma, Long tipoAtendimentoId)
+            throws TipoAtendimentoNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
         TipoAtendimento tipoAtendimento = buscarTipoAtendimento(tipoAtendimentoId);
         Profissional profissional = profissionalService.buscarPorUserId(userId);
@@ -437,11 +441,12 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     }
 
     @Transactional
-    public CancelamentoAgendamento cancelarAgendamento(Long id, CancelamentoAgendamento cancelamento) throws AgendamentoNotFoundException {
+    public CancelamentoAgendamento cancelarAgendamento(Long id, CancelamentoAgendamento cancelamento)
+            throws AgendamentoNotFoundException {
         Agendamento agendamento = agendamentoService.buscar(id);
-        if(!Objects.equals(agendamento.getEstudante().getUserId(), authenticatedUserProvider.getUserId())
+        if (!Objects.equals(agendamento.getEstudante().getUserId(), authenticatedUserProvider.getUserId())
                 && !Objects.equals(agendamento.getVaga().getCronograma().getProfissional().getUserId(),
-                authenticatedUserProvider.getUserId())){
+                        authenticatedUserProvider.getUserId())) {
             throw new GlobalAccessDeniedException("Você não tem permissão para acessar este recurso");
         }
 
@@ -468,19 +473,19 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         return agendamentoService.listarPorProfissional(profissional);
     }
 
-    public List<Agendamento> listarAgendamentoPorEstudanteAtual(){
+    public List<Agendamento> listarAgendamentoPorEstudanteAtual() {
         return agendamentoService.listarAgendamentosEstudanteAtual();
     }
 
-    public List<Agendamento> listarAgendamentoPorProfissionalAtual(){
+    public List<Agendamento> listarAgendamentoPorProfissionalAtual() {
         return agendamentoService.listarPorProfissionalAtual();
     }
 
-    public List<CancelamentoAgendamento> listarCancelamentosPorEstudanteAtual(){
+    public List<CancelamentoAgendamento> listarCancelamentosPorEstudanteAtual() {
         return cancelamentoService.ListarPorEstudanteAtual();
     }
 
-    public List<CancelamentoAgendamento> listarCancelamentosPorProfissionalAtual(){
+    public List<CancelamentoAgendamento> listarCancelamentosPorProfissionalAtual() {
         return cancelamentoService.ListarPorProfissionalAtual();
     }
 
@@ -488,7 +493,7 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         return cancelamentoService.buscar(id);
     }
 
-  // ------------------- TipoBolsa ------------------- //
+    // ------------------- TipoBolsa ------------------- //
     public List<TipoBolsa> listarTipoBolsas() {
         return tipoBolsaService.listar();
     }
@@ -534,7 +539,7 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     public List<Auxilio> listarAuxilios() {
         return auxilioService.listar();
     }
-    
+
     public List<Auxilio> listarAuxiliosPorEstudanteId(Long estudanteId) throws EstudanteNotFoundException {
         return estudanteService.buscarEstudante(estudanteId).getAuxilios();
     }
@@ -543,56 +548,69 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         return auxilioService.buscar(id);
     }
 
-    public Auxilio salvarAuxilio(Long estudanteId, Auxilio auxilio, MultipartFile termo) throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
-    	Estudante estudante = estudanteService.buscarEstudante(estudanteId);
-    	auxilio.setId(null);
+    public Auxilio salvarAuxilio(Long estudanteId, Auxilio auxilio, MultipartFile termo)
+            throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
+        Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+        auxilio.setId(null);
 
-    	TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
-    	auxilio.setTipoAuxilio(tipoAuxilio);
+        if (auxilio.getTipoAuxilio() != null) {
+            TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
+            auxilio.setTipoAuxilio(tipoAuxilio);
+        }
 
-    	TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
-    	auxilio.setTipoBolsa(tipoBolsa);
-    	auxilio.setTipoAuxilio(buscarTipoAuxilio(estudanteId));
+        if (auxilio.getTipoBolsa() != null) {
+            TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
+            auxilio.setTipoBolsa(tipoBolsa);
+        }
 
-        MultipartFile[] arquivos = {termo};
+        MultipartFile[] arquivos = { termo };
         List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
         auxilio.setTermo(documentos.getFirst());
 
-    	auxilio = auxilioService.salvar(auxilio);
-        
-    	estudante.addAuxilio(auxilio);
-    	estudanteService.atualizarEstudante(estudante, estudante);
+        auxilio = auxilioService.salvar(auxilio);
+
+        estudante.addAuxilio(auxilio);
+        estudanteService.atualizarEstudante(estudante, estudante);
         return auxilio;
     }
 
-    public Auxilio editarAuxilio(Long id, Auxilio auxilio, MultipartFile termo) throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
-    	Auxilio aux = buscarAuxilio(id);
-    	auxilio.setId(id);
-    	auxilio.getTermo().setId(aux.getTermo().getId());
- 
-    	TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
-    	auxilio.setTipoAuxilio(tipoAuxilio);
-    	
-    	TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
-    	auxilio.setTipoBolsa(tipoBolsa);
+    public Auxilio editarAuxilio(Long id, Auxilio auxilio, MultipartFile termo)
+            throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
+        Auxilio aux = buscarAuxilio(id);
+        auxilio.setId(id);
         
-        MultipartFile[] arquivos = {termo};
-        List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
-        auxilio.setTermo(documentos.getFirst());
-    	auxilio = auxilioService.salvar(auxilio);
 
-    	return auxilioService.editar(id, auxilio);
+        if (auxilio.getTipoAuxilio() != null) {
+            TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
+            auxilio.setTipoAuxilio(tipoAuxilio);
+            auxilio.setTipoBolsa(null);
+        }
+
+        if (auxilio.getTipoBolsa() != null) {
+            TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
+            auxilio.setTipoBolsa(tipoBolsa);
+            auxilio.setTipoAuxilio(null);
+        }
+
+        if (termo != null) {
+            MultipartFile[] arquivos = { termo };
+            List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
+            auxilio.setTermo(documentos.getFirst());
+            auxilio.getTermo().setId(aux.getTermo().getId());
+        }
+
+        return auxilioService.editar(id, auxilio);
     }
 
     public void deletarAuxilio(Long id) throws AuxilioNotFoundException {
         auxilioService.deletar(id);
     }
-    
- // ------------------- Pagamento ------------------- //
+
+    // ------------------- Pagamento ------------------- //
     public List<Pagamento> listarPagamentos() {
         return pagamentoService.listar();
     }
-    
+
     public List<Pagamento> listarPagamentosPorAuxilioId(Long auxilioId) throws AuxilioNotFoundException {
         return auxilioService.buscar(auxilioId).getPagamentos();
     }
@@ -602,12 +620,12 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     }
 
     public Pagamento salvarPagamento(Long auxilioId, Pagamento pagamento) throws AuxilioNotFoundException {
-    	pagamento.setId(null);
-    	pagamento = pagamentoService.salvar(pagamento);
-    	Auxilio auxilio = buscarAuxilio(auxilioId);
-    	auxilio.addPagamento(pagamento);
-    	auxilioService.editar(auxilioId, auxilio);
-    	return pagamento;
+        pagamento.setId(null);
+        pagamento = pagamentoService.salvar(pagamento);
+        Auxilio auxilio = buscarAuxilio(auxilioId);
+        auxilio.addPagamento(pagamento);
+        auxilioService.editar(auxilioId, auxilio);
+        return pagamento;
     }
 
     public Pagamento editarPagamento(Long id, Pagamento pagamento) throws PagamentoNotFoundException {
@@ -618,7 +636,7 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         pagamentoService.deletar(id);
     }
 
-     // ------------------- Armazenamento ------------------- //
+    // ------------------- Armazenamento ------------------- //
 
     public List<Documento> salvarArquivo(MultipartFile[] arquivos) {
         return armazenamentoService.salvarArquivo(arquivos);
