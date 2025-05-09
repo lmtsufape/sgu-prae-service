@@ -15,4 +15,6 @@ public interface TipoBolsaService {
     TipoBolsa editar(Long id, TipoBolsa entity) throws TipoBolsaNotFoundException;
 
     void deletar(Long id) throws TipoBolsaNotFoundException;
+
+    void desativar(Long id) throws TipoBolsaNotFoundException;
 }
