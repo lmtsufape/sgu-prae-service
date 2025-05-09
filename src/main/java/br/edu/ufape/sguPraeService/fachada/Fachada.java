@@ -1,6 +1,8 @@
 package br.edu.ufape.sguPraeService.fachada;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +12,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
@@ -19,13 +19,20 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.AuxilioRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.EstudanteRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.PagamentoRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.RelatorioFinanceiroResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioAuxilioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteAssistidoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.EstudanteSemAuxilioAtivoException;
 import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
 import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
@@ -33,7 +40,6 @@ import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EnderecoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
@@ -46,7 +52,6 @@ import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
 import br.edu.ufape.sguPraeService.models.Cronograma;
 import br.edu.ufape.sguPraeService.models.DadosBancarios;
 import br.edu.ufape.sguPraeService.models.Documento;
-import br.edu.ufape.sguPraeService.models.Endereco;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import br.edu.ufape.sguPraeService.models.Profissional;
@@ -74,7 +79,9 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 @Component
 @RequiredArgsConstructor
 public class Fachada {
@@ -101,8 +108,6 @@ public class Fachada {
     @Value("${authClient.client-id}")
     private String clientId;
 
-    Logger logger = LoggerFactory.getLogger(Fachada.class);
-
     // ------------------- Profissional ------------------- //
     public List<ProfissionalResponse> listarProfissionais() {
         List<ProfissionalResponse> profissionalResponse = new ArrayList<>();
@@ -111,7 +116,7 @@ public class Fachada {
             return profissionalResponse;
         }
         List<UUID> userIds = profissionais.stream().map(Profissional::getUserId).toList();
-        logger.info("Profissionals encontrados: {}", userIds);
+        log.info("Profissionals encontrados: {}", userIds);
         List<FuncionarioResponse> usuarios = authServiceHandler.buscarTecnicos(userIds);
         for (int i = 0; i < profissionais.size(); i++) {
             Profissional profissional = profissionais.get(i);
@@ -188,8 +193,11 @@ public class Fachada {
         List<UUID> userIds = estudantes.stream()
                 .map(Estudante::getUserId)
                 .toList();
-        logger.info("Estudantes encontrados: {}", userIds);
+        log.info("Estudantes encontrados: {}", userIds);
         List<AlunoResponse> usuarios = authServiceHandler.buscarAlunos(userIds);
+        if (usuarios.isEmpty()) {
+            return estudanteResponse;
+        }
         for (int i = 0; i < estudantes.size(); i++) {
             Estudante estudante = estudantes.get(i);
             AlunoResponse usuario = usuarios.get(i);
@@ -219,11 +227,31 @@ public class Fachada {
         estudanteService.deletarEstudante(id);
     }
 
+    public List<EstudanteResponse> listarEstudantesPorCurso(Long id) {
+        List<Estudante> estudantes = estudanteService.listarEstudantes();
+        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
+
+        Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
+                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
+
+        List<EstudanteResponse> estudantesNoCurso = new ArrayList<>();
+
+        for (Estudante estudante : estudantes) {
+            AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
+            if (aluno != null) {
+                EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
+                estudanteResponse.setAluno(aluno);
+                estudantesNoCurso.add(estudanteResponse);
+            }
+        }
+
+        return estudantesNoCurso;
+    }
+
     public List<CredorResponse> listarCredoresPorCurso(Long id) {
         List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
         List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
 
-        // Mapeia alunos por ID para acesso rápido
         Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
@@ -282,13 +310,45 @@ public class Fachada {
             AlunoResponse aluno = alunos.get(i);
             EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
             estudanteResponse.setAluno(aluno);
-            estudante.getAuxilios().stream()
-                    .filter(auxilio -> auxilio.getId().equals(auxilioId))
+            estudante.getAuxilios().stream().filter(auxilio -> auxilio.getId().equals(auxilioId))
                     .forEach(auxilio -> credores
                             .add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
         }
 
         return credores;
+    }
+
+    public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId)
+            throws EstudanteNotFoundException {
+        Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+
+        if (estudante == null) {
+            throw new EstudanteNotFoundException();
+        }
+
+        if (estudante.getAuxilios() == null || estudante.getAuxilios().stream().noneMatch(Auxilio::isAtivo)) {
+            throw new EstudanteSemAuxilioAtivoException();
+        }
+
+        List<RelatorioAuxilioResponse> auxilios = estudante.getAuxilios().stream()
+                .filter(Auxilio::isAtivo)
+                .map(auxilio -> new RelatorioAuxilioResponse(
+                        auxilio.getTipoAuxilio().getTipo(),
+                        auxilio.getValorBolsa(),
+                        auxilio.getInicioBolsa(),
+                        auxilio.getFimBolsa()))
+                .collect(Collectors.toList());
+
+        var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
+
+        return new RelatorioEstudanteAssistidoResponse(
+                aluno.getNome(),
+                estudante.getRendaPercapta(),
+                estudante.getContatoFamilia(),
+                estudante.isDeficiente(),
+                estudante.getTipoDeficiencia(),
+                estudante.getTipoEtnia() != null ? estudante.getTipoEtnia().getTipo() : null,
+                auxilios);
     }
 
     // ================== TipoEtnia ================== //
@@ -315,34 +375,38 @@ public class Fachada {
 
     // ================== Endereco ================== //
 
-    public List<Endereco> listarEnderecos() {
-        return enderecoService.listarEnderecos();
-    }
-
-    public Endereco buscarEndereco(Long id) {
-        try {
-            return enderecoService.buscarEndereco(id);
-        } catch (EnderecoNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Endereco criarEndereco(Endereco endereco) {
-        return enderecoService.criarEndereco(endereco);
-    }
-
-    public void excluirEndereco(Long id) {
-        enderecoService.excluirEndereco(id);
-    }
-
-    public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {
-        return enderecoService.editarEndereco(id, enderecoAtualizado);
-    }
+    // public List<Endereco> listarEnderecos() {
+    // return enderecoService.listarEnderecos();
+    // }
+    //
+    // public Endereco buscarEndereco(Long id) {
+    // try {
+    // return enderecoService.buscarEndereco(id);
+    // } catch (EnderecoNotFoundException e) {
+    // throw new RuntimeException(e);
+    // }
+    // }
+    //
+    // public Endereco criarEndereco(Endereco endereco) {
+    // return enderecoService.criarEndereco(endereco);
+    // }
+    //
+    // public void excluirEndereco(Long id) {
+    // enderecoService.excluirEndereco(id);
+    // }
+    //
+    // public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {
+    // return enderecoService.editarEndereco(id, enderecoAtualizado);
+    // }
 
     // ================== Dados Bancarios ================== //
 
-    public DadosBancarios salvarDadosBancarios(DadosBancarios dadosBancarios) {
-        return dadosBancariosService.salvarDadosBancarios(dadosBancarios);
+    public DadosBancarios salvarDadosBancarios(Long idEstudante, DadosBancarios dadosBancarios) {
+        Estudante estudante = estudanteService.buscarEstudante(idEstudante);
+        DadosBancarios salvo = dadosBancariosService.salvarDadosBancarios(dadosBancarios);
+        estudante.setDadosBancarios(salvo);
+        estudanteService.salvarEstudante(estudante);
+        return salvo;
     }
 
     public List<DadosBancarios> listarDadosBancarios() {
@@ -535,6 +599,10 @@ public class Fachada {
         tipoAuxilioService.deletar(id);
     }
 
+    public void desativarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
+        tipoAuxilioService.desativar(id);
+    }
+
     // ------------------- Auxilio ------------------- //
     public List<Auxilio> listarAuxilios() {
         return auxilioService.listar();
@@ -578,7 +646,6 @@ public class Fachada {
             throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
         Auxilio aux = buscarAuxilio(id);
         auxilio.setId(id);
-        
 
         if (auxilio.getTipoAuxilio() != null) {
             TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
@@ -606,7 +673,59 @@ public class Fachada {
         auxilioService.deletar(id);
     }
 
+    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
+        List<Auxilio> auxilios = auxilioService
+                .listar().stream()
+                .filter(aux -> aux.isAtivo() && aux.isStatus()
+                        && !aux.getInicioBolsa().isAfter(fim)
+                        && !aux.getFimBolsa().isBefore(inicio))
+                .toList();
+
+        List<AuxilioRelatorioResponse> detalhes = new ArrayList<>();
+        BigDecimal totalGeral = BigDecimal.ZERO;
+
+        for (Auxilio auxilio : auxilios) {
+            List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilio.getId());
+            List<EstudanteRelatorioResponse> estudantesDto = new ArrayList<>();
+
+            List<Pagamento> pagamentosFiltrados = auxilio.getPagamentos().stream()
+                    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+                    .toList();
+
+            BigDecimal totalAuxilio = auxilio.getPagamentos().stream()
+                    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+                    .map(Pagamento::getValor)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            List<PagamentoRelatorioResponse> pagamentosDto = pagamentosFiltrados.stream()
+                    .map(p -> new PagamentoRelatorioResponse(p.getValor(), p.getData()))
+                    .toList();
+
+            for (Estudante estudante : estudantes) {
+                var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
+
+                estudantesDto.add(new EstudanteRelatorioResponse(
+                        aluno.getNome(),
+                        aluno.getCpf(),
+                        aluno.getMatricula(),
+                        aluno.getEmail(),
+                        aluno.getTelefone(),
+                        aluno.getCurso()));
+            }
+            totalGeral = totalGeral.add(totalAuxilio);
+            detalhes.add(new AuxilioRelatorioResponse(
+                    auxilio.getId(),
+                    auxilio.getTipoBolsa().getDescricao(),
+                    auxilio.getValorBolsa(),
+                    pagamentosDto,
+                    totalAuxilio,
+                    estudantesDto));
+        }
+        return new RelatorioFinanceiroResponse(detalhes, totalGeral);
+    }
+
     // ------------------- Pagamento ------------------- //
+
     public List<Pagamento> listarPagamentos() {
         return pagamentoService.listar();
     }
@@ -615,8 +734,16 @@ public class Fachada {
         return auxilioService.buscar(auxilioId).getPagamentos();
     }
 
+    public List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException {
+        return auxilioService.listarPagosPorMes();
+    }
+
     public Pagamento buscarPagamento(Long id) throws PagamentoNotFoundException {
         return pagamentoService.buscar(id);
+    }
+
+    public List<Auxilio> listarAuxiliosPorTipo(Long tipoId) throws AuxilioNotFoundException {
+        return auxilioService.listarPorTipo(tipoId);
     }
 
     public Pagamento salvarPagamento(Long auxilioId, Pagamento pagamento) throws AuxilioNotFoundException {

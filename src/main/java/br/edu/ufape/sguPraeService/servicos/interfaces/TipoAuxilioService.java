@@ -15,4 +15,6 @@ public interface TipoAuxilioService {
     TipoAuxilio editar(Long id, TipoAuxilio entity) throws TipoAuxilioNotFoundException;
 
     void deletar(Long id) throws TipoAuxilioNotFoundException;
+
+    void desativar(Long id) throws TipoAuxilioNotFoundException;
 }

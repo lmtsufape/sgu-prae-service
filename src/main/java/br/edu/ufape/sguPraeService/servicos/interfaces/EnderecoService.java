@@ -8,13 +8,13 @@ import java.util.List;
 
 public interface EnderecoService {
 
-    List<Endereco> listarEnderecos();
-
-    Endereco buscarEndereco(Long id) throws EnderecoNotFoundException;
-
-    Endereco criarEndereco(Endereco endereco);
-
-    void excluirEndereco(Long id);
+//    List<Endereco> listarEnderecos();
+//
+//    Endereco buscarEndereco(Long id) throws EnderecoNotFoundException;
+//
+//    Endereco criarEndereco(Endereco endereco);
+//
+//    void excluirEndereco(Long id);
 
     Endereco editarEndereco(Long id, Endereco enderecoAtualizado);
 }

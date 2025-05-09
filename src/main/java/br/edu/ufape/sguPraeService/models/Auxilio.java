@@ -27,7 +27,7 @@ public class Auxilio {
 
     @ManyToOne(optional = true)
     private TipoAuxilio tipoAuxilio;
-    
+
     @ManyToOne(optional = true)
     private TipoBolsa tipoBolsa;
 
@@ -41,10 +41,10 @@ public class Auxilio {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Documento termo;
-    
+
     @OneToMany
     private List<Pagamento> pagamentos= new ArrayList<>();
-    
+
     public void addPagamento(Pagamento pagamento) {
     	pagamentos.add(pagamento);
     }
