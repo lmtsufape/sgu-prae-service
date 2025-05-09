@@ -3,12 +3,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.web.multipart.MultipartFile;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoRequest;
 import br.edu.ufape.sguPraeService.models.Auxilio;
 import br.edu.ufape.sguPraeService.models.TipoAuxilio;
 import br.edu.ufape.sguPraeService.models.TipoBolsa;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -38,9 +37,8 @@ public class AuxilioRequest {
     @Positive(message = "Valor da bolsa inválido")
     private BigDecimal valorBolsa;
     
-    @Valid
     @NotNull(message="O termo não pode ser nulo")
-    private DocumentoRequest termo;
+    private MultipartFile termo;
     
     @NotNull(message = "O id do estudante é obrigatória")
     @Positive(message = "Id do estudante inválido")

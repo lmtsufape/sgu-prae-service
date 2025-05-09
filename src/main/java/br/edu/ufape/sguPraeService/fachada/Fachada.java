@@ -1,6 +1,7 @@
 package br.edu.ufape.sguPraeService.fachada;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
+import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
@@ -43,6 +46,7 @@ import br.edu.ufape.sguPraeService.models.Auxilio;
 import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
 import br.edu.ufape.sguPraeService.models.Cronograma;
 import br.edu.ufape.sguPraeService.models.DadosBancarios;
+import br.edu.ufape.sguPraeService.models.Documento;
 import br.edu.ufape.sguPraeService.models.Endereco;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import br.edu.ufape.sguPraeService.models.Pagamento;
@@ -53,6 +57,7 @@ import br.edu.ufape.sguPraeService.models.TipoBolsa;
 import br.edu.ufape.sguPraeService.models.TipoEtnia;
 import br.edu.ufape.sguPraeService.models.Vaga;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AgendamentoService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.ArmazenamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AuxilioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService;
@@ -92,6 +97,7 @@ public class Fachada {
     private final TipoAuxilioService tipoAuxilioService;
     private final AuxilioService auxilioService;
     private final PagamentoService pagamentoService;
+    private final ArmazenamentoService armazenamentoService;
 
 
     @Value("${authClient.client-id}")
@@ -537,21 +543,29 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
         return auxilioService.buscar(id);
     }
 
-    public Auxilio salvarAuxilio(Auxilio auxilio, Long estudanteId) throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
+    public Auxilio salvarAuxilio(Long estudanteId, Auxilio auxilio, MultipartFile termo) throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
     	Estudante estudante = estudanteService.buscarEstudante(estudanteId);
     	auxilio.setId(null);
+
     	TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
     	auxilio.setTipoAuxilio(tipoAuxilio);
+
     	TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
     	auxilio.setTipoBolsa(tipoBolsa);
     	auxilio.setTipoAuxilio(buscarTipoAuxilio(estudanteId));
+
+        MultipartFile[] arquivos = {termo};
+        List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
+        auxilio.setTermo(documentos.getFirst());
+
     	auxilio = auxilioService.salvar(auxilio);
+        
     	estudante.addAuxilio(auxilio);
     	estudanteService.atualizarEstudante(estudante, estudante);
         return auxilio;
     }
 
-    public Auxilio editarAuxilio(Long id, Auxilio auxilio) throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
+    public Auxilio editarAuxilio(Long id, Auxilio auxilio, MultipartFile termo) throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
     	Auxilio aux = buscarAuxilio(id);
     	auxilio.setId(id);
     	auxilio.getTermo().setId(aux.getTermo().getId());
@@ -561,7 +575,12 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
     	
     	TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
     	auxilio.setTipoBolsa(tipoBolsa);
-    	
+        
+        MultipartFile[] arquivos = {termo};
+        List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
+        auxilio.setTermo(documentos.getFirst());
+    	auxilio = auxilioService.salvar(auxilio);
+
     	return auxilioService.editar(id, auxilio);
     }
 
@@ -597,5 +616,15 @@ public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
 
     public void deletarPagamento(Long id) throws PagamentoNotFoundException {
         pagamentoService.deletar(id);
+    }
+
+     // ------------------- Armazenamento ------------------- //
+
+    public List<Documento> salvarArquivo(MultipartFile[] arquivos) {
+        return armazenamentoService.salvarArquivo(arquivos);
+    }
+
+    public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
+        return armazenamentoService.converterDocumentosParaBase64(documentos);
     }
 }
