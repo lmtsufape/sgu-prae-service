@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import org.modelmapper.ModelMapper;
 
+import br.edu.ufape.sguPraeService.comunicacao.annotations.PagamentoValido;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -13,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@PagamentoValido
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class PagamentoRequest {
 	@NotNull(message = "Valor é obrigatório")
