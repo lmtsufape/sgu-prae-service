@@ -38,8 +38,8 @@ public class DadosBancariosController {
     }
 
     @PreAuthorize("hasRole('GESTOR')")
-    @PostMapping
-    public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@RequestParam Long idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
+    @PostMapping("/{idEstudante}")
+    public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@PathVariable Long idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
         DadosBancarios novoDadosBancarios = fachada.salvarDadosBancarios(idEstudante, dadosBancarios);
         return new ResponseEntity<>(new DadosBancariosResponse(novoDadosBancarios, modelMapper), HttpStatus.CREATED);
