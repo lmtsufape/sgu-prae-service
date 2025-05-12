@@ -1,14 +1,14 @@
 package br.edu.ufape.sguPraeService.servicos;
 
+import java.util.List;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Service;
+
 import br.edu.ufape.sguPraeService.dados.AuxilioRepository;
 import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
 import br.edu.ufape.sguPraeService.models.Auxilio;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Service;
-
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +35,13 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 	public Auxilio editar(Long id, Auxilio entity) throws AuxilioNotFoundException {
 		Auxilio auxilio = buscar(id);
 		modelMapper.map(entity, auxilio);
+		if (entity.getTipoAuxilio() != null) {
+            auxilio.setTipoBolsa(null);
+        }
+
+        if (entity.getTipoBolsa() != null) {
+            auxilio.setTipoAuxilio(null);
+        }
 		return auxilioRepository.save(auxilio);
 	}
 
