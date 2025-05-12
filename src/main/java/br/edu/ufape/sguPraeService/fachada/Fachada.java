@@ -578,6 +578,10 @@ public class Fachada {
         tipoBolsaService.deletar(id);
     }
 
+    public void desativarTipoBolsa(Long id) throws TipoBolsaNotFoundException {
+        tipoBolsaService.desativar(id);
+    }
+
     // ------------------- TipoAuxilio ------------------- //
     public List<TipoAuxilio> listarTipoAuxilios() {
         return tipoAuxilioService.listar();

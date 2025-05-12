@@ -34,6 +34,12 @@ public class TipoBolsaService implements br.edu.ufape.sguPraeService.servicos.in
     @Override
     public void deletar(Long id) throws TipoBolsaNotFoundException {
         TipoBolsa tipoBolsa = buscar(id);
+        tipoBolsaRepository.delete(tipoBolsa);
+    }
+
+    @Override
+    public void desativar(Long id) throws TipoBolsaNotFoundException {
+        TipoBolsa tipoBolsa = buscar(id);
         tipoBolsa.setAtivo(false);
         tipoBolsaRepository.save(tipoBolsa);
     }
