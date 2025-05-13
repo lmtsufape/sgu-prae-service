@@ -483,6 +483,21 @@ public class Fachada {
         return cronogramaService.salvar(cronograma);
     }
 
+    @Transactional
+    public Cronograma editarCronograma(Long cronogramaId, Cronograma cronograma, Long tipoAtendimentoId)
+            throws TipoAtendimentoNotFoundException, CronogramaNotFoundException {
+        TipoAtendimento tipoAtendimento = buscarTipoAtendimento(tipoAtendimentoId);
+        cronograma.setTipoAtendimento(tipoAtendimento);
+        List<Vaga> vagas = vagaService.gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
+        vagas.forEach(vaga -> vaga.setCronograma(cronograma));
+        cronograma.setVagas(vagas);
+        return cronogramaService.editar(cronogramaId, cronograma);
+    }
+
+    public void deletarCronograma(Long id) throws CronogramaNotFoundException {
+        cronogramaService.deletar(id);
+    }
+
     // ------------------- Agendamento ------------------- //
 
     @Transactional
