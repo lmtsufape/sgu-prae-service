@@ -19,17 +19,21 @@ public class TipoEtniaSeeder {
 
     @EventListener
     public void seed(ApplicationReadyEvent event) {
-        List<String> etnias = List.of("Branco", "Preto", "Pardo", "Indígena", "Amarelo");
+        if (tipoEtniaRepository.count() == 0) {
+            List<String> etnias = List.of("Branco", "Preto", "Pardo", "Indígena", "Amarelo");
 
-        for (String etnia : etnias) {
-            tipoEtniaRepository.findByTipo(etnia)
-                    .orElseGet(() -> {
-                        TipoEtnia novoTipo = new TipoEtnia();
-                        novoTipo.setTipo(etnia);
-                        return tipoEtniaRepository.save(novoTipo);
-                    });
+            for (String etnia : etnias) {
+                tipoEtniaRepository.findByTipoIgnoreCase(etnia)
+                        .orElseGet(() -> {
+                            TipoEtnia novoTipo = new TipoEtnia();
+                            novoTipo.setTipo(etnia);
+                            return tipoEtniaRepository.save(novoTipo);
+                        });
+            }
+
+            System.out.println("Tipos de Etnia inicializados com sucesso!");
+        } else {
+            System.out.println("Seeder de TipoEtnia ignorado: tabela já contém registros.");
         }
-
-        System.out.println("Tipos de Etnia inicializados com sucesso!");
     }
 }
