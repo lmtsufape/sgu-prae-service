@@ -18,6 +18,8 @@ public class Cronograma {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    boolean ativo = true;
+
     @Column(nullable = false)
     private LocalDate data;
 

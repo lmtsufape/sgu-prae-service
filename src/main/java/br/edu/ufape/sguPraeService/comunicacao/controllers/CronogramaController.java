@@ -55,15 +55,15 @@
          return fachada.listarCronogramasPorProfissional().stream().map(cronograma -> new CronogramaResponse(cronograma, modelMapper)).toList();
      }
 
-//     @PatchMapping("/{id}")
-//     public ResponseEntity<CronogramaResponse> editar(@PathVariable Long id, @Valid @RequestBody CronogramaRequest entity) throws CronogramaNotFoundException {
-//         Cronograma response = fachada.editar(id, entity.convertToEntity(entity, modelMapper));
-//         return new ResponseEntity<>(new CronogramaResponse(response, modelMapper), HttpStatus.OK);
-//     }
-//
-//     @DeleteMapping("/{id}")
-//     public ResponseEntity<Void> delete(@PathVariable Long id) {
-//         fachada.deletar(id);
-//         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-//     }
+     @PatchMapping("/{id}")
+     public ResponseEntity<CronogramaResponse> editar(@PathVariable Long id, @Valid @RequestBody CronogramaRequest entity) throws CronogramaNotFoundException {
+         Cronograma response = fachada.editarCronograma(id, entity.convertToEntity(entity, modelMapper), entity.getTipoAtendimentoId());
+         return new ResponseEntity<>(new CronogramaResponse(response, modelMapper), HttpStatus.OK);
+     }
+
+     @DeleteMapping("/{id}")
+     public ResponseEntity<Void> delete(@PathVariable Long id) {
+         fachada.deletarCronograma(id);
+         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+     }
  }
