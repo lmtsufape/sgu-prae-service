@@ -5,7 +5,6 @@ import java.time.LocalDate;
 
 import org.modelmapper.ModelMapper;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoAuxilio.TipoAuxilioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoBolsa.TipoBolsaResponse;
 import br.edu.ufape.sguPraeService.models.Auxilio;
@@ -27,7 +26,6 @@ public class AuxilioResponse {
 	private LocalDate fimBolsa;
 	private String parecerTermino;
 	private BigDecimal valorBolsa;
-	private DocumentoResponse termo;
 	private boolean status;
 
 	public AuxilioResponse(Auxilio auxilio, ModelMapper modelMapper) {
