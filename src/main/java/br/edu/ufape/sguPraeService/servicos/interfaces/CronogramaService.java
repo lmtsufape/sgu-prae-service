@@ -17,7 +17,5 @@ public interface CronogramaService {
 
     Cronograma salvar(Cronograma entity);
 
-    Cronograma editar(Long id, Cronograma entity) throws CronogramaNotFoundException;
-
     void deletar(Long id);
 }

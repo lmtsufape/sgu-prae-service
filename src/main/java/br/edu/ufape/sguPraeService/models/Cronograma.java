@@ -32,4 +32,13 @@ public class Cronograma {
     @OneToMany(mappedBy = "cronograma", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Vaga> vagas = new ArrayList<>();
+
+
+    public void trocarVagas(List<Vaga> novas) {
+        this.vagas.clear();
+        novas.forEach(v -> {
+            v.setCronograma(this);
+            this.vagas.add(v);
+        });
+    }
 }

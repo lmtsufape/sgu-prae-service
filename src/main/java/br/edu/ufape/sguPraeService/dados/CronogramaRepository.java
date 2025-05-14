@@ -9,7 +9,8 @@ import java.util.UUID;
 
 @Repository
 public interface CronogramaRepository extends JpaRepository<Cronograma, Long> {
-    List<Cronograma> findByTipoAtendimentoId(Long id);
+    List<Cronograma> findAllByAtivoTrue();
+    List<Cronograma> findByAtivoTrueAndTipoAtendimento_Id(Long id);
 
-    List<Cronograma> findByProfissional_UserId(UUID profissionalUserId);
+    List<Cronograma> findAllByAtivoTrueAndProfissional_UserId(UUID profissionalUserId);
 }
