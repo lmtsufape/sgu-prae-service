@@ -54,5 +54,11 @@ public class PagamentoController {
         fachada.deletarPagamento(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PatchMapping("desativar/{id}")
+    public ResponseEntity<Void> desativar(@PathVariable Long id) throws PagamentoNotFoundException {
+        fachada.desativarPagamento(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
 

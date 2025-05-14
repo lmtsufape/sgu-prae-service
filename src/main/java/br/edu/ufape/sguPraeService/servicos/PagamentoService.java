@@ -32,9 +32,15 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public void deletar(Long id) throws PagamentoNotFoundException {
+    public void desativar(Long id) throws PagamentoNotFoundException {
         Pagamento Pagamento = buscar(id);
         Pagamento.setAtivo(false);
         pagamentoRepository.save(Pagamento);
+    }
+
+    @Override
+    public void deletar(Long id) throws PagamentoNotFoundException {
+        Pagamento Pagamento = buscar(id);
+        pagamentoRepository.delete(Pagamento);
     }
 }

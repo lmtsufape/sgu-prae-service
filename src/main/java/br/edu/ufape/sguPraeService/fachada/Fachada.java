@@ -627,6 +627,10 @@ public class Fachada {
         return auxilioService.listar();
     }
 
+    public List<Auxilio> listarAuxiliosPorTipo(Long tipoId) throws AuxilioNotFoundException {
+        return auxilioService.listarPorTipo(tipoId);
+    }
+
     public List<Auxilio> listarAuxiliosPorEstudanteId(Long estudanteId) throws EstudanteNotFoundException {
         return estudanteService.buscarEstudante(estudanteId).getAuxilios();
     }
@@ -761,10 +765,6 @@ public class Fachada {
         return pagamentoService.buscar(id);
     }
 
-    public List<Auxilio> listarAuxiliosPorTipo(Long tipoId) throws AuxilioNotFoundException {
-        return auxilioService.listarPorTipo(tipoId);
-    }
-
     public Pagamento salvarPagamento(Long auxilioId, Pagamento pagamento) throws AuxilioNotFoundException {
         pagamento.setId(null);
         pagamento = pagamentoService.salvar(pagamento);
@@ -780,6 +780,10 @@ public class Fachada {
 
     public void deletarPagamento(Long id) throws PagamentoNotFoundException {
         pagamentoService.deletar(id);
+    }
+
+    public void desativarPagamento(Long id) throws PagamentoNotFoundException {
+        pagamentoService.desativar(id);
     }
 
     // ------------------- Armazenamento ------------------- //
