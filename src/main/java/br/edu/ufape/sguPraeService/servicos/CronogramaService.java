@@ -21,17 +21,17 @@
  
      @Override
      public List<Cronograma> listar() {
-         return repository.findAll();
+         return repository.findAllByAtivoTrue();
      }
 
      @Override
      public List<Cronograma> listarPorTipoAtendimento(Long id) {
-         return repository.findByTipoAtendimentoId(id);
+         return repository.findByAtivoTrueAndTipoAtendimento_Id(id);
      }
 
      @Override
      public List<Cronograma> listarPorProfissional(UUID userId) {
-         return repository.findByProfissional_UserId(userId);
+         return repository.findAllByAtivoTrueAndProfissional_UserId(userId);
      }
  
      @Override
