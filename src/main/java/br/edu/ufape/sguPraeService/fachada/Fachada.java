@@ -3,14 +3,11 @@ package br.edu.ufape.sguPraeService.fachada;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -486,12 +483,18 @@ public class Fachada {
     @Transactional
     public Cronograma editarCronograma(Long cronogramaId, Cronograma cronograma, Long tipoAtendimentoId)
             throws TipoAtendimentoNotFoundException, CronogramaNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
         TipoAtendimento tipoAtendimento = buscarTipoAtendimento(tipoAtendimentoId);
-        cronograma.setTipoAtendimento(tipoAtendimento);
-        List<Vaga> vagas = vagaService.gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
-        vagas.forEach(vaga -> vaga.setCronograma(cronograma));
-        cronograma.setVagas(vagas);
-        return cronogramaService.editar(cronogramaId, cronograma);
+        Cronograma cronogramaExistente = cronogramaService.buscar(cronogramaId);
+        if (!cronogramaExistente.getProfissional().getUserId().equals(userId)) {
+            throw new NotAllowedException("Você não tem permissão para editar este cronograma.");
+        }
+        cronogramaExistente.setData(cronograma.getData());
+        cronogramaExistente.setTipoAtendimento(tipoAtendimento);
+        List<Vaga> novas = vagaService
+                .gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
+        cronogramaExistente.trocarVagas(novas);
+        return cronogramaService.salvar(cronogramaExistente);
     }
 
     public void deletarCronograma(Long id) throws CronogramaNotFoundException {
