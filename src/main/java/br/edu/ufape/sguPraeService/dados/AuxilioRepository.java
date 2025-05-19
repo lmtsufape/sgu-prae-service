@@ -13,4 +13,6 @@ public interface AuxilioRepository extends JpaRepository<Auxilio, Long> {
 
   @Query("SELECT a FROM Auxilio a WHERE a.tipoAuxilio.id = :tipoId")
   List<Auxilio> findByTipoAuxilioId(@Param("tipoId") Long tipoId);
+
+  List<Auxilio> findByPagamentos_Id(Long pagamentoId);
   }
