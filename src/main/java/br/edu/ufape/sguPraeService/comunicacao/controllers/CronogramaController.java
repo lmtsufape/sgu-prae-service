@@ -49,11 +49,12 @@
          return new ResponseEntity<>(new CronogramaResponse(response, modelMapper), HttpStatus.CREATED);
      }
 
-        @PreAuthorize("hasRole('PROFISSIONAL')")
+     @PreAuthorize("hasRole('PROFISSIONAL')")
      @GetMapping("/profissional")
      public List<CronogramaResponse> listarPorProfissional() {
          return fachada.listarCronogramasPorProfissional().stream().map(cronograma -> new CronogramaResponse(cronograma, modelMapper)).toList();
      }
+
 
      @PatchMapping("/{id}")
      public ResponseEntity<CronogramaResponse> editar(@PathVariable Long id, @Valid @RequestBody CronogramaRequest entity) throws CronogramaNotFoundException {

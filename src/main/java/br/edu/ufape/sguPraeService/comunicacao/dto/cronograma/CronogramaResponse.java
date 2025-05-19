@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.dto.cronograma;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.vaga.VagaResponse;
 import br.edu.ufape.sguPraeService.models.Cronograma;
 
@@ -15,6 +16,7 @@ public class CronogramaResponse {
 
     Long id;
     LocalDate data;
+    TipoAtendimentoResponse tipoAtendimento;
     List<VagaResponse> vagas;
 
     public CronogramaResponse(Cronograma cronograma, ModelMapper modelMapper){
