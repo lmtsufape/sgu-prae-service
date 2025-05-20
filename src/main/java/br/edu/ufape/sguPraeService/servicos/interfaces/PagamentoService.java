@@ -15,4 +15,6 @@ public interface PagamentoService {
     Pagamento editar(Long id, Pagamento entity) throws PagamentoNotFoundException;
 
     void deletar(Long id) throws PagamentoNotFoundException;
+
+    void desativar(Long id) throws PagamentoNotFoundException;
 }
