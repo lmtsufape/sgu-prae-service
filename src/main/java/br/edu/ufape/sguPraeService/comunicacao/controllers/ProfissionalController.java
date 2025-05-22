@@ -34,7 +34,7 @@
          return ResponseEntity.ok(fachada.buscarProfissional(id));
      }
 
-     @PreAuthorize("hasAnyRole('TECNICO', 'PROFESSOR')")
+     @PreAuthorize("(hasAnyRole('TECNICO', 'PROFESSOR')) and hasRole('PRAE_ACESS')")
      @PostMapping
      public ResponseEntity<ProfissionalResponse> salvar(@Valid @RequestBody ProfissionalRequest entity) {
 
@@ -43,7 +43,7 @@
                             ProfissionalResponse.class));
      }
 
-     @PreAuthorize("hasAnyRole('TECNICO', 'PROFESSOR')")
+     @PreAuthorize("hasRole('PROFISSIONAL')")
      @PatchMapping
      public ResponseEntity<ProfissionalResponse> editar(@Valid @RequestBody ProfissionalRequest entity) throws ProfissionalNotFoundException {
          ProfissionalResponse response = fachada.editarProfissional(entity.convertToEntity(entity, modelMapper));
