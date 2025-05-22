@@ -37,7 +37,7 @@ public class DadosBancariosController {
                 .collect(Collectors.toList());
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping("/{idEstudante}")
     public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@PathVariable Long idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
@@ -45,7 +45,7 @@ public class DadosBancariosController {
         return new ResponseEntity<>(new DadosBancariosResponse(novoDadosBancarios, modelMapper), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("/{id}")
     public ResponseEntity<DadosBancariosResponse> atualizarDadosBancarios(@PathVariable Long id, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
@@ -56,7 +56,7 @@ public class DadosBancariosController {
         return new ResponseEntity<>(new DadosBancariosResponse(dadosBancariosAtualizados, modelMapper), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarDadosBancarios(@PathVariable Long id) {
         fachada.deletarDadosBancarios(id);

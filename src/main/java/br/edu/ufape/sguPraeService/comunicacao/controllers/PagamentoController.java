@@ -6,6 +6,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoRequest;
 import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
@@ -37,24 +38,28 @@ public class PagamentoController {
         return new ResponseEntity<>(new PagamentoResponse(response, modelMapper), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping
     public ResponseEntity<PagamentoResponse> salvar(@Valid @RequestBody PagamentoRequest entity) throws AuxilioNotFoundException {
         Pagamento response = fachada.salvarPagamento(entity.getAuxilioId(), entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new PagamentoResponse(response, modelMapper), HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("/{id}")
     public ResponseEntity<PagamentoResponse> editar(@PathVariable Long id, @Valid @RequestBody PagamentoRequest entity) throws PagamentoNotFoundException {
         Pagamento response = fachada.editarPagamento(id, entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new PagamentoResponse(response, modelMapper), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws PagamentoNotFoundException {
         fachada.deletarPagamento(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("desativar/{id}")
     public ResponseEntity<Void> desativar(@PathVariable Long id) throws PagamentoNotFoundException {
         fachada.desativarPagamento(id);

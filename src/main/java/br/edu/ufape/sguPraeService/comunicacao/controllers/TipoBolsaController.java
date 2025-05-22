@@ -32,28 +32,28 @@ public class TipoBolsaController {
         return new ResponseEntity<>(new TipoBolsaResponse(response, modelMapper), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping
     public ResponseEntity<TipoBolsaResponse> salvar(@Valid @RequestBody TipoBolsaRequest entity) {
         TipoBolsa response = fachada.salvarTipoBolsa(entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new TipoBolsaResponse(response, modelMapper), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("/{id}")
     public ResponseEntity<TipoBolsaResponse> editar(@PathVariable Long id, @Valid @RequestBody TipoBolsaRequest entity) throws TipoBolsaNotFoundException {
         TipoBolsa response = fachada.editarTipoBolsa(id, entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new TipoBolsaResponse(response, modelMapper), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws TipoBolsaNotFoundException {
         fachada.deletarTipoBolsa(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("desativar/{id}")
     public ResponseEntity<Void> desativar(@PathVariable Long id) throws TipoBolsaNotFoundException {
         fachada.desativarTipoBolsa(id);
