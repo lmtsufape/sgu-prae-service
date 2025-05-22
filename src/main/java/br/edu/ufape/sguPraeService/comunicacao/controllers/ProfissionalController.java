@@ -34,7 +34,7 @@
          return ResponseEntity.ok(fachada.buscarProfissional(id));
      }
 
-     @PreAuthorize("(hasAnyRole('TECNICO', 'PROFESSOR')) and hasRole('PRAE_ACESS')")
+     @PreAuthorize("(hasAnyRole('TECNICO', 'PROFESSOR')) and hasRole('PRAE_ACCESS')")
      @PostMapping
      public ResponseEntity<ProfissionalResponse> salvar(@Valid @RequestBody ProfissionalRequest entity) {
 

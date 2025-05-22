@@ -8,6 +8,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -58,6 +59,7 @@ public class AuxilioController {
         return new ResponseEntity<>(new AuxilioResponse(response, modelMapper), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/{id}/termo")
     public ResponseEntity<DocumentoResponse> buscarTermo(@PathVariable Long id)
             throws AuxilioNotFoundException, IOException {
@@ -66,6 +68,7 @@ public class AuxilioController {
         return new ResponseEntity<>(termo, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<AuxilioResponse> salvar(@Valid @ModelAttribute AuxilioRequest entity)
             throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
@@ -74,6 +77,7 @@ public class AuxilioController {
         return new ResponseEntity<>(new AuxilioResponse(response, modelMapper), HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<AuxilioResponse> editar(@PathVariable Long id, @Valid @ModelAttribute AuxilioRequest entity)
             throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
@@ -81,12 +85,14 @@ public class AuxilioController {
         return new ResponseEntity<>(new AuxilioResponse(response, modelMapper), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws AuxilioNotFoundException {
         fachada.deletarAuxilio(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/pagos")
     public ResponseEntity<List<AuxilioResponse>> listarPagosPorMes() throws AuxilioNotFoundException {
         List<Auxilio> auxilios = fachada.listarPagosPorMes();
@@ -96,6 +102,7 @@ public class AuxilioController {
                         .toList());
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/tipo/{id}")
     public ResponseEntity<List<AuxilioResponse>> listarPorTipo(@PathVariable Long id) throws AuxilioNotFoundException {
         List<Auxilio> auxilios = fachada.listarAuxiliosPorTipo(id);
@@ -105,6 +112,7 @@ public class AuxilioController {
                         .toList());
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/relatorio/financeiro")
     public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
             @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate inicio,

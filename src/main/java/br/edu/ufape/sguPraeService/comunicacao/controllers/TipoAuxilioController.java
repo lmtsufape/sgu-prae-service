@@ -32,28 +32,28 @@ public class TipoAuxilioController {
         return new ResponseEntity<>(new TipoAuxilioResponse(response, modelMapper), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping
     public ResponseEntity<TipoAuxilioResponse> salvar(@Valid @RequestBody TipoAuxilioRequest entity) {
         TipoAuxilio response = fachada.salvarTipoAuxilio(entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new TipoAuxilioResponse(response, modelMapper), HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("/{id}")
     public ResponseEntity<TipoAuxilioResponse> editar(@PathVariable Long id, @Valid @RequestBody TipoAuxilioRequest entity) throws TipoAuxilioNotFoundException {
         TipoAuxilio response = fachada.editarTipoAuxilio(id, entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new TipoAuxilioResponse(response, modelMapper), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws TipoAuxilioNotFoundException {
         fachada.deletarTipoAuxilio(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("desativar/{id}")
     public ResponseEntity<Void> desativar(@PathVariable Long id) throws TipoAuxilioNotFoundException {
         fachada.desativarTipoAuxilio(id);

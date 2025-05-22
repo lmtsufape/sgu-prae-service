@@ -60,23 +60,28 @@ public class EstudanteController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores")
     public ResponseEntity<List<CredorResponse>> listarCredoresComAuxiliosAtivos() {
         List<CredorResponse> credores = fachada.listarCredoresComAuxiliosAtivos();
         return ResponseEntity.ok(credores);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/auxilio/{id}")
     public ResponseEntity<List<CredorResponse>> listarCredoresPorAuxilio(@PathVariable Long id) {
         List<CredorResponse> credores = fachada.listarCredoresPorAuxilio(id);
         return ResponseEntity.ok(credores);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/publicacao")
     public ResponseEntity<List<PublicacaoResponse>> listarCrediresParaPublicacao() {
         List<PublicacaoResponse> publicacoes = fachada.listarCredoresParaPublicacao().stream().map(alunoResponse -> new PublicacaoResponse(alunoResponse, modelMapper)).toList();
         return ResponseEntity.ok(publicacoes);
     }
+
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/curso/{id}")
     List<CredorResponse> listarCredoresPorCurso(@PathVariable Long id) {
         return fachada.listarCredoresPorCurso(id);
@@ -84,6 +89,7 @@ public class EstudanteController {
 
 
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/{id}/relatorio")
     public ResponseEntity<RelatorioEstudanteAssistidoResponse> gerarRelatorioAssistido(
             @PathVariable Long id
