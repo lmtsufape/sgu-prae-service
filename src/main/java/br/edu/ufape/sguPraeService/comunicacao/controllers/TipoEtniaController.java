@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,6 +38,7 @@ public class TipoEtniaController {
                 .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
     @PostMapping
     public ResponseEntity<TipoEtniaResponse> criarTipoEtnia(@RequestBody TipoEtniaRequest tipoEtniaRequest) {
         TipoEtnia tipoEtnia = tipoEtniaRequest.convertToEntity(tipoEtniaRequest, modelMapper);
@@ -44,6 +46,7 @@ public class TipoEtniaController {
         return new ResponseEntity<>(new TipoEtniaResponse(novoTipoEtnia, modelMapper), HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
     @PatchMapping("/{id}")
     public ResponseEntity<TipoEtniaResponse> atualizarTipoEtnia(@PathVariable Long id, @RequestBody TipoEtniaRequest tipoEtniaRequest) throws TipoEtniaNotFoundException {
         TipoEtnia tipoEtnia = tipoEtniaRequest.convertToEntity(tipoEtniaRequest, modelMapper);
@@ -54,6 +57,7 @@ public class TipoEtniaController {
         return new ResponseEntity<>(new TipoEtniaResponse(tipoEtniaAtualizado, modelMapper), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarTipoEtnia(@PathVariable Long id) throws TipoEtniaNotFoundException {
         fachada.deletarTipoEtnia(id);

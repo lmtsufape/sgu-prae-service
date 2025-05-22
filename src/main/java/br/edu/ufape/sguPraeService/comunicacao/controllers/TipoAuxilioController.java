@@ -5,6 +5,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.tipoAuxilio.TipoAuxilioRespon
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoAuxilio.TipoAuxilioRequest;
 import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
@@ -31,24 +32,28 @@ public class TipoAuxilioController {
         return new ResponseEntity<>(new TipoAuxilioResponse(response, modelMapper), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
     @PostMapping
     public ResponseEntity<TipoAuxilioResponse> salvar(@Valid @RequestBody TipoAuxilioRequest entity) {
         TipoAuxilio response = fachada.salvarTipoAuxilio(entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new TipoAuxilioResponse(response, modelMapper), HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
     @PatchMapping("/{id}")
     public ResponseEntity<TipoAuxilioResponse> editar(@PathVariable Long id, @Valid @RequestBody TipoAuxilioRequest entity) throws TipoAuxilioNotFoundException {
         TipoAuxilio response = fachada.editarTipoAuxilio(id, entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new TipoAuxilioResponse(response, modelMapper), HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws TipoAuxilioNotFoundException {
         fachada.deletarTipoAuxilio(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACESS')")
     @PatchMapping("desativar/{id}")
     public ResponseEntity<Void> desativar(@PathVariable Long id) throws TipoAuxilioNotFoundException {
         fachada.desativarTipoAuxilio(id);
