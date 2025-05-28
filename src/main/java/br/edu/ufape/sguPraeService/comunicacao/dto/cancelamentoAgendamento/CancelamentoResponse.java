@@ -17,10 +17,12 @@ public class CancelamentoResponse {
     private String motivo;
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm", shape = JsonFormat.Shape.STRING)
     private LocalDateTime dataCancelamento;
+    private String tipoAtendimento;
     private AgendamentoResponse agendamento;
 
     public CancelamentoResponse(CancelamentoAgendamento cancelamento, ModelMapper modelMapper) {
         if (cancelamento == null) throw new IllegalArgumentException("CancelamentoAgendamento não pode ser nulo");
         modelMapper.map(cancelamento,this);
+        this.tipoAtendimento = cancelamento.getAgendamento().getVaga().getCronograma().getTipoAtendimento().getNome();
     }
 }
