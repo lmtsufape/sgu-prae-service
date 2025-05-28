@@ -1,5 +1,6 @@
  package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+ import br.edu.ufape.sguPraeService.comunicacao.dto.cronograma.CronogramaUpdateRequest;
  import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
  import br.edu.ufape.sguPraeService.fachada.Fachada;
  import br.edu.ufape.sguPraeService.models.Cronograma;
@@ -15,6 +16,8 @@
  import jakarta.validation.Valid;
  import lombok.RequiredArgsConstructor;
  import java.util.List;
+ import java.util.stream.Collectors;
+
  import org.springframework.http.HttpStatus;
 
  @RestController
@@ -44,9 +47,20 @@
 
      @PreAuthorize("hasRole('PROFISSIONAL')")
      @PostMapping
-     public ResponseEntity<CronogramaResponse> salvar(@Valid @RequestBody CronogramaRequest entity) throws TipoAtendimentoNotFoundException {
-         Cronograma response = fachada.salvarCronograma(entity.convertToEntity(entity, modelMapper), entity.getTipoAtendimentoId());
-         return new ResponseEntity<>(new CronogramaResponse(response, modelMapper), HttpStatus.CREATED);
+     public ResponseEntity<List<CronogramaResponse>> salvar(@Valid @RequestBody CronogramaRequest entity) throws TipoAtendimentoNotFoundException {
+         List<Cronograma> entities = entity.convertToEntities(modelMapper);
+
+         List<CronogramaResponse> responses = entities.stream()
+                 .map(cronogramaEntity -> {
+                     Cronograma criado = fachada.salvarCronograma(
+                             cronogramaEntity,
+                             entity.getTipoAtendimentoId()
+                     );
+                     return new CronogramaResponse(criado, modelMapper);
+                 })
+                 .collect(Collectors.toList());
+
+         return new ResponseEntity<>(responses, HttpStatus.CREATED);
      }
 
      @PreAuthorize("hasRole('PROFISSIONAL')")
@@ -57,7 +71,7 @@
 
 
      @PatchMapping("/{id}")
-     public ResponseEntity<CronogramaResponse> editar(@PathVariable Long id, @Valid @RequestBody CronogramaRequest entity) throws CronogramaNotFoundException {
+     public ResponseEntity<CronogramaResponse> editar(@PathVariable Long id, @Valid @RequestBody CronogramaUpdateRequest entity) throws CronogramaNotFoundException {
          Cronograma response = fachada.editarCronograma(id, entity.convertToEntity(entity, modelMapper), entity.getTipoAtendimentoId());
          return new ResponseEntity<>(new CronogramaResponse(response, modelMapper), HttpStatus.OK);
      }
