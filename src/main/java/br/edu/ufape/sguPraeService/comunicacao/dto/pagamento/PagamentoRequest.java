@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import org.modelmapper.ModelMapper;
 
 import br.edu.ufape.sguPraeService.comunicacao.annotations.PagamentoValido;
+import br.edu.ufape.sguPraeService.models.Auxilio;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -27,6 +28,10 @@ public class PagamentoRequest {
 	private LocalDate data;
 
     public Pagamento convertToEntity(PagamentoRequest pagamentoRequest, ModelMapper modelMapper) {
-        return modelMapper.map(pagamentoRequest, Pagamento.class);
+        Pagamento entity = modelMapper.map(pagamentoRequest, Pagamento.class);
+        Auxilio auxilio = new Auxilio();
+        auxilio.setId(auxilioId);
+        entity.setAuxilio(auxilio);
+        return entity;
     }
 }

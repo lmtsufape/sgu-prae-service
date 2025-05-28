@@ -9,10 +9,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-
 @Entity
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class Estudante{
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Estudante {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,13 +35,10 @@ public class Estudante{
     private TipoEtnia tipoEtnia;
 
     @ManyToMany
-    @JoinTable(name = "estudante_auxilio",
-                         joinColumns = @JoinColumn(name = "estudante_id"),
-                         inverseJoinColumns = @JoinColumn(name = "auxilio_id")
-    )
+    @JoinTable(name = "estudante_auxilio", joinColumns = @JoinColumn(name = "estudante_id"), inverseJoinColumns = @JoinColumn(name = "auxilio_id"))
     private List<Auxilio> auxilios;
-    
+
     public void addAuxilio(Auxilio auxilio) {
-    	this.auxilios.add(auxilio);
+        this.auxilios.add(auxilio);
     }
 }
