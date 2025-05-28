@@ -12,6 +12,8 @@ public class DadosBancariosRequest {
     private String nomeTitular;
     private String conta;
     private String agencia;
+    private String banco;
+    private String tipoConta;
 
     public DadosBancarios convertToEntity(DadosBancariosRequest request, ModelMapper modelMapper) {
         return modelMapper.map(request, DadosBancarios.class);
