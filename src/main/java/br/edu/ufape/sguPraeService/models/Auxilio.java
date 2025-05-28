@@ -32,18 +32,22 @@ public class Auxilio {
     private boolean status = true;
     private boolean ativo = true;
 
+    @ManyToMany(mappedBy = "auxilios")
+    private List<Estudante> estudantes = new ArrayList<>();
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Documento termo;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "auxilio_pagamentos",
-            joinColumns = @JoinColumn(name = "auxilio_id"),
-            inverseJoinColumns = @JoinColumn(name = "pagamento_id")
-    )
+    @OneToMany(mappedBy="auxilio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Pagamento> pagamentos = new ArrayList<>();
 
     public void addPagamento(Pagamento pagamento) {
-    	pagamentos.add(pagamento);
+    	pagamento.setAuxilio(this);
+        pagamentos.add(pagamento);
+    }
+
+    public void addEstudante(Estudante estudante) {
+        estudante.addAuxilio(this);
+        estudantes.add(estudante);
     }
 }
