@@ -29,6 +29,7 @@ public class Auxilio {
     private LocalDate fimBolsa;
     private String parecerTermino;
     private BigDecimal valorBolsa;
+    private BigDecimal valorPagamento;
     private boolean status = true;
     private boolean ativo = true;
 

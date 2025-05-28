@@ -13,6 +13,8 @@ public class DadosBancariosResponse {
     private String nomeTitular;
     private String conta;
     private String agencia;
+    private String banco;
+    private String tipoConta;
 
     public DadosBancariosResponse(DadosBancarios dadosBancarios, ModelMapper modelMapper) {
         if (dadosBancarios == null) throw new IllegalArgumentException("Dados bancários não podem ser nulos");

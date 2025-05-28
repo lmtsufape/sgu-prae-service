@@ -18,4 +18,6 @@ public class DadosBancarios {
     private String nomeTitular;
     private String conta;
     private String agencia;
+    private String banco;
+    private String tipoConta;
 }

@@ -26,7 +26,9 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public Pagamento salvar(Pagamento entity) { return pagamentoRepository.save(entity); }
+    public List<Pagamento> salvar(List<Pagamento> pagamentos) {
+        return pagamentoRepository.saveAll(pagamentos);
+    }
 
     @Override
     public Pagamento editar(Long id, Pagamento entity) throws PagamentoNotFoundException {

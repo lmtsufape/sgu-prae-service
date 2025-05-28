@@ -10,7 +10,7 @@ public interface PagamentoService {
 
     Pagamento buscar(Long id) throws PagamentoNotFoundException;
 
-    Pagamento salvar(Pagamento entity);
+    List<Pagamento> salvar(List<Pagamento> pagamentos);
 
     Pagamento editar(Long id, Pagamento entity) throws PagamentoNotFoundException;
 
