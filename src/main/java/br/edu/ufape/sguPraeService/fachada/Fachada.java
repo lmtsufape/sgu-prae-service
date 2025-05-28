@@ -768,11 +768,15 @@ public class Fachada {
         return pagamentoService.buscar(id);
     }
 
-    public Pagamento salvarPagamento(Pagamento pagamento) throws AuxilioNotFoundException {
-        pagamento.setId(null);
-        pagamento.setAuxilio(buscarAuxilio(pagamento.getAuxilio().getId()));
-        pagamento = pagamentoService.salvar(pagamento);
-        return pagamento;
+    public List<Pagamento> salvarPagamentos(List<Pagamento> pagamentos, Long auxilioId) throws AuxilioNotFoundException {
+        Auxilio auxilio = buscarAuxilio(auxilioId);
+
+        for (Pagamento pagamento : pagamentos) {
+            pagamento.setId(null);
+            pagamento.setAuxilio(auxilio);
+        }
+
+        return pagamentoService.salvar(pagamentos);
     }
 
     public Pagamento editarPagamento(Long id, Pagamento pagamento) throws PagamentoNotFoundException {

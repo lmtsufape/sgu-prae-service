@@ -40,9 +40,20 @@ public class PagamentoController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping
-    public ResponseEntity<PagamentoResponse> salvar(@Valid @RequestBody PagamentoRequest entity) throws AuxilioNotFoundException {
-        Pagamento response = fachada.salvarPagamento(entity.convertToEntity(entity, modelMapper));
-        return new ResponseEntity<>(new PagamentoResponse(response, modelMapper), HttpStatus.CREATED);
+    public ResponseEntity<List<PagamentoResponse>> salvar(@Valid @RequestBody List<PagamentoRequest> entities) throws AuxilioNotFoundException {
+        if (entities.isEmpty()) return ResponseEntity.badRequest().build();
+
+        List<Pagamento> pagamentos = entities.stream()
+                .map(e -> e.convertToEntity(e, modelMapper))
+                .toList();
+
+        List<Pagamento> salvos = fachada.salvarPagamentos(pagamentos, entities.getFirst().getAuxilioId());
+
+        List<PagamentoResponse> response = salvos.stream()
+                .map(p -> new PagamentoResponse(p, modelMapper))
+                .toList();
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
