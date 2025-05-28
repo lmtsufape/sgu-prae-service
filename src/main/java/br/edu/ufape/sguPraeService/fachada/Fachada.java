@@ -662,10 +662,9 @@ public class Fachada {
         List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
         auxilio.setTermo(documentos.getFirst());
 
-        auxilio = auxilioService.salvar(auxilio);
+        auxilio.addEstudante(estudante);
 
-        estudante.addAuxilio(auxilio);
-        estudanteService.atualizarEstudante(estudante, estudante);
+        auxilio = auxilioService.salvar(auxilio);
         return auxilio;
     }
 
@@ -769,12 +768,10 @@ public class Fachada {
         return pagamentoService.buscar(id);
     }
 
-    public Pagamento salvarPagamento(Long auxilioId, Pagamento pagamento) throws AuxilioNotFoundException {
+    public Pagamento salvarPagamento(Pagamento pagamento) throws AuxilioNotFoundException {
         pagamento.setId(null);
+        pagamento.setAuxilio(buscarAuxilio(pagamento.getAuxilio().getId()));
         pagamento = pagamentoService.salvar(pagamento);
-        Auxilio auxilio = buscarAuxilio(auxilioId);
-        auxilio.addPagamento(pagamento);
-        auxilioService.editar(auxilioId, auxilio);
         return pagamento;
     }
 

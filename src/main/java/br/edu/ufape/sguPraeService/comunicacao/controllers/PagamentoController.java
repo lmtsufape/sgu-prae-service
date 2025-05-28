@@ -41,7 +41,7 @@ public class PagamentoController {
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping
     public ResponseEntity<PagamentoResponse> salvar(@Valid @RequestBody PagamentoRequest entity) throws AuxilioNotFoundException {
-        Pagamento response = fachada.salvarPagamento(entity.getAuxilioId(), entity.convertToEntity(entity, modelMapper));
+        Pagamento response = fachada.salvarPagamento(entity.convertToEntity(entity, modelMapper));
         return new ResponseEntity<>(new PagamentoResponse(response, modelMapper), HttpStatus.CREATED);
     }
 
