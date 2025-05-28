@@ -26,6 +26,7 @@ public class AuxilioResponse {
 	private LocalDate fimBolsa;
 	private String parecerTermino;
 	private BigDecimal valorBolsa;
+	private BigDecimal valorPagamento;
 	private boolean status;
 
 	public AuxilioResponse(Auxilio auxilio, ModelMapper modelMapper) {

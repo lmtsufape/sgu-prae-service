@@ -650,6 +650,7 @@ public class Fachada {
         if (auxilio.getTipoAuxilio() != null) {
             TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
             auxilio.setTipoAuxilio(tipoAuxilio);
+            auxilio.setValorPagamento(auxilio.getValorBolsa());
         }
 
         if (auxilio.getTipoBolsa() != null) {
