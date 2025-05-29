@@ -9,6 +9,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service @RequiredArgsConstructor
@@ -55,5 +57,9 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
             auxilioRepository.save(aux);
         }
         pagamentoRepository.delete(pagamento);
+    }
+
+    public List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max) {
+        return pagamentoRepository.findByValorBetween(min, max);
     }
 }

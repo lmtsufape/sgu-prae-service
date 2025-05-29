@@ -795,6 +795,10 @@ public class Fachada {
         pagamentoService.desativar(id);
     }
 
+    public List<Pagamento> listarPagamentosPorValor(BigDecimal min, BigDecimal max) {
+        return pagamentoService.listarPorValor(min, max);
+    }
+
     // ------------------- Armazenamento ------------------- //
 
     public List<Documento> salvarArquivo(MultipartFile[] arquivos) {

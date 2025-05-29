@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface PagamentoService {
@@ -17,4 +18,6 @@ public interface PagamentoService {
     void deletar(Long id) throws PagamentoNotFoundException;
 
     void desativar(Long id) throws PagamentoNotFoundException;
+
+    List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max);
 }
