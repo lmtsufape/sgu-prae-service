@@ -699,6 +699,10 @@ public class Fachada {
         auxilioService.deletar(id);
     }
 
+    public List<Auxilio> listarAuxiliosPendentesMesAtual() {
+        return auxilioService.listarAuxiliosPendentesMesAtual();
+    }
+
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
         List<Auxilio> auxilios = auxilioService
                 .listar().stream()

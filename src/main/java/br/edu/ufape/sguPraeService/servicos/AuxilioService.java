@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.servicos;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -61,4 +62,16 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
     public List<Auxilio> listarPorTipo(Long tipoId) throws AuxilioNotFoundException {
         return auxilioRepository.findByTipoAuxilioId(tipoId);
     }
+
+	public List<Auxilio> listarAuxiliosPendentesMesAtual() {
+		List<Auxilio> ativos = auxilioRepository.findByAtivoTrue();
+		LocalDate agora = LocalDate.now();
+
+		return ativos.stream()
+				.filter(aux -> aux.getPagamentos().stream()
+						.noneMatch(p -> p.getData() != null &&
+								p.getData().getMonth() == agora.getMonth() &&
+								p.getData().getYear() == agora.getYear()))
+				.toList();
+	}
 }
