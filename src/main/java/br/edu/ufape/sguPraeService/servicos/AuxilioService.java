@@ -63,6 +63,7 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
         return auxilioRepository.findByTipoAuxilioId(tipoId);
     }
 
+	@Override
 	public List<Auxilio> listarAuxiliosPendentesMesAtual() {
 		List<Auxilio> ativos = auxilioRepository.findByAtivoTrue();
 		LocalDate agora = LocalDate.now();

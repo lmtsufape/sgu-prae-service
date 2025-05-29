@@ -88,5 +88,12 @@ public class PagamentoController {
                 .map(p -> new PagamentoResponse(p, modelMapper))
                 .toList();
     }
+
+    @GetMapping("/estudante/{estudanteId}")
+    public List<PagamentoResponse> listarPorEstudante(@PathVariable Long estudanteId) {
+        return fachada.listarPagamentosPorEstudante(estudanteId).stream()
+                .map(p -> new PagamentoResponse(p, modelMapper))
+                .toList();
+    }
 }
 

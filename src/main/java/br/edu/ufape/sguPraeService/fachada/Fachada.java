@@ -799,6 +799,10 @@ public class Fachada {
         return pagamentoService.listarPorValor(min, max);
     }
 
+    public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
+        return pagamentoService.listarPorEstudanteId(estudanteId);
+    }
+
     // ------------------- Armazenamento ------------------- //
 
     public List<Documento> salvarArquivo(MultipartFile[] arquivos) {
