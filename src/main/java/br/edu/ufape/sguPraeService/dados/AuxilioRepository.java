@@ -15,4 +15,6 @@ public interface AuxilioRepository extends JpaRepository<Auxilio, Long> {
   List<Auxilio> findByTipoAuxilioId(@Param("tipoId") Long tipoId);
 
   List<Auxilio> findByPagamentos_Id(Long pagamentoId);
-  }
+
+  List<Auxilio> findByEstudantes_Id(Long estudanteId);
+}

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 
@@ -75,6 +77,23 @@ public class PagamentoController {
     public ResponseEntity<Void> desativar(@PathVariable Long id) throws PagamentoNotFoundException {
         fachada.desativarPagamento(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/valor/{min}/{max}")
+    public List<PagamentoResponse> listarPorValor(
+            @PathVariable BigDecimal min,
+            @PathVariable BigDecimal max) {
+        return fachada.listarPagamentosPorValor(min, max)
+                .stream()
+                .map(p -> new PagamentoResponse(p, modelMapper))
+                .toList();
+    }
+
+    @GetMapping("/estudante/{estudanteId}")
+    public List<PagamentoResponse> listarPorEstudante(@PathVariable Long estudanteId) {
+        return fachada.listarPagamentosPorEstudante(estudanteId).stream()
+                .map(p -> new PagamentoResponse(p, modelMapper))
+                .toList();
     }
 }
 

@@ -9,6 +9,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 
 @Service @RequiredArgsConstructor
@@ -55,5 +58,19 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
             auxilioRepository.save(aux);
         }
         pagamentoRepository.delete(pagamento);
+    }
+
+    @Override
+    public List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max) {
+        return pagamentoRepository.findByValorBetween(min, max);
+    }
+
+    @Override
+    public List<Pagamento> listarPorEstudanteId(Long estudanteId) {
+        return auxilioRepository.findByEstudantes_Id(estudanteId).stream()
+                .flatMap(aux -> aux.getPagamentos().stream())
+                .filter(Pagamento::isAtivo)
+                .sorted(Comparator.comparing(Pagamento::getData).reversed())
+                .toList();
     }
 }
