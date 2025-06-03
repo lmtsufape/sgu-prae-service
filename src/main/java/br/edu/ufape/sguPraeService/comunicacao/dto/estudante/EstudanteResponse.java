@@ -31,7 +31,6 @@ public class EstudanteResponse {
 
     public EstudanteResponse(Estudante estudante,  ModelMapper modelMapper) {
         if (estudante == null) throw new IllegalArgumentException("Estudante não pode ser nulo");
-        estudante.getAuxilios().forEach(x -> x.setEstudantes(null));
         modelMapper.map(estudante, this);
     }
 }
