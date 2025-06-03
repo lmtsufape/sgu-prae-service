@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,6 +37,7 @@ public class Estudante {
 
     @ManyToMany
     @JoinTable(name = "estudante_auxilio", joinColumns = @JoinColumn(name = "estudante_id"), inverseJoinColumns = @JoinColumn(name = "auxilio_id"))
+    @JsonManagedReference
     private List<Auxilio> auxilios;
 
     public void addAuxilio(Auxilio auxilio) {

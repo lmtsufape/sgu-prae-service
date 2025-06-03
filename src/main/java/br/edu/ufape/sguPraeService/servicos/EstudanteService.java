@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,8 +45,13 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public List<Estudante> listarEstudantes() {
-        return estudanteRepository.findAllByAtivoTrue();
+    public Page<Estudante> buscarPorUserIds(List<UUID> userIds, Pageable pageable) {
+        return estudanteRepository.findByUserIdIn(userIds, pageable);
+    }
+
+    @Override
+    public Page<Estudante> listarEstudantes(Pageable pageable) {
+        return estudanteRepository.findAllByAtivoTrue(pageable);
     }
 
     @Override
@@ -66,8 +73,13 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public List<Estudante> listarEstudantesComAuxilioAtivo() {
-        return estudanteRepository.findAllWithAuxilioAtivo();
+    public Page<Estudante> listarEstudantesComAuxilioAtivo(Pageable pageable) {
+        return estudanteRepository.findAllWithAuxilioAtivo(pageable);
+    }
+
+    @Override
+    public Page<Estudante> listarEstudantesPorAuxilioId(Long auxilioId, Pageable pageable) {
+        return estudanteRepository.findByAuxilioId(auxilioId, pageable);
     }
 
     @Override

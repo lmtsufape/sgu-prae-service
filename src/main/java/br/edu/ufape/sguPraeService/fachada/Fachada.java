@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -181,28 +184,39 @@ public class Fachada {
         return response;
     }
 
-    public List<EstudanteResponse> listarEstudantes() {
-        List<EstudanteResponse> estudanteResponse = new ArrayList<>();
-        List<Estudante> estudantes = estudanteService.listarEstudantes();
+    public Page<EstudanteResponse> listarEstudantes(Pageable pageable) throws EstudanteNotFoundException {
+        Page<Estudante> estudantes = estudanteService.listarEstudantes(pageable);
+
         if (estudantes.isEmpty()) {
-            return estudanteResponse;
+            return Page.empty();
         }
+
         List<UUID> userIds = estudantes.stream()
                 .map(Estudante::getUserId)
                 .toList();
-        log.info("Estudantes encontrados: {}", userIds);
+
         List<AlunoResponse> usuarios = authServiceHandler.buscarAlunos(userIds);
         if (usuarios.isEmpty()) {
-            return estudanteResponse;
+            return Page.empty();
         }
-        for (int i = 0; i < estudantes.size(); i++) {
-            Estudante estudante = estudantes.get(i);
-            AlunoResponse usuario = usuarios.get(i);
-            EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
-            response.setAluno(usuario);
-            estudanteResponse.add(response);
-        }
-        return estudanteResponse;
+
+        Map<UUID, AlunoResponse> mapaAlunos = usuarios.stream()
+                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
+
+        List<EstudanteResponse> listaEstudantes = estudantes.getContent().stream()
+                .map(estudante -> {
+                    EstudanteResponse resp = new EstudanteResponse(estudante, modelMapper);
+                    // "lookup" no mapa para anexar o AlunoResponse correto
+                    AlunoResponse ar = mapaAlunos.get(estudante.getUserId());
+                    resp.setAluno(ar);
+                    return resp;
+                })
+                .toList();
+        return new PageImpl<>(
+                listaEstudantes,
+                pageable,
+                estudantes.getTotalElements()
+        );
     }
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
@@ -224,97 +238,62 @@ public class Fachada {
         estudanteService.deletarEstudante(id);
     }
 
-    public List<EstudanteResponse> listarEstudantesPorCurso(Long id) {
-        List<Estudante> estudantes = estudanteService.listarEstudantes();
-        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
+    public Page<EstudanteResponse> listarEstudantesPorCurso(Long idCurso, Pageable pageable) {
+        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(idCurso);
+
+        List<UUID> userIds = alunosNoCurso.stream()
+                .map(AlunoResponse::getId)
+                .collect(Collectors.toList());
 
         Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
-        List<EstudanteResponse> estudantesNoCurso = new ArrayList<>();
+        Page<Estudante> pageEntidades = estudanteService.buscarPorUserIds(userIds, pageable);
 
-        for (Estudante estudante : estudantes) {
-            AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
-            if (aluno != null) {
-                EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
-                estudanteResponse.setAluno(aluno);
-                estudantesNoCurso.add(estudanteResponse);
-            }
-        }
-
-        return estudantesNoCurso;
+        return pageEntidades.map(estudante -> {
+            EstudanteResponse resp = new EstudanteResponse(estudante, modelMapper);
+            resp.setAluno(mapaAlunos.get(estudante.getUserId()));
+            return resp;
+        });
     }
 
-    public List<CredorResponse> listarCredoresPorCurso(Long id) {
-        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
+    public Page<CredorResponse> listarCredoresPorCurso(Long id, Pageable pageable) {
+        Page<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo(pageable);
+        if (estudantes.isEmpty()) {
+            return Page.empty(pageable);
+        }
         List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
 
-        Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
+        return getCredorResponses(pageable, estudantes, alunosNoCurso);
+    }
+
+    public Page<AlunoResponse> listarCredoresParaPublicacao(Pageable pageable) {
+        Page<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo(pageable);
+        if (estudantes.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
+
+        List<AlunoResponse> alunos  = authServiceHandler.buscarAlunos(userIds);
+        Map<UUID, AlunoResponse> mapaAlunos = alunos.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
-        List<CredorResponse> credores = new ArrayList<>();
-
-        for (Estudante estudante : estudantes) {
-            AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
-            if (aluno != null) {
-                EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
-                estudanteResponse.setAluno(aluno);
-                estudante.getAuxilios().stream()
-                        .filter(Auxilio::isAtivo)
-                        .forEach(auxilio -> credores
-                                .add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
-            }
-        }
-
-        return credores;
+        List<AlunoResponse> conteudo = estudantes.getContent().stream()
+                .map(est -> mapaAlunos.get(est.getUserId()))
+                .filter(Objects::nonNull)
+                .toList();
+        return new PageImpl<>(conteudo, pageable, conteudo.size());
     }
 
-    public List<AlunoResponse> listarCredoresParaPublicacao() {
-        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
-        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-        return authServiceHandler.buscarAlunos(userIds);
+    public Page<CredorResponse> listarCredoresComAuxiliosAtivos(Pageable pageable) {
+        return gerarCredores(pageable, estudanteService::listarEstudantesComAuxilioAtivo);
     }
 
-    public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
-        List<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo();
-        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
-
-        List<CredorResponse> credores = new ArrayList<>();
-
-        for (int i = 0; i < estudantes.size(); i++) {
-            Estudante estudante = estudantes.get(i);
-            AlunoResponse aluno = alunos.get(i);
-            EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
-            estudanteResponse.setAluno(aluno);
-            estudante.getAuxilios().stream()
-                    .filter(Auxilio::isAtivo)
-                    .forEach(auxilio -> credores
-                            .add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
-        }
-
-        return credores;
+    public Page<CredorResponse> listarCredoresPorAuxilio(Long auxilioId, Pageable pageable) {
+        return gerarCredores(pageable, pg ->
+                estudanteService.listarEstudantesPorAuxilioId(auxilioId, pg)
+        );
     }
-
-    public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
-        List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilioId);
-        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
-
-        List<CredorResponse> credores = new ArrayList<>();
-        for (int i = 0; i < estudantes.size(); i++) {
-            Estudante estudante = estudantes.get(i);
-            AlunoResponse aluno = alunos.get(i);
-            EstudanteResponse estudanteResponse = new EstudanteResponse(estudante, modelMapper);
-            estudanteResponse.setAluno(aluno);
-            estudante.getAuxilios().stream().filter(auxilio -> auxilio.getId().equals(auxilioId))
-                    .forEach(auxilio -> credores
-                            .add(new CredorResponse(estudanteResponse, estudante.getDadosBancarios(), auxilio)));
-        }
-
-        return credores;
-    }
-
     public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId)
             throws EstudanteNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
@@ -348,6 +327,56 @@ public class Fachada {
                 auxilios);
     }
 
+    private Page<CredorResponse> getCredorResponses(Pageable pageable, Page<Estudante> estudantes, List<AlunoResponse> alunos) {
+        Map<UUID, AlunoResponse> mapaAlunos = alunos.stream()
+                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
+
+
+        List<CredorResponse> listaCredores = estudantes.getContent().stream()
+                .map(estudante -> {
+                    AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
+
+                    EstudanteResponse er = new EstudanteResponse(estudante, modelMapper);
+                    er.setAluno(aluno);
+
+                    List<Auxilio> auxAtivos = estudante.getAuxilios().stream()
+                            .filter(Auxilio::isAtivo)
+                            .toList();
+
+                    return new CredorResponse(
+                            er,
+                            estudante.getDadosBancarios(),
+                            auxAtivos
+                    );
+                })
+                .toList();
+
+
+        return new PageImpl<>(
+                listaCredores,
+                pageable,
+                estudantes.getTotalElements()
+        );
+    }
+
+    private Page<CredorResponse> gerarCredores(
+            Pageable pageable,
+            Function<Pageable, Page<Estudante>> fetchEstudantes
+    ) {
+        Page<Estudante> pageEstudantes = fetchEstudantes.apply(pageable);
+        if (pageEstudantes.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<UUID> userIds = pageEstudantes.getContent().stream()
+                .map(Estudante::getUserId)
+                .toList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+        return getCredorResponses(pageable, pageEstudantes, alunos);
+    }
+
+
+
     // ================== TipoEtnia ================== //
 
     public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
@@ -370,31 +399,6 @@ public class Fachada {
         tipoEtniaService.deletarTipoEtnia(id);
     }
 
-    // ================== Endereco ================== //
-
-    // public List<Endereco> listarEnderecos() {
-    // return enderecoService.listarEnderecos();
-    // }
-    //
-    // public Endereco buscarEndereco(Long id) {
-    // try {
-    // return enderecoService.buscarEndereco(id);
-    // } catch (EnderecoNotFoundException e) {
-    // throw new RuntimeException(e);
-    // }
-    // }
-    //
-    // public Endereco criarEndereco(Endereco endereco) {
-    // return enderecoService.criarEndereco(endereco);
-    // }
-    //
-    // public void excluirEndereco(Long id) {
-    // enderecoService.excluirEndereco(id);
-    // }
-    //
-    // public Endereco editarEndereco(Long id, Endereco enderecoAtualizado) {
-    // return enderecoService.editarEndereco(id, enderecoAtualizado);
-    // }
 
     // ================== Dados Bancarios ================== //
 
@@ -792,10 +796,6 @@ public class Fachada {
     }
 
     // ------------------- Armazenamento ------------------- //
-
-    public List<Documento> salvarArquivo(MultipartFile[] arquivos) {
-        return armazenamentoService.salvarArquivo(arquivos);
-    }
 
     public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
         return armazenamentoService.converterDocumentosParaBase64(documentos);
