@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.models;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,5 +24,6 @@ public class Pagamento {
 	private LocalDate data;
 	private boolean ativo = true;
 	@ManyToOne
+	@JsonManagedReference
 	private Auxilio auxilio;
 }

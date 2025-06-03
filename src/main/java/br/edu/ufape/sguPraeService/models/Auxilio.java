@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,10 +19,10 @@ public class Auxilio {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = true)
+    @ManyToOne()
     private TipoAuxilio tipoAuxilio;
 
-    @ManyToOne(optional = true)
+    @ManyToOne()
     private TipoBolsa tipoBolsa;
 
     private int horasBolsa;
@@ -34,12 +35,14 @@ public class Auxilio {
     private boolean ativo = true;
 
     @ManyToMany(mappedBy = "auxilios")
+    @JsonBackReference
     private List<Estudante> estudantes = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Documento termo;
 
     @OneToMany(mappedBy="auxilio", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Pagamento> pagamentos = new ArrayList<>();
 
     public void addPagamento(Pagamento pagamento) {

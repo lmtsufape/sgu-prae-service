@@ -1,6 +1,8 @@
 package br.edu.ufape.sguPraeService.dados;
 
 import br.edu.ufape.sguPraeService.models.Estudante;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,12 +13,17 @@ import java.util.UUID;
 public interface EstudanteRepository extends JpaRepository<Estudante, Long> {
     Optional<Object> findByUserId(UUID userId);
 
-    List<Estudante> findAllByAtivoTrue();
+    Page<Estudante> findByUserIdIn(List<UUID> userIds, Pageable pageable);
+
+    Page<Estudante> findAllByAtivoTrue(Pageable pageable);
 
     @Query("SELECT DISTINCT e FROM Estudante e JOIN FETCH e.auxilios a WHERE a.ativo = true")
-    List<Estudante> findAllWithAuxilioAtivo();
+    Page<Estudante> findAllWithAuxilioAtivo(Pageable pageable);
 
      @Query("SELECT e FROM Estudante e JOIN e.auxilios a WHERE a.id = :auxilioId")
+    Page<Estudante> findByAuxilioId(Long auxilioId, Pageable pageable);
+
+    @Query("SELECT e FROM Estudante e JOIN e.auxilios a WHERE a.id = :auxilioId")
     List<Estudante> findByAuxilioId(Long auxilioId);
 
 }
