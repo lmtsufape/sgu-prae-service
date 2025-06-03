@@ -6,12 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class CredorResponse {
     private EstudanteResponse estudante;
     private DadosBancarios dadosBancarios;
-    private Auxilio auxilio;
+    private List<Auxilio> auxilios;
 
 }

@@ -1,6 +1,7 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
@@ -8,12 +9,13 @@ import br.edu.ufape.sguPraeService.models.Estudante;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/estudantes")
@@ -23,13 +25,16 @@ public class EstudanteController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    public List<EstudanteResponse> listarEstudantes() {
-        return fachada.listarEstudantes();
+    public Page<EstudanteResponse> listarEstudantes(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarEstudantes(pageable);
     }
 
     @GetMapping("/curso/{id}")
-    public List<EstudanteResponse> listarEstudantesPorCurso(@PathVariable Long id) {
-        return fachada.listarEstudantesPorCurso(id);
+    public Page<EstudanteResponse> listarEstudantesPorCurso(
+            @PathVariable Long id,
+            @PageableDefault(sort = "id") Pageable pageable
+    ) {
+        return fachada.listarEstudantesPorCurso(id, pageable);
     }
 
     @GetMapping("/{id}")
@@ -62,29 +67,31 @@ public class EstudanteController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores")
-    public ResponseEntity<List<CredorResponse>> listarCredoresComAuxiliosAtivos() {
-        List<CredorResponse> credores = fachada.listarCredoresComAuxiliosAtivos();
+    public ResponseEntity<Page<CredorResponse>> listarCredoresComAuxiliosAtivos(@PageableDefault(sort = "id") Pageable pageable) {
+        Page<CredorResponse> credores = fachada.listarCredoresComAuxiliosAtivos(pageable);
         return ResponseEntity.ok(credores);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/auxilio/{id}")
-    public ResponseEntity<List<CredorResponse>> listarCredoresPorAuxilio(@PathVariable Long id) {
-        List<CredorResponse> credores = fachada.listarCredoresPorAuxilio(id);
+    public ResponseEntity<Page<CredorResponse>> listarCredoresPorAuxilio(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) {
+        Page<CredorResponse> credores = fachada.listarCredoresPorAuxilio(id, pageable);
         return ResponseEntity.ok(credores);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/publicacao")
-    public ResponseEntity<List<PublicacaoResponse>> listarCrediresParaPublicacao() {
-        List<PublicacaoResponse> publicacoes = fachada.listarCredoresParaPublicacao().stream().map(alunoResponse -> new PublicacaoResponse(alunoResponse, modelMapper)).toList();
-        return ResponseEntity.ok(publicacoes);
+    public ResponseEntity<Page<PublicacaoResponse>> listarCredoresParaPublicacao( @PageableDefault(sort = "id") Pageable pageable) {
+        Page<AlunoResponse> pageAlunos = fachada.listarCredoresParaPublicacao(pageable);
+        Page<PublicacaoResponse> pagePublicacoes = pageAlunos.map(alunoResponse ->
+                new PublicacaoResponse(alunoResponse, modelMapper)
+        );
+        return ResponseEntity.ok(pagePublicacoes);
     }
-
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/curso/{id}")
-    List<CredorResponse> listarCredoresPorCurso(@PathVariable Long id) {
-        return fachada.listarCredoresPorCurso(id);
+    Page<CredorResponse> listarCredoresPorCurso(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarCredoresPorCurso(id, pageable);
     }
 
 
