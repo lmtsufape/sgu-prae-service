@@ -703,6 +703,10 @@ public class Fachada {
         auxilioService.deletar(id);
     }
 
+    public List<Auxilio> listarAuxiliosPendentesMesAtual() {
+        return auxilioService.listarAuxiliosPendentesMesAtual();
+    }
+
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
         List<Auxilio> auxilios = auxilioService
                 .listar().stream()
@@ -793,6 +797,14 @@ public class Fachada {
 
     public void desativarPagamento(Long id) throws PagamentoNotFoundException {
         pagamentoService.desativar(id);
+    }
+
+    public List<Pagamento> listarPagamentosPorValor(BigDecimal min, BigDecimal max) {
+        return pagamentoService.listarPorValor(min, max);
+    }
+
+    public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
+        return pagamentoService.listarPorEstudanteId(estudanteId);
     }
 
     // ------------------- Armazenamento ------------------- //
