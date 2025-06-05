@@ -1,8 +1,10 @@
 package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+
 import java.util.UUID;
 
 public interface CancelamentoService {
@@ -10,13 +12,13 @@ public interface CancelamentoService {
 
     CancelamentoAgendamento buscar(Long id);
 
-    List<CancelamentoAgendamento> listar();
+    Page<CancelamentoAgendamento> listar(Pageable pageable);
 
-    List<CancelamentoAgendamento> ListarCancelamentosPorEstudante(UUID userId);
+    Page<CancelamentoAgendamento> ListarCancelamentosPorEstudante(UUID userId, Pageable pageable);
 
-    List<CancelamentoAgendamento> ListarCancelamentosPorProfissional(UUID userId);
+    Page<CancelamentoAgendamento> ListarCancelamentosPorProfissional(UUID userId, Pageable pageable);
 
-    List<CancelamentoAgendamento> ListarPorEstudanteAtual();
+    Page<CancelamentoAgendamento> ListarPorEstudanteAtual(Pageable pageable);
 
-    List<CancelamentoAgendamento> ListarPorProfissionalAtual();
+    Page<CancelamentoAgendamento> ListarPorProfissionalAtual(Pageable pageable);
 }

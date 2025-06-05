@@ -9,6 +9,9 @@
  import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
 
  import org.modelmapper.ModelMapper;
+ import org.springframework.data.domain.Page;
+ import org.springframework.data.domain.Pageable;
+ import org.springframework.data.web.PageableDefault;
  import org.springframework.security.access.prepost.PreAuthorize;
  import org.springframework.web.bind.annotation.*;
  import org.springframework.http.ResponseEntity;
@@ -29,8 +32,8 @@
 
 
      @GetMapping
-     public List<CronogramaResponse> listar() {
-         return fachada.listarCronogramas().stream().map(cronograma -> new CronogramaResponse(cronograma, modelMapper)).toList();
+     public Page<CronogramaResponse> listar(@PageableDefault(sort = "id") Pageable pageable) {
+         return fachada.listarCronogramas(pageable).map(cronograma -> new CronogramaResponse(cronograma, modelMapper));
      }
 
      @GetMapping("/{id}")
@@ -40,8 +43,8 @@
      }
 
      @GetMapping("/tipo-atendimento/{id}")
-        public ResponseEntity<List<CronogramaResponse>> buscarPorTipoAtendimento(@PathVariable Long id) {
-            List<CronogramaResponse> response = fachada.listarCronogramasPorTipoAtendimento(id).stream().map(cronograma -> new CronogramaResponse(cronograma, modelMapper)).toList();
+        public ResponseEntity<Page<CronogramaResponse>> buscarPorTipoAtendimento(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) throws TipoAtendimentoNotFoundException{
+            Page<CronogramaResponse> response = fachada.listarCronogramasPorTipoAtendimento(id, pageable).map(cronograma -> new CronogramaResponse(cronograma, modelMapper));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
@@ -65,8 +68,8 @@
 
      @PreAuthorize("hasRole('PROFISSIONAL')")
      @GetMapping("/profissional")
-     public List<CronogramaResponse> listarPorProfissional() {
-         return fachada.listarCronogramasPorProfissional().stream().map(cronograma -> new CronogramaResponse(cronograma, modelMapper)).toList();
+     public Page<CronogramaResponse> listarPorProfissional(@PageableDefault(sort = "id") Pageable pageable) {
+         return fachada.listarCronogramasPorProfissional(pageable).map(cronograma -> new CronogramaResponse(cronograma, modelMapper));
      }
 
 

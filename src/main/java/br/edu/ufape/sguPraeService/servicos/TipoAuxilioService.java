@@ -5,8 +5,9 @@ import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoAuxilio;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service @RequiredArgsConstructor
 public class TipoAuxilioService implements br.edu.ufape.sguPraeService.servicos.interfaces.TipoAuxilioService {
@@ -14,7 +15,7 @@ public class TipoAuxilioService implements br.edu.ufape.sguPraeService.servicos.
     private final ModelMapper modelMapper;
 
     @Override
-    public List<TipoAuxilio> listar() { return tipoAuxilioRepository.findAll(); }
+    public Page<TipoAuxilio> listar(Pageable pageable) { return tipoAuxilioRepository.findAll(pageable); }
 
     @Override
     public TipoAuxilio buscar(Long id) throws TipoAuxilioNotFoundException {

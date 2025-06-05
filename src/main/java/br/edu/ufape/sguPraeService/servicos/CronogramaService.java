@@ -6,9 +6,10 @@
  import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
  import jakarta.ws.rs.NotAllowedException;
  import lombok.RequiredArgsConstructor;
+ import org.springframework.data.domain.Page;
+ import org.springframework.data.domain.Pageable;
  import org.springframework.stereotype.Service;
 
- import java.util.List;
  import java.util.UUID;
 
  @Service
@@ -18,18 +19,18 @@
      private final AuthenticatedUserProvider authenticatedUserProvider;
  
      @Override
-     public List<Cronograma> listar() {
-         return repository.findAllByAtivoTrue();
+     public Page<Cronograma> listar(Pageable pageable) {
+         return repository.findAllByAtivoTrue(pageable);
      }
 
      @Override
-     public List<Cronograma> listarPorTipoAtendimento(Long id) {
-         return repository.findByAtivoTrueAndTipoAtendimento_Id(id);
+     public Page<Cronograma> listarPorTipoAtendimento(Long id, Pageable pageable) {
+         return repository.findByAtivoTrueAndTipoAtendimento_Id(id, pageable);
      }
 
      @Override
-     public List<Cronograma> listarPorProfissional(UUID userId) {
-         return repository.findAllByAtivoTrueAndProfissional_UserId(userId);
+     public Page<Cronograma> listarPorProfissional(UUID userId, Pageable pageable) {
+         return repository.findAllByAtivoTrueAndProfissional_UserId(userId, pageable);
      }
  
      @Override

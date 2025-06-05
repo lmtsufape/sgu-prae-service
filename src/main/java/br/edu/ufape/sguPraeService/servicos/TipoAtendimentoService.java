@@ -4,18 +4,19 @@
  import br.edu.ufape.sguPraeService.dados.TipoAtendimentoRepository;
  import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
  import org.modelmapper.ModelMapper;
+ import org.springframework.data.domain.Page;
+ import org.springframework.data.domain.Pageable;
  import org.springframework.stereotype.Service;
  import lombok.RequiredArgsConstructor;
- import java.util.List;
- 
+
  @Service @RequiredArgsConstructor
  public class TipoAtendimentoService implements br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService {
      private final TipoAtendimentoRepository repository;
      private final ModelMapper modelMapper;
  
      @Override
-     public List<TipoAtendimento> listar() {
-         return repository.findAll();
+     public Page<TipoAtendimento> listar(Pageable pageable) {
+         return repository.findAll(pageable);
      }
 
 

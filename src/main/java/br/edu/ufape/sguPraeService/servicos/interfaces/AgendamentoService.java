@@ -5,8 +5,8 @@ import br.edu.ufape.sguPraeService.models.Agendamento;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import br.edu.ufape.sguPraeService.models.Profissional;
 import br.edu.ufape.sguPraeService.models.Vaga;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface AgendamentoService {
 
@@ -20,11 +20,11 @@ public interface AgendamentoService {
 
     void deletar(Long id);
 
-    List<Agendamento> listarAgendamentosPorEstudante(Estudante estudante);
+    Page<Agendamento> listarAgendamentosPorEstudante(Estudante estudante, Pageable pageable);
 
-    List<Agendamento> listarAgendamentosEstudanteAtual();
+    Page<Agendamento> listarAgendamentosEstudanteAtual(Pageable pageable);
 
-    List<Agendamento> listarPorProfissional(Profissional profissional);
+    Page<Agendamento> listarPorProfissional(Profissional profissional, Pageable pageable);
 
-    List<Agendamento> listarPorProfissionalAtual();
+    Page<Agendamento> listarPorProfissionalAtual(Pageable pageable);
 }

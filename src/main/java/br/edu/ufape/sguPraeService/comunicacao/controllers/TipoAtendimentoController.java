@@ -8,13 +8,15 @@
  
  
  import org.modelmapper.ModelMapper;
+ import org.springframework.data.domain.Page;
+ import org.springframework.data.domain.Pageable;
+ import org.springframework.data.web.PageableDefault;
  import org.springframework.security.access.prepost.PreAuthorize;
  import org.springframework.web.bind.annotation.*;
  import org.springframework.http.ResponseEntity;
  
  import jakarta.validation.Valid;
  import lombok.RequiredArgsConstructor;
- import java.util.List;
  import org.springframework.http.HttpStatus;
  
  @RestController
@@ -26,8 +28,9 @@
  
  
      @GetMapping
-     public List<TipoAtendimentoResponse> listar() {
-         return fachada.listarTipoAtendimentos().stream().map(tipoatendimento -> new TipoAtendimentoResponse(tipoatendimento, modelMapper)).toList();
+     public Page<TipoAtendimentoResponse> listar(@PageableDefault (sort = "id") Pageable pageable) {
+            return fachada.listarTipoAtendimentos(pageable)
+                    .map(tipoAtendimento -> new TipoAtendimentoResponse(tipoAtendimento, modelMapper));
      }
  
      @GetMapping("/{id}")

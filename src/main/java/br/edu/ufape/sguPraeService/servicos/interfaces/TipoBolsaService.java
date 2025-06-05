@@ -2,11 +2,11 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoBolsa;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface TipoBolsaService {
-    List<TipoBolsa> listar();
+    Page<TipoBolsa> listar(Pageable pageable);
 
     TipoBolsa buscar(Long id) throws TipoBolsaNotFoundException;
 

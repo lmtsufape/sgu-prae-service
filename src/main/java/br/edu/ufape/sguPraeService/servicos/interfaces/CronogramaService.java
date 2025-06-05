@@ -2,16 +2,18 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
 import br.edu.ufape.sguPraeService.models.Cronograma;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+
 import java.util.UUID;
 
 public interface CronogramaService {
-    List<Cronograma> listar();
+    Page<Cronograma> listar(Pageable pageable);
 
-    List<Cronograma> listarPorTipoAtendimento(Long id);
+    Page<Cronograma> listarPorTipoAtendimento(Long id, Pageable pageable);
 
-    List<Cronograma> listarPorProfissional(UUID userId);
+    Page<Cronograma> listarPorProfissional(UUID userId, Pageable pageable);
 
     Cronograma buscar(Long id) throws CronogramaNotFoundException;
 

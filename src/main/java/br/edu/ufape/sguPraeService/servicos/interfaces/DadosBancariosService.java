@@ -1,14 +1,16 @@
 package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.models.DadosBancarios;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+
 
 public interface DadosBancariosService {
 
     DadosBancarios buscarDadosBancarios(Long id);
 
-    List<DadosBancarios> listarDadosBancarios();
+    Page<DadosBancarios> listarDadosBancarios(Pageable pageable);
 
     DadosBancarios salvarDadosBancarios(DadosBancarios dadosBancarios);
 

@@ -6,13 +6,13 @@ import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.DadosBancarios;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/dadosBancarios")
@@ -31,10 +31,9 @@ public class DadosBancariosController {
     }
 
     @GetMapping
-    public List<DadosBancariosResponse> listarDadosBancarios() {
-        return fachada.listarDadosBancarios().stream()
-                .map(dadosBancarios -> new DadosBancariosResponse(dadosBancarios, modelMapper))
-                .collect(Collectors.toList());
+    public Page<DadosBancariosResponse> listarDadosBancarios(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarDadosBancarios(pageable)
+                .map(dadosBancarios -> new DadosBancariosResponse(dadosBancarios, modelMapper));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")

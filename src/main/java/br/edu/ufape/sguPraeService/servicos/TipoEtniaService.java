@@ -5,9 +5,9 @@ import br.edu.ufape.sguPraeService.exceptions.TipoEtniaDuplicadoException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoEtnia;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +17,7 @@ public class TipoEtniaService implements br.edu.ufape.sguPraeService.servicos.in
     @Override
     public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
         tipoEtniaRepository.findByTipoIgnoreCase(tipoEtnia.getTipo())
-                .ifPresent(et -> {
+                .ifPresent(_ -> {
                     throw new TipoEtniaDuplicadoException("Já existe um tipo de etnia: " + tipoEtnia.getTipo());
                 });
 
@@ -30,8 +30,8 @@ public class TipoEtniaService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public List<TipoEtnia> listarTiposEtnia() {
-        return tipoEtniaRepository.findAll();
+    public Page<TipoEtnia> listarTiposEtnia(Pageable pageable) {
+        return tipoEtniaRepository.findAll(pageable);
     }
 
     @Override
