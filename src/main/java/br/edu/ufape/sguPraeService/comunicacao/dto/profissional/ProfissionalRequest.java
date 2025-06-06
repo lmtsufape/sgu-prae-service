@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.comunicacao.dto.profissional;
 import br.edu.ufape.sguPraeService.models.Profissional;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import org.modelmapper.ModelMapper;
 public class ProfissionalRequest {
 
     @NotBlank(message = "Especialidade é obrigatória")
+    @Size(min = 3, max = 100, message = "Especialidade deve ter entre 3 e 100 caracteres")
     private String especialidade;
 
     public Profissional convertToEntity(ProfissionalRequest profissionalRequest, ModelMapper modelMapper) {
