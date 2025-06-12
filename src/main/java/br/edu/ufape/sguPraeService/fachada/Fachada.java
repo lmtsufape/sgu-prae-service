@@ -184,6 +184,10 @@ public class Fachada {
         return response;
     }
 
+    public Page<Estudante> listarEstudantesPorAuxilio(Long auxilioId, Pageable pageable) {
+        return estudanteService.listarEstudantesPorAuxilioId(auxilioId, pageable);
+    }
+
     public Page<EstudanteResponse> listarEstudantes(Pageable pageable) throws EstudanteNotFoundException {
         Page<Estudante> estudantes = estudanteService.listarEstudantes(pageable);
 

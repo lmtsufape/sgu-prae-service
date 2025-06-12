@@ -55,7 +55,6 @@ public class EstudanteController {
     public ResponseEntity<EstudanteResponse> atualizarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
         Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
         EstudanteResponse estudanteAtualizado = fachada.atualizarEstudante(estudante,estudanteRequest.getTipoEtniaId());
-
         return ResponseEntity.ok(estudanteAtualizado);
     }
 
@@ -70,6 +69,14 @@ public class EstudanteController {
     public ResponseEntity<Page<CredorResponse>> listarCredoresComAuxiliosAtivos(@PageableDefault(sort = "id") Pageable pageable) {
         Page<CredorResponse> credores = fachada.listarCredoresComAuxiliosAtivos(pageable);
         return ResponseEntity.ok(credores);
+    }
+
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    @GetMapping("/auxlio/{auxilioId}")
+    public ResponseEntity<Page<EstudanteResponse>> buscarEstudantesPorAuxiliosId(@PathVariable Long auxilioId, @PageableDefault(sort = "id") Pageable pageable) {
+        Page<Estudante> estudantes = fachada.listarEstudantesPorAuxilio(auxilioId, pageable);
+        Page<EstudanteResponse> response = estudantes.map(estudante -> new EstudanteResponse(estudante, modelMapper));
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
@@ -88,13 +95,12 @@ public class EstudanteController {
         );
         return ResponseEntity.ok(pagePublicacoes);
     }
+
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/curso/{id}")
-    Page<CredorResponse> listarCredoresPorCurso(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarCredoresPorCurso(id, pageable);
+    ResponseEntity<Page<CredorResponse>> listarCredoresPorCurso(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(fachada.listarCredoresPorCurso(id, pageable));
     }
-
-
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/{id}/relatorio")
