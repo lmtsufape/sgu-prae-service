@@ -20,6 +20,4 @@ public interface PagamentoService {
     void desativar(Long id) throws PagamentoNotFoundException;
 
     List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max);
-
-    List<Pagamento> listarPorEstudanteId(Long estudanteId);
 }

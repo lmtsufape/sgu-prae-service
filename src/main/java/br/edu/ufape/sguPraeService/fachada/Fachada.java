@@ -646,6 +646,10 @@ public class Fachada {
         return auxilioService.buscar(id);
     }
 
+    public Auxilio buscarAuxilioPorPagamentoId(Long pagamentoId) throws AuxilioNotFoundException {
+        return auxilioService.buscarPorPagamentoId(pagamentoId);
+    }
+
     public Auxilio salvarAuxilio(Long estudanteId, Auxilio auxilio, MultipartFile termo)
             throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
@@ -778,20 +782,25 @@ public class Fachada {
 
     public List<Pagamento> salvarPagamentos(List<Pagamento> pagamentos, Long auxilioId) throws AuxilioNotFoundException {
         Auxilio auxilio = buscarAuxilio(auxilioId);
-
+        List<Pagamento> rPagamentos = new ArrayList<>();
         for (Pagamento pagamento : pagamentos) {
+            auxilio.addPagamento(pagamento);
             pagamento.setId(null);
-            pagamento.setAuxilio(auxilio);
+            auxilio = auxilioService.editar(auxilioId, auxilio);
+            rPagamentos.add(auxilio.getPagamentos().getLast());
         }
-
-        return pagamentoService.salvar(pagamentos);
+        return rPagamentos;
     }
 
     public Pagamento editarPagamento(Long id, Pagamento pagamento) throws PagamentoNotFoundException {
         return pagamentoService.editar(id, pagamento);
     }
 
-    public void deletarPagamento(Long id) throws PagamentoNotFoundException {
+    public void deletarPagamento(Long id) throws PagamentoNotFoundException, AuxilioNotFoundException {
+        Pagamento pagamento = buscarPagamento(id);
+        Auxilio auxilio = buscarAuxilioPorPagamentoId(id);
+        auxilio.getPagamentos().remove(pagamento);
+        auxilio = auxilioService.editar(auxilio.getId(), auxilio);
         pagamentoService.deletar(id);
     }
 
@@ -804,7 +813,12 @@ public class Fachada {
     }
 
     public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
-        return pagamentoService.listarPorEstudanteId(estudanteId);
+        buscarEstudante(estudanteId);
+        return auxilioService.buscarPorEstudanteId(estudanteId).stream()
+                .flatMap(aux -> aux.getPagamentos().stream())
+                .filter(Pagamento::isAtivo)
+                .sorted(Comparator.comparing(Pagamento::getData).reversed())
+                .toList();
     }
 
     // ------------------- Armazenamento ------------------- //

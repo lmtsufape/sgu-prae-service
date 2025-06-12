@@ -28,6 +28,16 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 	}
 
 	@Override
+	public Auxilio buscarPorPagamentoId(Long pagamentoId) throws AuxilioNotFoundException {
+		return auxilioRepository.findByPagamentos_Id(pagamentoId).orElseThrow(AuxilioNotFoundException::new);
+	}
+
+	@Override
+	public List<Auxilio> buscarPorEstudanteId(Long estudanteId) {
+		return auxilioRepository.findByEstudantes_Id(estudanteId);
+	}
+
+	@Override
 	public Auxilio salvar(Auxilio entity) {
 		return auxilioRepository.save(entity);
 	}

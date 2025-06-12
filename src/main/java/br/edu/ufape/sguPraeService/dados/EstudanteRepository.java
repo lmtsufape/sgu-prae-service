@@ -20,10 +20,9 @@ public interface EstudanteRepository extends JpaRepository<Estudante, Long> {
     @Query("SELECT DISTINCT e FROM Estudante e JOIN FETCH e.auxilios a WHERE a.ativo = true")
     Page<Estudante> findAllWithAuxilioAtivo(Pageable pageable);
 
-     @Query("SELECT e FROM Estudante e JOIN e.auxilios a WHERE a.id = :auxilioId")
+    @Query("SELECT e FROM Estudante e JOIN e.auxilios a WHERE a.id = :auxilioId AND e.ativo = true AND a.ativo = true")
     Page<Estudante> findByAuxilioId(Long auxilioId, Pageable pageable);
 
-    @Query("SELECT e FROM Estudante e JOIN e.auxilios a WHERE a.id = :auxilioId")
+    @Query("SELECT e FROM Estudante e JOIN e.auxilios a WHERE a.id = :auxilioId AND e.ativo = true AND a.ativo = true")
     List<Estudante> findByAuxilioId(Long auxilioId);
-
 }

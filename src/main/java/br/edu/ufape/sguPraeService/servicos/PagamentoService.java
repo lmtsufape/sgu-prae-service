@@ -18,7 +18,6 @@ import java.util.List;
 public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService {
     private final PagamentoRepository pagamentoRepository;
     private final ModelMapper modelMapper;
-    private final AuxilioRepository auxilioRepository;
 
     @Override
     public List<Pagamento> listar() { return pagamentoRepository.findAll(); }
@@ -51,26 +50,11 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     @Transactional
     public void deletar(Long id) throws PagamentoNotFoundException {
         Pagamento pagamento = buscar(id);
-
-        List<Auxilio> auxilios = auxilioRepository.findByPagamentos_Id(id);
-        for (Auxilio aux : auxilios) {
-            aux.getPagamentos().remove(pagamento);
-            auxilioRepository.save(aux);
-        }
         pagamentoRepository.delete(pagamento);
     }
 
     @Override
     public List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max) {
         return pagamentoRepository.findByValorBetween(min, max);
-    }
-
-    @Override
-    public List<Pagamento> listarPorEstudanteId(Long estudanteId) {
-        return auxilioRepository.findByEstudantes_Id(estudanteId).stream()
-                .flatMap(aux -> aux.getPagamentos().stream())
-                .filter(Pagamento::isAtivo)
-                .sorted(Comparator.comparing(Pagamento::getData).reversed())
-                .toList();
     }
 }
