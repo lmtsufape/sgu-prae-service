@@ -5,6 +5,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,17 +43,19 @@ public class AuxilioController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    public List<AuxilioResponse> listar() {
-        return fachada.listarAuxilios().stream().map(auxilio -> new AuxilioResponse(auxilio, modelMapper)).toList();
+    public ResponseEntity<Page<AuxilioResponse>> listar(@PageableDefault(sort = "id") Pageable pageable) {
+        Page<AuxilioResponse> resposta = fachada.listarAuxilios(pageable)
+                .map(auxilio -> new AuxilioResponse(auxilio, modelMapper));
+        return ResponseEntity.ok(resposta);
     }
 
     @GetMapping("/estudante/{estudanteId}")
-    public List<AuxilioResponse> listarPorEstudanteId(@PathVariable Long estudanteId)
+    public ResponseEntity<Page<AuxilioResponse>> listarPorEstudanteId(@PathVariable Long estudanteId,
+            @PageableDefault(sort = "id") Pageable pageable)
             throws EstudanteNotFoundException {
-        return fachada.listarAuxiliosPorEstudanteId(estudanteId)
-                .stream()
-                .map(auxilio -> new AuxilioResponse(auxilio, modelMapper))
-                .toList();
+        Page<AuxilioResponse> resposta = fachada.listarAuxiliosPorEstudanteId(estudanteId, pageable)
+                .map(auxilio -> new AuxilioResponse(auxilio, modelMapper));
+        return ResponseEntity.ok(resposta);
     }
 
     @GetMapping("/{id}")
@@ -94,32 +99,26 @@ public class AuxilioController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/pagos")
-    public ResponseEntity<List<AuxilioResponse>> listarPagosPorMes() throws AuxilioNotFoundException {
-        List<Auxilio> auxilios = fachada.listarPagosPorMes();
+    public ResponseEntity<Page<AuxilioResponse>> listarPagosPorMes(@PageableDefault(sort = "id") Pageable pageable) throws AuxilioNotFoundException {
+        Page<Auxilio> auxilios = fachada.listarPagosPorMes(pageable);
         return ResponseEntity.ok(
-                auxilios.stream()
-                        .map(aux -> new AuxilioResponse(aux, modelMapper))
-                        .toList());
+                auxilios.map(aux -> new AuxilioResponse(aux, modelMapper)));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/tipo/{id}")
-    public ResponseEntity<List<AuxilioResponse>> listarPorTipo(@PathVariable Long id) throws AuxilioNotFoundException {
-        List<Auxilio> auxilios = fachada.listarAuxiliosPorTipo(id);
+    public ResponseEntity<Page<AuxilioResponse>> listarPorTipo(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) throws AuxilioNotFoundException {
+        Page<Auxilio> auxilios = fachada.listarAuxiliosPorTipo(id, pageable);
         return ResponseEntity.ok(
-                auxilios.stream()
-                        .map(aux -> new AuxilioResponse(aux, modelMapper))
-                        .toList());
+                auxilios.map(aux -> new AuxilioResponse(aux, modelMapper)));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/pendentes")
-    public ResponseEntity<List<AuxilioResponse>> listarAuxiliosPendentesMesAtual() {
-        List<Auxilio> auxilios = fachada.listarAuxiliosPendentesMesAtual();
+    public ResponseEntity<Page<AuxilioResponse>> listarAuxiliosPendentesMesAtual(@PageableDefault(sort = "id") Pageable pageable) {
+        Page<Auxilio> auxilios = fachada.listarAuxiliosPendentesMesAtual(pageable);
         return ResponseEntity.ok(
-                auxilios.stream()
-                        .map(aux -> new AuxilioResponse(aux, modelMapper))
-                        .toList());
+                auxilios.map(aux -> new AuxilioResponse(aux, modelMapper)));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")

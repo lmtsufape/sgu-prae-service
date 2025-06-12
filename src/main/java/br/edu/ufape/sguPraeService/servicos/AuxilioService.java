@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.edu.ufape.sguPraeService.dados.AuxilioRepository;
@@ -23,6 +25,11 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 	}
 
 	@Override
+	public Page<Auxilio> listar(Pageable pageable) {
+		return auxilioRepository.findAll(pageable);
+	}
+
+	@Override
 	public Auxilio buscar(Long id) throws AuxilioNotFoundException {
 		return auxilioRepository.findById(id).orElseThrow(AuxilioNotFoundException::new);
 	}
@@ -35,6 +42,11 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 	@Override
 	public List<Auxilio> buscarPorEstudanteId(Long estudanteId) {
 		return auxilioRepository.findByEstudantes_Id(estudanteId);
+	}
+
+	@Override
+	public Page<Auxilio> buscarPorEstudanteId(Long estudanteId, Pageable pageable) {
+		return auxilioRepository.findByEstudantes_Id(estudanteId, pageable);
 	}
 
 	@Override
@@ -68,9 +80,19 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
         return auxilioRepository.findByAtivoTrue();
     }
 
+	@Override
+    public Page<Auxilio> listarPagosPorMes(Pageable pageable) throws AuxilioNotFoundException {
+        return auxilioRepository.findByAtivoTrue(pageable);
+    }
+
     @Override
     public List<Auxilio> listarPorTipo(Long tipoId) throws AuxilioNotFoundException {
         return auxilioRepository.findByTipoAuxilioId(tipoId);
+    }
+
+	@Override
+    public Page<Auxilio> listarPorTipo(Long tipoId, Pageable pageable) throws AuxilioNotFoundException {
+        return auxilioRepository.findByTipoAuxilioId(tipoId, pageable);
     }
 
 	@Override
@@ -85,4 +107,14 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 								p.getData().getYear() == agora.getYear()))
 				.toList();
 	}
+
+	@Override
+	public Page<Auxilio> listarAuxiliosPendentesMesAtual(Pageable pageable) {
+		LocalDate agora = LocalDate.now();
+		System.out.println("--------------------------------------------------------------------------5467576857--------------------------------------");
+		System.out.println(agora.getMonthValue());
+		System.out.println(agora.getYear());
+    	return auxilioRepository.listarAuxiliosPendentesMesAtual(agora.getMonthValue(), agora.getYear(), pageable);
+	}
+	
 }

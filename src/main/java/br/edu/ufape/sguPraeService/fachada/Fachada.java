@@ -634,16 +634,17 @@ public class Fachada {
     }
 
     // ------------------- Auxilio ------------------- //
-    public List<Auxilio> listarAuxilios() {
-        return auxilioService.listar();
+    public Page<Auxilio> listarAuxilios(Pageable pageable) {
+        return auxilioService.listar(pageable);
     }
 
-    public List<Auxilio> listarAuxiliosPorTipo(Long tipoId) throws AuxilioNotFoundException {
-        return auxilioService.listarPorTipo(tipoId);
+    public Page<Auxilio> listarAuxiliosPorTipo(Long tipoId, Pageable pageable) throws AuxilioNotFoundException {
+        return auxilioService.listarPorTipo(tipoId, pageable);
     }
 
-    public List<Auxilio> listarAuxiliosPorEstudanteId(Long estudanteId) throws EstudanteNotFoundException {
-        return estudanteService.buscarEstudante(estudanteId).getAuxilios();
+    public Page<Auxilio> listarAuxiliosPorEstudanteId(Long estudanteId, Pageable pageable) throws EstudanteNotFoundException {
+        List<Auxilio> auxilios = estudanteService.buscarEstudante(estudanteId).getAuxilios();
+        return new PageImpl<>(auxilios, pageable, auxilios.size());
     }
 
     public Auxilio buscarAuxilio(Long id) throws AuxilioNotFoundException {
@@ -711,8 +712,8 @@ public class Fachada {
         auxilioService.deletar(id);
     }
 
-    public List<Auxilio> listarAuxiliosPendentesMesAtual() {
-        return auxilioService.listarAuxiliosPendentesMesAtual();
+    public Page<Auxilio> listarAuxiliosPendentesMesAtual(Pageable pageable) {
+        return auxilioService.listarAuxiliosPendentesMesAtual(pageable);
     }
 
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
@@ -776,8 +777,8 @@ public class Fachada {
         return auxilioService.buscar(auxilioId).getPagamentos();
     }
 
-    public List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException {
-        return auxilioService.listarPagosPorMes();
+    public Page<Auxilio> listarPagosPorMes(Pageable pageable) throws AuxilioNotFoundException {
+        return auxilioService.listarPagosPorMes(pageable);
     }
 
     public Pagamento buscarPagamento(Long id) throws PagamentoNotFoundException {

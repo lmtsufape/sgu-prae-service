@@ -5,8 +5,13 @@ import br.edu.ufape.sguPraeService.models.Auxilio;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface AuxilioService {
     List<Auxilio> listar();
+
+    Page<Auxilio> listar(Pageable pageable);
 
     Auxilio buscar(Long id) throws AuxilioNotFoundException;
 
@@ -20,9 +25,17 @@ public interface AuxilioService {
 
     List<Auxilio> buscarPorEstudanteId(Long estudanteId);
 
+    Page<Auxilio> buscarPorEstudanteId(Long estudanteId, Pageable pageable);
+
     List<Auxilio> listarPorTipo(Long tipoId) throws AuxilioNotFoundException;
+
+    Page<Auxilio> listarPorTipo(Long tipoId, Pageable pageable) throws AuxilioNotFoundException;
 
     List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException;
 
+    Page<Auxilio> listarPagosPorMes(Pageable pageable) throws AuxilioNotFoundException;
+
     List<Auxilio> listarAuxiliosPendentesMesAtual();
+
+    Page<Auxilio> listarAuxiliosPendentesMesAtual(Pageable pageable);
 }
