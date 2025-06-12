@@ -111,9 +111,6 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 	@Override
 	public Page<Auxilio> listarAuxiliosPendentesMesAtual(Pageable pageable) {
 		LocalDate agora = LocalDate.now();
-		System.out.println("--------------------------------------------------------------------------5467576857--------------------------------------");
-		System.out.println(agora.getMonthValue());
-		System.out.println(agora.getYear());
     	return auxilioRepository.listarAuxiliosPendentesMesAtual(agora.getMonthValue(), agora.getYear(), pageable);
 	}
 	
