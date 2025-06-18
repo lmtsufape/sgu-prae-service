@@ -113,6 +113,16 @@ public class AuxilioController {
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    @GetMapping("/pendentes")
+    public ResponseEntity<List<AuxilioResponse>> listarAuxiliosPendentesMesAtual() {
+        List<Auxilio> auxilios = fachada.listarAuxiliosPendentesMesAtual();
+        return ResponseEntity.ok(
+                auxilios.stream()
+                        .map(aux -> new AuxilioResponse(aux, modelMapper))
+                        .toList());
+    }
+
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/relatorio/financeiro")
     public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
             @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate inicio,

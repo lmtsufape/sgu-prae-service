@@ -20,4 +20,5 @@ public interface AuxilioService {
 
     List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException;
 
+    List<Auxilio> listarAuxiliosPendentesMesAtual();
 }
