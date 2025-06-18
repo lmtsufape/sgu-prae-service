@@ -37,6 +37,45 @@ public interface AuxilioRepository extends JpaRepository<Auxilio, Long> {
           AND DATE_PART('year', p.data) = :ano
       )
       """)
+  List<Auxilio> listarAuxiliosPendentesMesAtual(@Param("mes") int mes, @Param("ano") int ano);
+
+  @Query("""
+      SELECT a FROM Auxilio a
+      WHERE a.ativo = true
+      AND NOT EXISTS (
+          SELECT p FROM Pagamento p
+          WHERE p MEMBER OF a.pagamentos
+          AND p.data IS NOT NULL
+          AND DATE_PART('month', p.data) = :mes
+          AND DATE_PART('year', p.data) = :ano
+      )
+      """)
   Page<Auxilio> listarAuxiliosPendentesMesAtual(@Param("mes") int mes, @Param("ano") int ano, Pageable pageable);
+
+  @Query("""
+      SELECT a FROM Auxilio a
+      WHERE a.ativo = true
+      AND EXISTS (
+          SELECT p FROM Pagamento p
+          WHERE p MEMBER OF a.pagamentos
+          AND p.data IS NOT NULL
+          AND DATE_PART('month', p.data) = :mes
+          AND DATE_PART('year', p.data) = :ano
+      )
+      """)
+  List<Auxilio> listarAuxiliosPagosMes(@Param("mes") int mes, @Param("ano") int ano);
+
+  @Query("""
+      SELECT a FROM Auxilio a
+      WHERE a.ativo = true
+      AND EXISTS (
+          SELECT p FROM Pagamento p
+          WHERE p MEMBER OF a.pagamentos
+          AND p.data IS NOT NULL
+          AND DATE_PART('month', p.data) = :mes
+          AND DATE_PART('year', p.data) = :ano
+      )
+      """)
+  Page<Auxilio> listarAuxiliosPagosMes(@Param("mes") int mes, @Param("ano") int ano, Pageable page);
 
 }

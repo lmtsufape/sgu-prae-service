@@ -49,6 +49,13 @@ public class AuxilioController {
         return ResponseEntity.ok(resposta);
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<List<AuxilioResponse>> listar() {
+        List<AuxilioResponse> resposta = fachada.listarAuxilios().stream()
+                .map(auxilio -> new AuxilioResponse(auxilio, modelMapper)).toList();
+        return ResponseEntity.ok(resposta);
+    }
+
     @GetMapping("/estudante/{estudanteId}")
     public ResponseEntity<Page<AuxilioResponse>> listarPorEstudanteId(@PathVariable Long estudanteId,
             @PageableDefault(sort = "id") Pageable pageable)
@@ -98,9 +105,9 @@ public class AuxilioController {
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
-    @GetMapping("/pagos")
-    public ResponseEntity<Page<AuxilioResponse>> listarPagosPorMes(@PageableDefault(sort = "id") Pageable pageable) throws AuxilioNotFoundException {
-        Page<Auxilio> auxilios = fachada.listarPagosPorMes(pageable);
+    @GetMapping("/pagos/{ano}/{mes}")
+    public ResponseEntity<Page<AuxilioResponse>> listarPagosPorMes(@PathVariable int ano, @PathVariable int mes, @PageableDefault(sort = "id") Pageable pageable) throws AuxilioNotFoundException {
+        Page<Auxilio> auxilios = fachada.listarPagosPorMes(ano, mes, pageable);
         return ResponseEntity.ok(
                 auxilios.map(aux -> new AuxilioResponse(aux, modelMapper)));
     }

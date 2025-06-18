@@ -76,13 +76,13 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 	}
 
     @Override
-    public List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException {
-        return auxilioRepository.findByAtivoTrue();
+    public List<Auxilio> listarPagosPorMes(int ano, int mes) throws AuxilioNotFoundException {
+        return auxilioRepository.listarAuxiliosPagosMes(mes, ano);
     }
 
 	@Override
-    public Page<Auxilio> listarPagosPorMes(Pageable pageable) throws AuxilioNotFoundException {
-        return auxilioRepository.findByAtivoTrue(pageable);
+    public Page<Auxilio> listarPagosPorMes(int ano, int mes, Pageable pageable) throws AuxilioNotFoundException {
+        return auxilioRepository.listarAuxiliosPagosMes(mes, ano, pageable);
     }
 
     @Override
@@ -97,15 +97,8 @@ public class AuxilioService implements br.edu.ufape.sguPraeService.servicos.inte
 
 	@Override
 	public List<Auxilio> listarAuxiliosPendentesMesAtual() {
-		List<Auxilio> ativos = auxilioRepository.findByAtivoTrue();
 		LocalDate agora = LocalDate.now();
-
-		return ativos.stream()
-				.filter(aux -> aux.getPagamentos().stream()
-						.noneMatch(p -> p.getData() != null &&
-								p.getData().getMonth() == agora.getMonth() &&
-								p.getData().getYear() == agora.getYear()))
-				.toList();
+    	return auxilioRepository.listarAuxiliosPendentesMesAtual(agora.getMonthValue(), agora.getYear());
 	}
 
 	@Override

@@ -184,16 +184,9 @@ public class Fachada {
         return response;
     }
 
-    public Page<Estudante> listarEstudantesPorAuxilio(Long auxilioId, Pageable pageable) {
-        return estudanteService.listarEstudantesPorAuxilioId(auxilioId, pageable);
-    }
-
-    public Page<EstudanteResponse> listarEstudantes(Pageable pageable) throws EstudanteNotFoundException {
-        Page<Estudante> estudantes = estudanteService.listarEstudantes(pageable);
-
-        if (estudantes.isEmpty()) {
-            return Page.empty();
-        }
+    private List<EstudanteResponse> buscarAlunosParaEstudantes(List<Estudante> estudantes) {
+        if(estudantes.isEmpty())
+            Collections.emptyList();
 
         List<UUID> userIds = estudantes.stream()
                 .map(Estudante::getUserId)
@@ -201,26 +194,42 @@ public class Fachada {
 
         List<AlunoResponse> usuarios = authServiceHandler.buscarAlunos(userIds);
         if (usuarios.isEmpty()) {
-            return Page.empty();
+            Collections.emptyList();
         }
 
         Map<UUID, AlunoResponse> mapaAlunos = usuarios.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
-        List<EstudanteResponse> listaEstudantes = estudantes.getContent().stream()
+        List<EstudanteResponse> listaEstudantes = estudantes.stream()
                 .map(estudante -> {
                     EstudanteResponse resp = new EstudanteResponse(estudante, modelMapper);
-                    // "lookup" no mapa para anexar o AlunoResponse correto
                     AlunoResponse ar = mapaAlunos.get(estudante.getUserId());
-                    resp.setAluno(ar);
+                    if (ar != null) 
+                        resp.setAluno(ar);
                     return resp;
                 })
                 .toList();
+        return listaEstudantes;
+    }
+
+    public Page<Estudante> listarEstudantesPorAuxilio(Long auxilioId, Pageable pageable) {
+        return estudanteService.listarEstudantesPorAuxilioId(auxilioId, pageable);
+    }
+
+    public Page<EstudanteResponse> listarEstudantes(Pageable pageable) throws EstudanteNotFoundException {
+        Page<Estudante> estudantes = estudanteService.listarEstudantes(pageable);
+
+        List<EstudanteResponse> listaEstudantes = buscarAlunosParaEstudantes(estudantes.getContent());
         return new PageImpl<>(
                 listaEstudantes,
                 pageable,
                 estudantes.getTotalElements()
         );
+    }
+
+    public List<EstudanteResponse> listarEstudantes() throws EstudanteNotFoundException {
+        List<Estudante> estudantes = estudanteService.listarEstudantes();
+        return buscarAlunosParaEstudantes(estudantes);
     }
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
@@ -298,6 +307,15 @@ public class Fachada {
                 estudanteService.listarEstudantesPorAuxilioId(auxilioId, pg)
         );
     }
+
+    public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
+        return gerarCredores(estudanteService.listarEstudantesComAuxilioAtivo());
+    }
+
+    public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
+        return gerarCredores(estudanteService.listarEstudantesPorAuxilioId(auxilioId));
+    }
+
     public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId)
             throws EstudanteNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
@@ -332,11 +350,19 @@ public class Fachada {
     }
 
     private Page<CredorResponse> getCredorResponses(Pageable pageable, Page<Estudante> estudantes, List<AlunoResponse> alunos) {
+        return new PageImpl<>(
+                getCredorResponses(estudantes.getContent(), alunos),
+                pageable,
+                estudantes.getTotalElements()
+        );
+    }
+
+    private List<CredorResponse> getCredorResponses(List<Estudante> estudantes, List<AlunoResponse> alunos) {
         Map<UUID, AlunoResponse> mapaAlunos = alunos.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
 
-        List<CredorResponse> listaCredores = estudantes.getContent().stream()
+        List<CredorResponse> listaCredores = estudantes.stream()
                 .map(estudante -> {
                     AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
 
@@ -356,11 +382,7 @@ public class Fachada {
                 .toList();
 
 
-        return new PageImpl<>(
-                listaCredores,
-                pageable,
-                estudantes.getTotalElements()
-        );
+        return listaCredores;
     }
 
     private Page<CredorResponse> gerarCredores(
@@ -379,7 +401,17 @@ public class Fachada {
         return getCredorResponses(pageable, pageEstudantes, alunos);
     }
 
+    private List<CredorResponse> gerarCredores(List<Estudante> estudantes) {
+        if (estudantes.isEmpty()) {
+            return Collections.emptyList();
+        }
 
+        List<UUID> userIds = estudantes.stream()
+                .map(Estudante::getUserId)
+                .toList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+        return getCredorResponses(estudantes, alunos);
+    }
 
     // ================== TipoEtnia ================== //
 
@@ -638,6 +670,10 @@ public class Fachada {
         return auxilioService.listar(pageable);
     }
 
+    public List<Auxilio> listarAuxilios() {
+        return auxilioService.listar();
+    }
+
     public Page<Auxilio> listarAuxiliosPorTipo(Long tipoId, Pageable pageable) throws AuxilioNotFoundException {
         return auxilioService.listarPorTipo(tipoId, pageable);
     }
@@ -773,12 +809,17 @@ public class Fachada {
         return pagamentoService.listar();
     }
 
-    public List<Pagamento> listarPagamentosPorAuxilioId(Long auxilioId) throws AuxilioNotFoundException {
-        return auxilioService.buscar(auxilioId).getPagamentos();
+    public Page<Pagamento> listarPagamentos(Pageable pageable) {
+        return pagamentoService.listar(pageable);
     }
 
-    public Page<Auxilio> listarPagosPorMes(Pageable pageable) throws AuxilioNotFoundException {
-        return auxilioService.listarPagosPorMes(pageable);
+    public Page<Pagamento> listarPagamentosPorAuxilioId(Long auxilioId, Pageable pageable) throws AuxilioNotFoundException {
+        List<Pagamento> pagamentos = auxilioService.buscar(auxilioId).getPagamentos();
+        return new PageImpl<>(pagamentos, pageable, pagamentos.size());
+    }
+
+    public Page<Auxilio> listarPagosPorMes(int ano, int mes, Pageable pageable) throws AuxilioNotFoundException {
+        return auxilioService.listarPagosPorMes(ano, mes, pageable);
     }
 
     public Pagamento buscarPagamento(Long id) throws PagamentoNotFoundException {

@@ -19,6 +19,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 
 import br.edu.ufape.sguPraeService.models.Estudante;
@@ -30,16 +33,22 @@ public class PagamentoController {
     private final Fachada fachada;
     private final ModelMapper modelMapper;
 
+    @GetMapping("/list")
+    public ResponseEntity<List<PagamentoResponse>> listar() {
+        return ResponseEntity.ok(fachada.listarPagamentos().stream()
+                .map(p -> new PagamentoResponse(p, getEstudantesPorPagamentoId(p.getId()), modelMapper)).toList());
+    }
+
     @GetMapping
-    public List<PagamentoResponse> listar() {
-        return fachada.listarPagamentos().stream()
-                .map(p -> new PagamentoResponse(p, getEstudantesPorPagamentoId(p.getId()), modelMapper)).toList();
+    public ResponseEntity<Page<PagamentoResponse>> listar(@PageableDefault(sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(fachada.listarPagamentos(pageable)
+                .map(p -> new PagamentoResponse(p, getEstudantesPorPagamentoId(p.getId()), modelMapper)));
     }
 
     @GetMapping("/auxilio/{auxilioId}")
-    public List<PagamentoResponse> listarPorAuxilioId(@PathVariable Long auxilioId) throws AuxilioNotFoundException {
-        return fachada.listarPagamentosPorAuxilioId(auxilioId).stream()
-                .map(p -> new PagamentoResponse(p, getEstudantesPorPagamentoId(p.getId()), modelMapper)).toList();
+    public ResponseEntity<Page<PagamentoResponse>> listarPorAuxilioId(@PathVariable Long auxilioId, @PageableDefault(sort = "id") Pageable pageable) throws AuxilioNotFoundException {
+        return ResponseEntity.ok(fachada.listarPagamentosPorAuxilioId(auxilioId, pageable)
+                .map(p -> new PagamentoResponse(p, getEstudantesPorPagamentoId(p.getId()), modelMapper)));
     }
 
     @GetMapping("/{id}")
@@ -82,7 +91,8 @@ public class PagamentoController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws PagamentoNotFoundException, AuxilioNotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable Long id)
+            throws PagamentoNotFoundException, AuxilioNotFoundException {
         fachada.deletarPagamento(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -95,20 +105,20 @@ public class PagamentoController {
     }
 
     @GetMapping("/valor/{min}/{max}")
-    public List<PagamentoResponse> listarPorValor(
+    public ResponseEntity<List<PagamentoResponse>> listarPorValor(
             @PathVariable BigDecimal min,
             @PathVariable BigDecimal max) {
-        return fachada.listarPagamentosPorValor(min, max)
+        return ResponseEntity.ok(fachada.listarPagamentosPorValor(min, max)
                 .stream()
                 .map(p -> new PagamentoResponse(p, getEstudantesPorPagamentoId(p.getId()), modelMapper))
-                .toList();
+                .toList());
     }
 
     @GetMapping("/estudante/{estudanteId}")
-    public List<PagamentoResponse> listarPorEstudante(@PathVariable Long estudanteId) {
-        return fachada.listarPagamentosPorEstudante(estudanteId).stream()
+    public ResponseEntity<List<PagamentoResponse>> listarPorEstudante(@PathVariable Long estudanteId) {
+        return ResponseEntity.ok(fachada.listarPagamentosPorEstudante(estudanteId).stream()
                 .map(p -> new PagamentoResponse(p, getEstudantesPorPagamentoId(p.getId()), modelMapper))
-                .toList();
+                .toList());
     }
 
     private List<Estudante> getEstudantesPorPagamentoId(Long pagamentoId) {

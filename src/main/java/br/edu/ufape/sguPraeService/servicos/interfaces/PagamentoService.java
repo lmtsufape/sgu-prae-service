@@ -6,8 +6,13 @@ import br.edu.ufape.sguPraeService.models.Pagamento;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface PagamentoService {
     List<Pagamento> listar();
+
+    Page<Pagamento> listar(Pageable pageable);
 
     Pagamento buscar(Long id) throws PagamentoNotFoundException;
 
@@ -20,4 +25,6 @@ public interface PagamentoService {
     void desativar(Long id) throws PagamentoNotFoundException;
 
     List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max);
+
+    Page<Pagamento> listarPorValor(BigDecimal min, BigDecimal max, Pageable pageable);
 }

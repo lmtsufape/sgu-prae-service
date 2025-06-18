@@ -31,9 +31,9 @@ public interface AuxilioService {
 
     Page<Auxilio> listarPorTipo(Long tipoId, Pageable pageable) throws AuxilioNotFoundException;
 
-    List<Auxilio> listarPagosPorMes() throws AuxilioNotFoundException;
+    List<Auxilio> listarPagosPorMes(int ano, int mes) throws AuxilioNotFoundException;
 
-    Page<Auxilio> listarPagosPorMes(Pageable pageable) throws AuxilioNotFoundException;
+    Page<Auxilio> listarPagosPorMes(int ano, int mes, Pageable pageable) throws AuxilioNotFoundException;
 
     List<Auxilio> listarAuxiliosPendentesMesAtual();
 
