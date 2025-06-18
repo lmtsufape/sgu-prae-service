@@ -5,12 +5,14 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.tipoBolsa.TipoBolsaResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoBolsa.TipoBolsaRequest;
 import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 
 @RestController
@@ -22,8 +24,8 @@ public class TipoBolsaController {
 
 
     @GetMapping
-    public List<TipoBolsaResponse> listar() {
-        return fachada.listarTipoBolsas().stream().map(tipoBolsa -> new TipoBolsaResponse(tipoBolsa, modelMapper)).toList();
+    public Page<TipoBolsaResponse> listar(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarTipoBolsas(pageable).map(tipoBolsa -> new TipoBolsaResponse(tipoBolsa, modelMapper));
     }
 
     @GetMapping("/{id}")

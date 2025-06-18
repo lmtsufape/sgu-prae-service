@@ -2,11 +2,12 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoAtendimento;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 public interface TipoAtendimentoService {
-    List<TipoAtendimento> listar();
+    Page<TipoAtendimento> listar(Pageable pageable);
 
     TipoAtendimento buscar(Long id) throws TipoAtendimentoNotFoundException;
 

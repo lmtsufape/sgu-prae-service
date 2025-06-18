@@ -2,11 +2,12 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoAuxilio;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 public interface TipoAuxilioService {
-    List<TipoAuxilio> listar();
+    Page<TipoAuxilio> listar(Pageable pageable);
 
     TipoAuxilio buscar(Long id) throws TipoAuxilioNotFoundException;
 

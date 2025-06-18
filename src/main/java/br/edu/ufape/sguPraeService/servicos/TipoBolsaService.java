@@ -5,8 +5,9 @@ import br.edu.ufape.sguPraeService.dados.TipoBolsaRepository;
 import br.edu.ufape.sguPraeService.models.TipoBolsa;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
 @Service @RequiredArgsConstructor
 public class TipoBolsaService implements br.edu.ufape.sguPraeService.servicos.interfaces.TipoBolsaService {
@@ -14,7 +15,7 @@ public class TipoBolsaService implements br.edu.ufape.sguPraeService.servicos.in
     private final ModelMapper modelMapper;
 
     @Override
-    public List<TipoBolsa> listar() { return tipoBolsaRepository.findAll(); }
+    public Page<TipoBolsa> listar(Pageable pageable) { return tipoBolsaRepository.findAll(pageable); }
 
     @Override
     public TipoBolsa buscar(Long id) throws TipoBolsaNotFoundException {

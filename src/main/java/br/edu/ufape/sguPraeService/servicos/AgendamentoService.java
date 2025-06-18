@@ -8,9 +8,10 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotF
 import br.edu.ufape.sguPraeService.models.*;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Objects;
 
 @RequiredArgsConstructor
@@ -60,20 +61,20 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
     }
 
     @Override
-    public List<Agendamento> listarAgendamentosPorEstudante(Estudante estudante) {
-        return repository.findAllByEstudante_UserIdAndAtivoTrue(estudante.getUserId());
+    public Page<Agendamento> listarAgendamentosPorEstudante(Estudante estudante, Pageable pageable) {
+        return repository.findAllByEstudante_UserIdAndAtivoTrue(estudante.getUserId(), pageable);
     }
     @Override
-    public List<Agendamento> listarAgendamentosEstudanteAtual() {
-        return repository.findAllByEstudante_UserIdAndAtivoTrue(authenticatedUserProvider.getUserId());
+    public Page<Agendamento> listarAgendamentosEstudanteAtual(Pageable pageable) {
+        return repository.findAllByEstudante_UserIdAndAtivoTrue(authenticatedUserProvider.getUserId(), pageable);
     }
     @Override
-    public List<Agendamento> listarPorProfissional(Profissional profissional){
-        return repository.findAllByProfissionalUserId(profissional.getUserId());
+    public Page<Agendamento> listarPorProfissional(Profissional profissional, Pageable pageable) {
+        return repository.findAllByProfissionalUserId(profissional.getUserId(), pageable);
     }
     @Override
-    public List<Agendamento> listarPorProfissionalAtual(){
-        return repository.findAllByProfissionalUserId(authenticatedUserProvider.getUserId());
+    public Page<Agendamento> listarPorProfissionalAtual(Pageable pageable) {
+        return repository.findAllByProfissionalUserId(authenticatedUserProvider.getUserId(), pageable);
     }
 
 }

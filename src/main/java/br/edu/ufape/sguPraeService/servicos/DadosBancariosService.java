@@ -4,9 +4,9 @@ import br.edu.ufape.sguPraeService.dados.DadosBancariosRepository;
 import br.edu.ufape.sguPraeService.models.DadosBancarios;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,8 +18,8 @@ public class DadosBancariosService implements br.edu.ufape.sguPraeService.servic
         return dadosBancariosRepository.findById(id).orElse(null);
     }
 
-    public List<DadosBancarios> listarDadosBancarios() {
-        return dadosBancariosRepository.findAll();
+    public Page<DadosBancarios> listarDadosBancarios(Pageable pageable) {
+        return dadosBancariosRepository.findAll(pageable);
     }
 
     public DadosBancarios salvarDadosBancarios(DadosBancarios dadosBancarios) {

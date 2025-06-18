@@ -5,12 +5,14 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.tipoAuxilio.TipoAuxilioRespon
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoAuxilio.TipoAuxilioRequest;
 import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 
 @RestController
@@ -22,8 +24,8 @@ public class TipoAuxilioController {
 
 
     @GetMapping
-    public List<TipoAuxilioResponse> listar() {
-        return fachada.listarTipoAuxilios().stream().map(tipoAuxilio -> new TipoAuxilioResponse(tipoAuxilio, modelMapper)).toList();
+    public Page<TipoAuxilioResponse> listar(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarTipoAuxilios(pageable).map(tipoAuxilio -> new TipoAuxilioResponse(tipoAuxilio, modelMapper));
     }
 
     @GetMapping("/{id}")

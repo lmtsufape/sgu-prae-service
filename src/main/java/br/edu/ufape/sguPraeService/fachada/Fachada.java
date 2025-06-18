@@ -387,8 +387,8 @@ public class Fachada {
         return tipoEtniaService.buscarTipoEtnia(id);
     }
 
-    public List<TipoEtnia> listarTiposEtnia() {
-        return tipoEtniaService.listarTiposEtnia();
+    public Page<TipoEtnia> listarTiposEtnia(Pageable pageable) {
+        return tipoEtniaService.listarTiposEtnia(pageable);
     }
 
     public TipoEtnia atualizarTipoEtnia(Long id, TipoEtnia tipoEtnia) throws TipoEtniaNotFoundException {
@@ -410,8 +410,8 @@ public class Fachada {
         return salvo;
     }
 
-    public List<DadosBancarios> listarDadosBancarios() {
-        return dadosBancariosService.listarDadosBancarios();
+    public Page<DadosBancarios> listarDadosBancarios(Pageable pageable) {
+        return dadosBancariosService.listarDadosBancarios(pageable);
     }
 
     public DadosBancarios buscarDadosBancarios(Long id) {
@@ -427,8 +427,8 @@ public class Fachada {
     }
 
     // ------------------- TipoAtendimento ------------------- //
-    public List<TipoAtendimento> listarTipoAtendimentos() {
-        return tipoAtendimentoService.listar();
+    public Page<TipoAtendimento> listarTipoAtendimentos(Pageable pageable) {
+        return tipoAtendimentoService.listar(pageable);
     }
 
     public TipoAtendimento buscarTipoAtendimento(Long id) throws TipoAtendimentoNotFoundException {
@@ -453,17 +453,17 @@ public class Fachada {
     }
 
     // ------------------- Cronograma ------------------- //
-    public List<Cronograma> listarCronogramasPorProfissional() {
+    public Page<Cronograma> listarCronogramasPorProfissional(Pageable pageable) {
 
-        return cronogramaService.listarPorProfissional(authenticatedUserProvider.getUserId());
+        return cronogramaService.listarPorProfissional(authenticatedUserProvider.getUserId(), pageable);
     }
 
-    public List<Cronograma> listarCronogramas() {
-        return cronogramaService.listar();
+    public Page<Cronograma> listarCronogramas(Pageable pageable) {
+        return cronogramaService.listar(pageable);
     }
 
-    public List<Cronograma> listarCronogramasPorTipoAtendimento(Long tipoAtendimentoId) {
-        return cronogramaService.listarPorTipoAtendimento(tipoAtendimentoId);
+    public Page<Cronograma> listarCronogramasPorTipoAtendimento(Long tipoAtendimentoId, Pageable pageable) {
+        return cronogramaService.listarPorTipoAtendimento(tipoAtendimentoId, pageable);
     }
 
     public Cronograma buscarCronograma(Long id) throws CronogramaNotFoundException {
@@ -549,30 +549,30 @@ public class Fachada {
         return agendamentoService.buscar(id);
     }
 
-    public List<Agendamento> listarAgendamentosPorEstudante(Long estudanteId) {
+    public Page<Agendamento> listarAgendamentosPorEstudante(Long estudanteId, Pageable pageable) {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
-        return agendamentoService.listarAgendamentosPorEstudante(estudante);
+        return agendamentoService.listarAgendamentosPorEstudante(estudante, pageable);
     }
 
-    public List<Agendamento> listarAgendamentosPorProfissional(Long userId) {
+    public Page<Agendamento> listarAgendamentosPorProfissional(Long userId, Pageable pageable) {
         Profissional profissional = profissionalService.buscar(userId);
-        return agendamentoService.listarPorProfissional(profissional);
+        return agendamentoService.listarPorProfissional(profissional, pageable);
     }
 
-    public List<Agendamento> listarAgendamentoPorEstudanteAtual() {
-        return agendamentoService.listarAgendamentosEstudanteAtual();
+    public Page<Agendamento> listarAgendamentoPorEstudanteAtual(Pageable pageable) {
+        return agendamentoService.listarAgendamentosEstudanteAtual(pageable);
     }
 
-    public List<Agendamento> listarAgendamentoPorProfissionalAtual() {
-        return agendamentoService.listarPorProfissionalAtual();
+    public Page<Agendamento> listarAgendamentoPorProfissionalAtual(Pageable pageable) {
+        return agendamentoService.listarPorProfissionalAtual(pageable);
     }
 
-    public List<CancelamentoAgendamento> listarCancelamentosPorEstudanteAtual() {
-        return cancelamentoService.ListarPorEstudanteAtual();
+    public Page<CancelamentoAgendamento> listarCancelamentosPorEstudanteAtual(Pageable pageable) {
+        return cancelamentoService.ListarPorEstudanteAtual(pageable);
     }
 
-    public List<CancelamentoAgendamento> listarCancelamentosPorProfissionalAtual() {
-        return cancelamentoService.ListarPorProfissionalAtual();
+    public Page<CancelamentoAgendamento> listarCancelamentosPorProfissionalAtual(Pageable pageable) {
+        return cancelamentoService.ListarPorProfissionalAtual(pageable);
     }
 
     public CancelamentoAgendamento buscarCancelamento(Long id) throws CancelamentoNotFoundException {
@@ -580,8 +580,8 @@ public class Fachada {
     }
 
     // ------------------- TipoBolsa ------------------- //
-    public List<TipoBolsa> listarTipoBolsas() {
-        return tipoBolsaService.listar();
+    public Page<TipoBolsa> listarTipoBolsas(Pageable pageable) {
+        return tipoBolsaService.listar(pageable);
     }
 
     public TipoBolsa buscarTipoBolsa(Long id) throws TipoBolsaNotFoundException {
@@ -605,8 +605,8 @@ public class Fachada {
     }
 
     // ------------------- TipoAuxilio ------------------- //
-    public List<TipoAuxilio> listarTipoAuxilios() {
-        return tipoAuxilioService.listar();
+    public Page<TipoAuxilio> listarTipoAuxilios(Pageable pageable) {
+        return tipoAuxilioService.listar(pageable);
     }
 
     public TipoAuxilio buscarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {

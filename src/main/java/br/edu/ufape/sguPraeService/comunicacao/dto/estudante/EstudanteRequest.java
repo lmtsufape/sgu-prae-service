@@ -7,6 +7,8 @@ import br.edu.ufape.sguPraeService.models.Estudante;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,14 +25,17 @@ import java.math.BigDecimal;
 @TipoDeficienciaObrigatorio
 public class EstudanteRequest {
 
+    @PositiveOrZero(message = "Renda deve ser um valor positivo ou zero.")
     private BigDecimal rendaPercapta;
 
     @NotBlank(message = "O contato da família é obrigatório.")
     @NumeroValido
     private String contatoFamilia;
 
+    @NotNull(message = "O número de matrícula é obrigatório.")
     private boolean deficiente;
 
+    @Size(max = 100, message = "O campo 'deficiencia' deve ter no máximo 100 caracteres.")
     private String tipoDeficiencia;
 
     @NotNull(message = "Defina o tipo de Etnia.")

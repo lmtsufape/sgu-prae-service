@@ -8,12 +8,14 @@ import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,23 +37,23 @@ public class AgendamentoController {
     }
 
     @GetMapping("/estudante")
-    public List<AgendamentoResponse> listarAgendamentosPorEstudanteAtual() {
-        return fachada.listarAgendamentoPorEstudanteAtual().stream().map(agendamento -> new AgendamentoResponse(agendamento, modelMapper)).toList();
+    public Page<AgendamentoResponse> listarAgendamentosPorEstudanteAtual(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarAgendamentoPorEstudanteAtual(pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
     }
 
     @GetMapping("/estudante/{estudanteId}")
-    public List<AgendamentoResponse> listarAgendamentosPorEstudante(@PathVariable Long estudanteId) {
-        return fachada.listarAgendamentosPorEstudante(estudanteId).stream().map(agendamento -> new AgendamentoResponse(agendamento, modelMapper)).toList();
+    public Page<AgendamentoResponse> listarAgendamentosPorEstudante(@PathVariable Long estudanteId, @PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarAgendamentosPorEstudante(estudanteId, pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
     }
 
     @GetMapping("/profissional")
-    public List<AgendamentoResponse> listarAgendamentosPorProfissionalAtual() {
-        return fachada.listarAgendamentoPorProfissionalAtual().stream().map(agendamento -> new AgendamentoResponse(agendamento, modelMapper)).toList();
+    public Page<AgendamentoResponse> listarAgendamentosPorProfissionalAtual(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarAgendamentoPorProfissionalAtual(pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
     }
 
     @GetMapping("/profissional/{profissionalId}")
-    public List<AgendamentoResponse> listarAgendamentosPorProfissional(@PathVariable Long profissionalId) {
-        return fachada.listarAgendamentosPorProfissional(profissionalId).stream().map(agendamento -> new AgendamentoResponse(agendamento, modelMapper)).toList();
+    public Page<AgendamentoResponse> listarAgendamentosPorProfissional(@PathVariable Long profissionalId, @PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarAgendamentosPorProfissional(profissionalId, pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
     }
 
     @PostMapping( "{id}/cancelar")
@@ -66,12 +68,12 @@ public class AgendamentoController {
     }
 
     @GetMapping("/cancelamento/estudante")
-    public List<CancelamentoResponse> listarCancelamentosPorEstudanteAtual() {
-        return fachada.listarCancelamentosPorEstudanteAtual().stream().map(cancelamento -> new CancelamentoResponse(cancelamento, modelMapper)).toList();
+    public Page<CancelamentoResponse> listarCancelamentosPorEstudanteAtual(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarCancelamentosPorEstudanteAtual(pageable).map(cancelamento -> new CancelamentoResponse(cancelamento, modelMapper));
     }
 
     @GetMapping("/cancelamento/profissional")
-    public List<CancelamentoResponse> listarCancelamentosPorProfissionalAtual() {
-        return fachada.listarCancelamentosPorProfissionalAtual().stream().map(cancelamento -> new CancelamentoResponse(cancelamento, modelMapper)).toList();
+    public Page<CancelamentoResponse> listarCancelamentosPorProfissionalAtual(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarCancelamentosPorProfissionalAtual(pageable).map(cancelamento -> new CancelamentoResponse(cancelamento, modelMapper));
     }
 }

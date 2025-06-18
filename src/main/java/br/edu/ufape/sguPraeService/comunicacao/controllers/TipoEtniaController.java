@@ -7,13 +7,13 @@ import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.TipoEtnia;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/tipoEtnia")
@@ -32,10 +32,9 @@ public class TipoEtniaController {
     }
 
     @GetMapping
-    public List<TipoEtniaResponse> listarTiposEtnia() {
-        return fachada.listarTiposEtnia().stream()
-                .map(tipoEtnia -> new TipoEtniaResponse(tipoEtnia, modelMapper))
-                .collect(Collectors.toList());
+    public Page<TipoEtniaResponse> listarTiposEtnia(@PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarTiposEtnia(pageable)
+                .map(tipoEtnia -> new TipoEtniaResponse(tipoEtnia, modelMapper));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")

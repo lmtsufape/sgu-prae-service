@@ -9,10 +9,11 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNot
 import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -39,27 +40,27 @@ public class CancelamentoService implements br.edu.ufape.sguPraeService.servicos
     }
 
     @Override
-    public List<CancelamentoAgendamento> listar() {
-        return cancelamentoAgendamentoRepository.findAll();
+    public Page<CancelamentoAgendamento> listar(Pageable pageable) {
+        return cancelamentoAgendamentoRepository.findAll(pageable);
     }
 
     @Override
-    public List<CancelamentoAgendamento> ListarCancelamentosPorEstudante(UUID userId) {
-        return cancelamentoAgendamentoRepository.findAllByAgendamento_Estudante_UserId(userId);
+    public Page<CancelamentoAgendamento> ListarCancelamentosPorEstudante(UUID userId, Pageable pageable) {
+        return cancelamentoAgendamentoRepository.findAllByAgendamento_Estudante_UserId(userId, pageable);
     }
 
     @Override
-    public List<CancelamentoAgendamento> ListarCancelamentosPorProfissional(UUID userId) {
-        return cancelamentoAgendamentoRepository.findAllByProfissionalUserId(userId);
+    public Page<CancelamentoAgendamento> ListarCancelamentosPorProfissional(UUID userId, Pageable pageable) {
+        return cancelamentoAgendamentoRepository.findAllByProfissionalUserId(userId, pageable);
     }
 
     @Override
-    public List<CancelamentoAgendamento> ListarPorEstudanteAtual() {
-        return cancelamentoAgendamentoRepository.findAllByAgendamento_Estudante_UserId(authenticatedUserProvider.getUserId());
+    public Page<CancelamentoAgendamento> ListarPorEstudanteAtual(Pageable pageable) {
+        return cancelamentoAgendamentoRepository.findAllByAgendamento_Estudante_UserId(authenticatedUserProvider.getUserId(), pageable);
     }
 
     @Override
-    public List<CancelamentoAgendamento> ListarPorProfissionalAtual() {
-        return cancelamentoAgendamentoRepository.findAllByProfissionalUserId(authenticatedUserProvider.getUserId());
+    public Page<CancelamentoAgendamento> ListarPorProfissionalAtual(Pageable pageable) {
+        return cancelamentoAgendamentoRepository.findAllByProfissionalUserId(authenticatedUserProvider.getUserId(), pageable);
     }
 }
