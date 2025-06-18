@@ -22,7 +22,7 @@ public class WebConfig {
                 )
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api-doc/**").permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()  // All other requests require authentication
                 ).oauth2ResourceServer(auth -> auth.jwt(token -> token.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter())));
         return http.build();
     }
