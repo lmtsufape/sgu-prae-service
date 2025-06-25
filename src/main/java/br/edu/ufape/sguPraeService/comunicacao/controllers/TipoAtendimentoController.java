@@ -1,5 +1,6 @@
  package br.edu.ufape.sguPraeService.comunicacao.controllers;
  
+ import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
  import br.edu.ufape.sguPraeService.fachada.Fachada;
  import br.edu.ufape.sguPraeService.models.TipoAtendimento;
  import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoResponse;
@@ -48,8 +49,8 @@
 
      @PreAuthorize("hasRole('PROFISSIONAL')")
      @PatchMapping("/{id}")
-     public ResponseEntity<TipoAtendimentoResponse> editar(@PathVariable Long id, @Valid @RequestBody TipoAtendimentoRequest entity) throws TipoAtendimentoNotFoundException {
-         TipoAtendimento response = fachada.editarTipoAtendimento(id, entity.convertToEntity(entity, modelMapper));
+     public ResponseEntity<TipoAtendimentoResponse> editar(@PathVariable Long id, @Valid @RequestBody TipoAtendimentoUpdateRequest dto) throws TipoAtendimentoNotFoundException {
+         TipoAtendimento response = fachada.editarTipoAtendimento(id, dto);
          return new ResponseEntity<>(new TipoAtendimentoResponse(response, modelMapper), HttpStatus.OK);
      }
 
