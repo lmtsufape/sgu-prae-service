@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
@@ -79,15 +80,16 @@ public class PagamentoController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("/{id}")
-    public ResponseEntity<PagamentoResponse> editar(@PathVariable Long id, @Valid @RequestBody PagamentoRequest entity)
-            throws PagamentoNotFoundException {
-        Pagamento response = fachada.editarPagamento(id, entity.convertToEntity(entity, modelMapper));
-        return new ResponseEntity<>(
-                new PagamentoResponse(response, getEstudantesPorPagamentoId(response.getId()), modelMapper),
-                HttpStatus.OK);
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    public ResponseEntity<PagamentoResponse> editar(@PathVariable Long id, @RequestBody PagamentoPatchRequest dto
+    ) throws PagamentoNotFoundException {
+        Pagamento atualizado = fachada.editarPagamento(id, dto);
+        return ResponseEntity.ok(
+                new PagamentoResponse(atualizado, getEstudantesPorPagamentoId(atualizado.getId()), modelMapper)
+        );
     }
+
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")

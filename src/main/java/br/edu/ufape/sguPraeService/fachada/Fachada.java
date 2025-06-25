@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -838,9 +839,18 @@ public class Fachada {
         return rPagamentos;
     }
 
-    public Pagamento editarPagamento(Long id, Pagamento pagamento) throws PagamentoNotFoundException {
-        return pagamentoService.editar(id, pagamento);
+    public Pagamento editarPagamento(Long id, PagamentoPatchRequest dto) throws PagamentoNotFoundException {
+        Pagamento pagamento = pagamentoService.buscar(id);
+
+        if (dto.getValor() != null) {
+            pagamento.setValor(dto.getValor());
+        }
+        if (dto.getData() != null) {
+            pagamento.setData(dto.getData());
+        }
+        return pagamentoService.salvar(List.of(pagamento)).getFirst();
     }
+
 
     public void deletarPagamento(Long id) throws PagamentoNotFoundException, AuxilioNotFoundException {
         Pagamento pagamento = buscarPagamento(id);
