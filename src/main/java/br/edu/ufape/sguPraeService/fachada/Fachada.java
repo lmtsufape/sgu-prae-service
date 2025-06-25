@@ -414,6 +414,23 @@ public class Fachada {
         return getCredorResponses(estudantes, alunos);
     }
 
+    public EstudanteResponse buscarEstudanteAtual() throws EstudanteNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
+        Estudante estudante = estudanteService.buscarPorUserId(userId);
+        AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
+        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
+        response.setAluno(userInfo);
+        return response;
+    }
+
+    public EstudanteResponse buscarEstudantePorUserId(UUID userId) throws EstudanteNotFoundException {
+        Estudante estudante = estudanteService.buscarPorUserId(userId);
+        AlunoResponse userInfo = authServiceHandler.buscarAlunoPorId(userId);
+        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
+        response.setAluno(userInfo);
+        return response;
+    }
+
     // ================== TipoEtnia ================== //
 
     public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
