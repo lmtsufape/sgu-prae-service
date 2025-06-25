@@ -7,6 +7,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
+import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
+import br.edu.ufape.sguPraeService.models.*;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,10 +28,6 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.EstudanteRelatorioRes
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.PagamentoRelatorioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.RelatorioFinanceiroResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioAuxilioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteAssistidoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
@@ -46,20 +46,6 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNot
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.VagaNotFoundException;
-import br.edu.ufape.sguPraeService.models.Agendamento;
-import br.edu.ufape.sguPraeService.models.Auxilio;
-import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
-import br.edu.ufape.sguPraeService.models.Cronograma;
-import br.edu.ufape.sguPraeService.models.DadosBancarios;
-import br.edu.ufape.sguPraeService.models.Documento;
-import br.edu.ufape.sguPraeService.models.Estudante;
-import br.edu.ufape.sguPraeService.models.Pagamento;
-import br.edu.ufape.sguPraeService.models.Profissional;
-import br.edu.ufape.sguPraeService.models.TipoAtendimento;
-import br.edu.ufape.sguPraeService.models.TipoAuxilio;
-import br.edu.ufape.sguPraeService.models.TipoBolsa;
-import br.edu.ufape.sguPraeService.models.TipoEtnia;
-import br.edu.ufape.sguPraeService.models.Vaga;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AgendamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.ArmazenamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
@@ -233,18 +219,40 @@ public class Fachada {
     }
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
-    public EstudanteResponse atualizarEstudante(Estudante estudante, Long tipoEtniaId)
+    public EstudanteResponse atualizarEstudante(EstudanteUpdateRequest estudanteUpdateRequest)
             throws EstudanteNotFoundException, TipoEtniaNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
-        estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
-        Estudante velhoEstudante = estudanteService.buscarPorUserId(userId);
-        estudante.setEndereco(
-                enderecoService.editarEndereco(velhoEstudante.getEndereco().getId(), estudante.getEndereco()));
-        Estudante novoEstudante = estudanteService.atualizarEstudante(estudante, velhoEstudante);
-        EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
-        AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
-        response.setAluno(userInfo);
-        return response;
+        Estudante estudanteParcial = new Estudante();
+        Estudante estudante = estudanteService.buscarPorUserId(userId);
+
+        if(estudanteUpdateRequest.getRendaPercapta() != null){
+            estudanteParcial.setRendaPercapta(estudanteUpdateRequest.getRendaPercapta());
+        }
+
+        if(estudanteUpdateRequest.getContatoFamilia() != null ){
+            estudanteParcial.setContatoFamilia(estudanteUpdateRequest.getContatoFamilia());
+        }
+
+        if(estudanteUpdateRequest.getDeficiente() != null){
+             estudanteParcial.setDeficiente(estudanteUpdateRequest.getDeficiente());
+        }
+
+        if(estudanteUpdateRequest.getTipoDeficiencia() != null){
+             estudanteParcial.setTipoDeficiencia(estudanteUpdateRequest.getTipoDeficiencia());
+        }
+
+        if(estudanteUpdateRequest.getTipoEtniaId() != null){
+             estudanteParcial.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(estudanteUpdateRequest.getTipoEtniaId()));
+        }
+
+        if(estudanteUpdateRequest.getEndereco() != null){
+            EnderecoRequest enderecoDTO = estudanteUpdateRequest.getEndereco();
+            Endereco enderecoAtualizado = enderecoDTO.convertToEntity(enderecoDTO, this.modelMapper);
+             estudanteParcial.setEndereco(enderecoService.editarEndereco( estudante.getEndereco().getId(), enderecoAtualizado));
+        }
+
+         Estudante estudanteAtualizado = estudanteService.atualizarEstudante(estudanteParcial, estudante);
+        return new EstudanteResponse(estudanteAtualizado, modelMapper);
     }
 
     public void deletarEstudante(Long id) throws EstudanteNotFoundException {
@@ -475,8 +483,21 @@ public class Fachada {
         return tipoAtendimentoService.salvar(tipoAtendimento);
     }
 
-    public TipoAtendimento editarTipoAtendimento(Long id, TipoAtendimento tipoAtendimento)
+    public TipoAtendimento editarTipoAtendimento(Long id, TipoAtendimentoUpdateRequest dto)
             throws TipoAtendimentoNotFoundException {
+        TipoAtendimento tipoAtendimento = tipoAtendimentoService.buscar(id);
+        if (dto.getNome() != null && !dto.getNome().isBlank()) {
+            tipoAtendimento.setNome(dto.getNome());
+        }
+
+         if (dto.getTempoAtendimento() != null) {
+            tipoAtendimento.setTempoAtendimento(dto.getTempoAtendimento());
+        }
+
+        if(dto.getHorarios() != null) {
+            tipoAtendimento.setHorarios(dto.getHorarios());
+        }
+
         return tipoAtendimentoService.editar(id, tipoAtendimento);
     }
 

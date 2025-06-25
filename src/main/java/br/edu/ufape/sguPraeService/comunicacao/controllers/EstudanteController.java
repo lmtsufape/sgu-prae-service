@@ -60,9 +60,8 @@ public class EstudanteController {
 
     @PreAuthorize("hasRole('ESTUDANTE')")
     @PatchMapping
-    public ResponseEntity<EstudanteResponse> atualizarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
-        Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        EstudanteResponse estudanteAtualizado = fachada.atualizarEstudante(estudante,estudanteRequest.getTipoEtniaId());
+    public ResponseEntity<EstudanteResponse> atualizarEstudante(@Valid @RequestBody EstudanteUpdateRequest estudanteUpdateRequest) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+        EstudanteResponse estudanteAtualizado = fachada.atualizarEstudante(estudanteUpdateRequest);
         return ResponseEntity.ok(estudanteAtualizado);
     }
 
