@@ -141,8 +141,8 @@ public class EstudanteController {
         return ResponseEntity.ok(estudante);
     }
 
-    @PreAuthorize("hasRole('GESTOR' or 'PROFISSIONAL') and hasRole('PRAE_ACCESS')")
-    @GetMapping("/usuario/{userId}")
+    @PreAuthorize("hasAnyRole('GESTOR', 'PROFISSIONAL') and hasRole('PRAE_ACCESS')")
+    @GetMapping("/{userId}")
     public ResponseEntity<EstudanteResponse> buscarEstudantePorUserId(@PathVariable UUID userId) throws EstudanteNotFoundException {
         EstudanteResponse estudante = fachada.buscarEstudantePorUserId(userId);
         return ResponseEntity.ok(estudante);
