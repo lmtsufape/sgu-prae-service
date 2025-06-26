@@ -27,6 +27,8 @@ public interface BeneficioService {
 
     Page<Beneficio> listarPorTipo(Long tipoId, Pageable pageable) throws BeneficioNotFoundException;
 
+    List<Beneficio> buscarPorPagamento(Long pagamentoId);
+
     List<Beneficio> listarPagosPorMes() throws BeneficioNotFoundException;
 
     List<Beneficio> listarBeneficiosPendentesMesAtual();

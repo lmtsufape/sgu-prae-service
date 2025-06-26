@@ -1,7 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 
-import java.util.List;
 import java.util.UUID;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;

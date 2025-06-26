@@ -702,6 +702,10 @@ public class Fachada {
         return beneficioService.listarBeneficiosPendentesMesAtual();
     }
 
+    public List<Beneficio> buscarBeneficioPorPagamentoId(Long pagamentoId) {
+        return beneficioService.buscarPorPagamento(pagamentoId);
+    }
+
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
         List<Beneficio> beneficios = beneficioService
                 .listar().stream()
@@ -795,9 +799,9 @@ public class Fachada {
 
     public void deletarPagamento(Long id) throws PagamentoNotFoundException, BeneficioNotFoundException {
         Pagamento pagamento = buscarPagamento(id);
-        Beneficio beneficio = buscarBeneficioPorPagamentoId(id);
+        Beneficio beneficio = pagamento.getBeneficio();
         beneficio.getPagamentos().remove(pagamento);
-        beneficio = beneficioService.editar(beneficio.getId(), beneficio);
+        beneficioService.editar(beneficio, beneficio);
 
         pagamentoService.deletar(id);
     }
@@ -806,8 +810,8 @@ public class Fachada {
         pagamentoService.desativar(id);
     }
 
-    public List<Pagamento> listarPagamentosPorValor(BigDecimal min, BigDecimal max) {
-        return pagamentoService.listarPorValor(min, max);
+    public Page<Pagamento> listarPagamentosPorValor(BigDecimal min, BigDecimal max, Pageable pageable) {
+        return pagamentoService.listarPorValor(min, max, pageable);
     }
 
     public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {

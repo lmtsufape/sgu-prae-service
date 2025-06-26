@@ -8,6 +8,8 @@ import br.edu.ufape.sguPraeService.models.Pagamento;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +24,11 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
 
     @Override
     public List<Pagamento> listar() { return pagamentoRepository.findAll(); }
+
+    @Override
+    public Page<Pagamento> listar(Pageable pageable) {
+        return pagamentoRepository.findAll(pageable);
+    }
 
     @Override
     public Pagamento buscar(Long id) throws PagamentoNotFoundException {
@@ -63,6 +70,11 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     @Override
     public List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max) {
         return pagamentoRepository.findByValorBetween(min, max);
+    }
+
+    @Override
+    public Page<Pagamento> listarPorValor(BigDecimal min, BigDecimal max, Pageable pageable) {
+        return pagamentoRepository.findByValorBetween(min, max, pageable);
     }
 
     @Override

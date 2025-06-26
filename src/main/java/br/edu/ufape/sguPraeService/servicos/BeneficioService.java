@@ -63,6 +63,11 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		beneficioRepository.save(beneficio);
 	}
 
+	@Override
+	public List<Beneficio> buscarPorPagamento(Long pagamentoId) {
+		return beneficioRepository.findByPagamentos_Id(pagamentoId);
+	}
+
     @Override
     public List<Beneficio> listarPagosPorMes()  {
         return beneficioRepository.findByAtivoTrue();
