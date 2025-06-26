@@ -21,17 +21,9 @@ public interface EstudanteService {
 
     Page<Estudante> listarEstudantes(Pageable pageable);
 
-    List<Estudante> listarEstudantes();
-
     Estudante atualizarEstudante(Estudante estudante, Estudante existente) throws EstudanteNotFoundException;
 
     void deletarEstudante(Long id) throws EstudanteNotFoundException;
 
-    Page<Estudante> listarEstudantesComAuxilioAtivo(Pageable pageable);
 
-    Page<Estudante> listarEstudantesPorAuxilioId(Long auxilioId, Pageable pageable);
-
-    List<Estudante> listarEstudantesComAuxilioAtivo();
-
-    List<Estudante> listarEstudantesPorAuxilioId(Long auxilioId);
 }

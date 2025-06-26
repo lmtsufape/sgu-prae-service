@@ -4,9 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import br.edu.ufape.sguPraeService.comunicacao.annotations.PagamentoValido;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoRequest;
-import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
-import br.edu.ufape.sguPraeService.models.Auxilio;
+import br.edu.ufape.sguPraeService.models.Beneficio;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -21,19 +21,18 @@ public class PagamentoValidoValidator implements ConstraintValidator<PagamentoVa
             return false;
         }
 
-        if (pagamentoRequest.getAuxilioId() != null) {
-            Auxilio auxilio = null;
+        if (pagamentoRequest.getBeneficioId() != null) {
+            Beneficio beneficio;
             try {
-                auxilio = fachada.buscarAuxilio(pagamentoRequest.getAuxilioId());
-            } catch (AuxilioNotFoundException e) {
+                beneficio = fachada.buscarBeneficios(pagamentoRequest.getBeneficioId());
+            } catch (BeneficioNotFoundException e) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate("Auxílio não encontrado")
                         .addPropertyNode("auxilioId")
                         .addConstraintViolation();
-                e.printStackTrace();
                 return false;
             }
-            if (pagamentoRequest.getData().isAfter(auxilio.getFimBolsa())) {
+            if (pagamentoRequest.getData().isAfter(beneficio.getFimBeneficio())) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate("Data do pagamento excede o termino do auxílio")
                         .addPropertyNode("data")

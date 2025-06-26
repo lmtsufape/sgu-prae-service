@@ -1,4 +1,4 @@
-package br.edu.ufape.sguPraeService.comunicacao.dto.auxilio;
+package br.edu.ufape.sguPraeService.comunicacao.dto.beneficio;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,10 +8,10 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class AuxilioRelatorioResponse {
+public class BeneficioRelatorioResponse {
     private Long auxilioId;
-    private String descricaoBolsa;
-    private BigDecimal valorBolsa;
+    private String descricaoBeneficio;
+    private BigDecimal valorBeneficio;
     private List<PagamentoRelatorioResponse> pagamentos;
     private BigDecimal totalGasto;
     private List<EstudanteRelatorioResponse> estudantes;

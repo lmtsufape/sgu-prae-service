@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RelatorioAuxilioResponse {
+public class RelatorioBeneficioResponse {
         private String tipoAuxilio;
         private BigDecimal valorBolsa;
         private LocalDate inicioBolsa;
