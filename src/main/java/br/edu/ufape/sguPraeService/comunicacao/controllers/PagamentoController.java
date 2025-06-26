@@ -3,7 +3,7 @@ import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoRequest;
-import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,9 +29,9 @@ public class PagamentoController {
         return fachada.listarPagamentos().stream().map(pagamento -> new PagamentoResponse(pagamento, modelMapper)).toList();
     }
     
-    @GetMapping("/auxilio/{auxilioId}")
-    public List<PagamentoResponse> listarPorAuxilioId(@PathVariable Long auxilioId) throws AuxilioNotFoundException {
-        return fachada.listarPagamentosPorAuxilioId(auxilioId).stream().map(pagamento -> new PagamentoResponse(pagamento, modelMapper)).toList();
+    @GetMapping("/beneficio/{beneficioId}")
+    public List<PagamentoResponse> listarPorBeneficioId(@PathVariable Long beneficioId) throws BeneficioNotFoundException {
+        return fachada.listarPagamentosPorBeneficioId(beneficioId).stream().map(pagamento -> new PagamentoResponse(pagamento, modelMapper)).toList();
     }
 
     @GetMapping("/{id}")
@@ -42,14 +42,14 @@ public class PagamentoController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping
-    public ResponseEntity<List<PagamentoResponse>> salvar(@Valid @RequestBody List<PagamentoRequest> entities) throws AuxilioNotFoundException {
+    public ResponseEntity<List<PagamentoResponse>> salvar(@Valid @RequestBody List<PagamentoRequest> entities) throws BeneficioNotFoundException {
         if (entities.isEmpty()) return ResponseEntity.badRequest().build();
 
         List<Pagamento> pagamentos = entities.stream()
                 .map(e -> e.convertToEntity(e, modelMapper))
                 .toList();
 
-        List<Pagamento> salvos = fachada.salvarPagamentos(pagamentos, entities.getFirst().getAuxilioId());
+        List<Pagamento> salvos = fachada.salvarPagamentos(pagamentos);
 
         List<PagamentoResponse> response = salvos.stream()
                 .map(p -> new PagamentoResponse(p, modelMapper))

@@ -25,5 +25,5 @@ public class Pagamento {
 	private boolean ativo = true;
 	@ManyToOne
 	@JsonManagedReference
-	private Auxilio auxilio;
+	private Beneficio beneficio;
 }
