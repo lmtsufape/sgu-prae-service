@@ -55,11 +55,6 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public List<Estudante> listarEstudantes() {
-        return estudanteRepository.findAllByAtivoTrue();
-    }
-
-    @Override
     public Estudante atualizarEstudante(Estudante estudante, Estudante existente) throws EstudanteNotFoundException {
         try {
             modelMapper.map(estudante, existente);
@@ -77,23 +72,4 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
         estudanteRepository.save(estudante);
     }
 
-    @Override
-    public Page<Estudante> listarEstudantesComAuxilioAtivo(Pageable pageable) {
-        return estudanteRepository.findAllWithAuxilioAtivo(pageable);
-    }
-    
-    @Override
-    public List<Estudante> listarEstudantesComAuxilioAtivo() {
-        return estudanteRepository.findAllWithAuxilioAtivo();
-    }
-
-    @Override
-    public Page<Estudante> listarEstudantesPorAuxilioId(Long auxilioId, Pageable pageable) {
-        return estudanteRepository.findByAuxilioId(auxilioId, pageable);
-    }
-
-    @Override
-    public List<Estudante> listarEstudantesPorAuxilioId(Long auxilioId) {
-        return estudanteRepository.findByAuxilioId(auxilioId);
-    }
 }
