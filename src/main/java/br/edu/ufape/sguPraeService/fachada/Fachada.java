@@ -7,7 +7,11 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+<<<<<<< correcao-editar-prae
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
+=======
 import br.edu.ufape.sguPraeService.models.*;
+>>>>>>> main
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -357,6 +361,23 @@ public class Fachada {
     }
 
 
+
+    public EstudanteResponse buscarEstudanteAtual() throws EstudanteNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
+        Estudante estudante = estudanteService.buscarPorUserId(userId);
+        AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
+        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
+        response.setAluno(userInfo);
+        return response;
+    }
+
+    public EstudanteResponse buscarEstudantePorUserId(UUID userId) throws EstudanteNotFoundException {
+        Estudante estudante = estudanteService.buscarPorUserId(userId);
+        AlunoResponse userInfo = authServiceHandler.buscarAlunoPorId(userId);
+        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
+        response.setAluno(userInfo);
+        return response;
+    }
 
     // ================== TipoEtnia ================== //
 
@@ -724,11 +745,28 @@ public class Fachada {
         return pagamentoService.salvar(pagamentos);
     }
 
-    public Pagamento editarPagamento(Long id, Pagamento pagamento) throws PagamentoNotFoundException {
-        return pagamentoService.editar(id, pagamento);
+    public Pagamento editarPagamento(Long id, PagamentoPatchRequest dto) throws PagamentoNotFoundException {
+        Pagamento pagamento = pagamentoService.buscar(id);
+
+        if (dto.getValor() != null) {
+            pagamento.setValor(dto.getValor());
+        }
+        if (dto.getData() != null) {
+            pagamento.setData(dto.getData());
+        }
+        return pagamentoService.salvar(List.of(pagamento)).getFirst();
     }
 
+<<<<<<< correcao-editar-prae
+
+    public void deletarPagamento(Long id) throws PagamentoNotFoundException, AuxilioNotFoundException {
+        Pagamento pagamento = buscarPagamento(id);
+        Auxilio auxilio = buscarAuxilioPorPagamentoId(id);
+        auxilio.getPagamentos().remove(pagamento);
+        auxilio = auxilioService.editar(auxilio.getId(), auxilio);
+=======
     public void deletarPagamento(Long id) throws PagamentoNotFoundException {
+>>>>>>> main
         pagamentoService.deletar(id);
     }
 

@@ -1,5 +1,11 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+<<<<<<< correcao-editar-prae
+import java.util.List;
+import java.util.UUID;
+
+=======
+>>>>>>> main
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
@@ -105,4 +111,17 @@ public class EstudanteController {
         return ResponseEntity.ok(relatorio);
     }
 
+    @PreAuthorize("hasRole('ESTUDANTE')")
+    @GetMapping("/current")
+    public ResponseEntity<EstudanteResponse> buscarEstudanteAtual() throws EstudanteNotFoundException {
+        EstudanteResponse estudante = fachada.buscarEstudanteAtual();
+        return ResponseEntity.ok(estudante);
+    }
+
+    @PreAuthorize("hasAnyRole('GESTOR', 'PROFISSIONAL') and hasRole('PRAE_ACCESS')")
+    @GetMapping("/{userId}")
+    public ResponseEntity<EstudanteResponse> buscarEstudantePorUserId(@PathVariable UUID userId) throws EstudanteNotFoundException {
+        EstudanteResponse estudante = fachada.buscarEstudantePorUserId(userId);
+        return ResponseEntity.ok(estudante);
+    }
 }
