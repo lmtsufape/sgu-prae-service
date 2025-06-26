@@ -1,4 +1,4 @@
-package br.edu.ufape.sguPraeService.comunicacao.dto.auxilio;
+package br.edu.ufape.sguPraeService.comunicacao.dto.beneficio;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import lombok.AllArgsConstructor;

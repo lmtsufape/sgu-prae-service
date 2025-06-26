@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import br.edu.ufape.sguPraeService.models.*;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,23 +20,22 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
-import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.AuxilioRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.EstudanteRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.PagamentoRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.auxilio.RelatorioFinanceiroResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.EstudanteRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.PagamentoRelatorioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.RelatorioFinanceiroResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioAuxilioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioBeneficioResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteAssistidoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.AuxilioNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.EstudanteSemAuxilioAtivoException;
 import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
-import br.edu.ufape.sguPraeService.exceptions.TipoAuxilioNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.TipoBolsaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.TipoBeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
@@ -46,24 +46,11 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNot
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.VagaNotFoundException;
-import br.edu.ufape.sguPraeService.models.Agendamento;
-import br.edu.ufape.sguPraeService.models.Auxilio;
-import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
-import br.edu.ufape.sguPraeService.models.Cronograma;
-import br.edu.ufape.sguPraeService.models.DadosBancarios;
-import br.edu.ufape.sguPraeService.models.Documento;
-import br.edu.ufape.sguPraeService.models.Estudante;
-import br.edu.ufape.sguPraeService.models.Pagamento;
-import br.edu.ufape.sguPraeService.models.Profissional;
-import br.edu.ufape.sguPraeService.models.TipoAtendimento;
-import br.edu.ufape.sguPraeService.models.TipoAuxilio;
-import br.edu.ufape.sguPraeService.models.TipoBolsa;
-import br.edu.ufape.sguPraeService.models.TipoEtnia;
-import br.edu.ufape.sguPraeService.models.Vaga;
+import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AgendamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.ArmazenamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
-import br.edu.ufape.sguPraeService.servicos.interfaces.AuxilioService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.DadosBancariosService;
@@ -72,8 +59,7 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.EstudanteService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAuxilioService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.TipoBolsaService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.TipoBeneficioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoEtniaService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -99,9 +85,8 @@ public class Fachada {
     private final AuthenticatedUserProvider authenticatedUserProvider;
     private final AgendamentoService agendamentoService;
     private final CancelamentoService cancelamentoService;
-    private final TipoBolsaService tipoBolsaService;
-    private final TipoAuxilioService tipoAuxilioService;
-    private final AuxilioService auxilioService;
+    private final TipoBeneficioService tipoBeneficioService;
+    private final BeneficioService beneficioService;
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
 
@@ -184,9 +169,12 @@ public class Fachada {
         return response;
     }
 
-    private List<EstudanteResponse> buscarAlunosParaEstudantes(List<Estudante> estudantes) {
-        if(estudantes.isEmpty())
-            Collections.emptyList();
+    public Page<EstudanteResponse> listarEstudantes(Pageable pageable) throws EstudanteNotFoundException {
+        Page<Estudante> estudantes = estudanteService.listarEstudantes(pageable);
+
+        if (estudantes.isEmpty()) {
+            return Page.empty();
+        }
 
         List<UUID> userIds = estudantes.stream()
                 .map(Estudante::getUserId)
@@ -194,42 +182,26 @@ public class Fachada {
 
         List<AlunoResponse> usuarios = authServiceHandler.buscarAlunos(userIds);
         if (usuarios.isEmpty()) {
-            Collections.emptyList();
+            return Page.empty();
         }
 
         Map<UUID, AlunoResponse> mapaAlunos = usuarios.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
-        List<EstudanteResponse> listaEstudantes = estudantes.stream()
+        List<EstudanteResponse> listaEstudantes = estudantes.getContent().stream()
                 .map(estudante -> {
                     EstudanteResponse resp = new EstudanteResponse(estudante, modelMapper);
+                    // "lookup" no mapa para anexar o AlunoResponse correto
                     AlunoResponse ar = mapaAlunos.get(estudante.getUserId());
-                    if (ar != null) 
-                        resp.setAluno(ar);
+                    resp.setAluno(ar);
                     return resp;
                 })
                 .toList();
-        return listaEstudantes;
-    }
-
-    public Page<Estudante> listarEstudantesPorAuxilio(Long auxilioId, Pageable pageable) {
-        return estudanteService.listarEstudantesPorAuxilioId(auxilioId, pageable);
-    }
-
-    public Page<EstudanteResponse> listarEstudantes(Pageable pageable) throws EstudanteNotFoundException {
-        Page<Estudante> estudantes = estudanteService.listarEstudantes(pageable);
-
-        List<EstudanteResponse> listaEstudantes = buscarAlunosParaEstudantes(estudantes.getContent());
         return new PageImpl<>(
                 listaEstudantes,
                 pageable,
                 estudantes.getTotalElements()
         );
-    }
-
-    public List<EstudanteResponse> listarEstudantes() throws EstudanteNotFoundException {
-        List<Estudante> estudantes = estudanteService.listarEstudantes();
-        return buscarAlunosParaEstudantes(estudantes);
     }
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
@@ -271,7 +243,7 @@ public class Fachada {
     }
 
     public Page<CredorResponse> listarCredoresPorCurso(Long id, Pageable pageable) {
-        Page<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo(pageable);
+        Page<Estudante> estudantes = beneficioService.listarEstudantesComBeneficioAtivo(pageable);
         if (estudantes.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -281,7 +253,7 @@ public class Fachada {
     }
 
     public Page<AlunoResponse> listarCredoresParaPublicacao(Pageable pageable) {
-        Page<Estudante> estudantes = estudanteService.listarEstudantesComAuxilioAtivo(pageable);
+        Page<Estudante> estudantes = beneficioService.listarEstudantesComBeneficioAtivo(pageable);
         if (estudantes.isEmpty()) {
             return Page.empty(pageable);
         }
@@ -298,43 +270,30 @@ public class Fachada {
         return new PageImpl<>(conteudo, pageable, conteudo.size());
     }
 
-    public Page<CredorResponse> listarCredoresComAuxiliosAtivos(Pageable pageable) {
-        return gerarCredores(pageable, estudanteService::listarEstudantesComAuxilioAtivo);
+    public Page<CredorResponse> listarCredoresComBeneficiosAtivos(Pageable pageable) {
+        return gerarCredores(pageable, beneficioService::listarEstudantesComBeneficioAtivo);
     }
 
-    public Page<CredorResponse> listarCredoresPorAuxilio(Long auxilioId, Pageable pageable) {
+    public Page<CredorResponse> listarCredoresPorBeneficio(Long beneficioId, Pageable pageable) {
         return gerarCredores(pageable, pg ->
-                estudanteService.listarEstudantesPorAuxilioId(auxilioId, pg)
+                beneficioService.listarEstudantesPorAuxilio(beneficioId, pg)
         );
     }
-
-    public List<CredorResponse> listarCredoresComAuxiliosAtivos() {
-        return gerarCredores(estudanteService.listarEstudantesComAuxilioAtivo());
-    }
-
-    public List<CredorResponse> listarCredoresPorAuxilio(Long auxilioId) {
-        return gerarCredores(estudanteService.listarEstudantesPorAuxilioId(auxilioId));
-    }
-
     public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId)
             throws EstudanteNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+        List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudanteId);
 
-        if (estudante == null) {
-            throw new EstudanteNotFoundException();
-        }
-
-        if (estudante.getAuxilios() == null || estudante.getAuxilios().stream().noneMatch(Auxilio::isAtivo)) {
+        if (beneficiosAtivos.isEmpty()) {
             throw new EstudanteSemAuxilioAtivoException();
         }
 
-        List<RelatorioAuxilioResponse> auxilios = estudante.getAuxilios().stream()
-                .filter(Auxilio::isAtivo)
-                .map(auxilio -> new RelatorioAuxilioResponse(
-                        auxilio.getTipoAuxilio().getTipo(),
-                        auxilio.getValorBolsa(),
-                        auxilio.getInicioBolsa(),
-                        auxilio.getFimBolsa()))
+        List<RelatorioBeneficioResponse> beneficios = beneficiosAtivos.stream()
+                .map(beneficio -> new RelatorioBeneficioResponse(
+                        beneficio.getTipoBeneficio().getTipo(),
+                        beneficio.getValorPagamento(),
+                        beneficio.getInicioBeneficio(),
+                        beneficio.getFimBeneficio()))
                 .collect(Collectors.toList());
 
         var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
@@ -346,43 +305,39 @@ public class Fachada {
                 estudante.isDeficiente(),
                 estudante.getTipoDeficiencia(),
                 estudante.getTipoEtnia() != null ? estudante.getTipoEtnia().getTipo() : null,
-                auxilios);
+                beneficios);
     }
 
     private Page<CredorResponse> getCredorResponses(Pageable pageable, Page<Estudante> estudantes, List<AlunoResponse> alunos) {
-        return new PageImpl<>(
-                getCredorResponses(estudantes.getContent(), alunos),
-                pageable,
-                estudantes.getTotalElements()
-        );
-    }
-
-    private List<CredorResponse> getCredorResponses(List<Estudante> estudantes, List<AlunoResponse> alunos) {
         Map<UUID, AlunoResponse> mapaAlunos = alunos.stream()
                 .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
 
 
-        List<CredorResponse> listaCredores = estudantes.stream()
+        List<CredorResponse> listaCredores = estudantes.getContent().stream()
                 .map(estudante -> {
                     AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
 
                     EstudanteResponse er = new EstudanteResponse(estudante, modelMapper);
                     er.setAluno(aluno);
 
-                    List<Auxilio> auxAtivos = estudante.getAuxilios().stream()
-                            .filter(Auxilio::isAtivo)
-                            .toList();
+                    List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudante.getId()).stream()
+                            .filter(Beneficio::isAtivo).toList();
+
 
                     return new CredorResponse(
                             er,
                             estudante.getDadosBancarios(),
-                            auxAtivos
+                            beneficiosAtivos
                     );
                 })
                 .toList();
 
 
-        return listaCredores;
+        return new PageImpl<>(
+                listaCredores,
+                pageable,
+                estudantes.getTotalElements()
+        );
     }
 
     private Page<CredorResponse> gerarCredores(
@@ -401,17 +356,7 @@ public class Fachada {
         return getCredorResponses(pageable, pageEstudantes, alunos);
     }
 
-    private List<CredorResponse> gerarCredores(List<Estudante> estudantes) {
-        if (estudantes.isEmpty()) {
-            return Collections.emptyList();
-        }
 
-        List<UUID> userIds = estudantes.stream()
-                .map(Estudante::getUserId)
-                .toList();
-        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
-        return getCredorResponses(estudantes, alunos);
-    }
 
     // ================== TipoEtnia ================== //
 
@@ -615,163 +560,112 @@ public class Fachada {
         return cancelamentoService.buscar(id);
     }
 
-    // ------------------- TipoBolsa ------------------- //
-    public Page<TipoBolsa> listarTipoBolsas(Pageable pageable) {
-        return tipoBolsaService.listar(pageable);
+
+
+    // ------------------- TipoBeneficio ------------------- //
+    public Page<TipoBeneficio> listarTipoBeneficios(Pageable pageable) {
+        return tipoBeneficioService.listar(pageable);
     }
 
-    public TipoBolsa buscarTipoBolsa(Long id) throws TipoBolsaNotFoundException {
-        return tipoBolsaService.buscar(id);
+    public TipoBeneficio buscarTipoBeneficio(Long id) throws TipoBeneficioNotFoundException {
+        return tipoBeneficioService.buscar(id);
     }
 
-    public TipoBolsa salvarTipoBolsa(TipoBolsa tipoBolsa) {
-        return tipoBolsaService.salvar(tipoBolsa);
+    public TipoBeneficio salvarTipoBeneficio(TipoBeneficio tipoBeneficio) {
+        return tipoBeneficioService.salvar(tipoBeneficio);
     }
 
-    public TipoBolsa editarTipoBolsa(Long id, TipoBolsa tipoBolsa) throws TipoBolsaNotFoundException {
-        return tipoBolsaService.editar(id, tipoBolsa);
+    public TipoBeneficio editarTipoBeneficio(Long id, TipoBeneficio tipoBeneficio) throws TipoBeneficioNotFoundException {
+        return tipoBeneficioService.editar(id, tipoBeneficio);
     }
 
-    public void deletarTipoBolsa(Long id) throws TipoBolsaNotFoundException {
-        tipoBolsaService.deletar(id);
+    public void deletarTipoBeneficio(Long id) throws TipoBeneficioNotFoundException {
+        tipoBeneficioService.deletar(id);
     }
 
-    public void desativarTipoBolsa(Long id) throws TipoBolsaNotFoundException {
-        tipoBolsaService.desativar(id);
+    public void desativarTipoBeneficio(Long id) throws TipoBeneficioNotFoundException {
+        tipoBeneficioService.desativar(id);
     }
 
-    // ------------------- TipoAuxilio ------------------- //
-    public Page<TipoAuxilio> listarTipoAuxilios(Pageable pageable) {
-        return tipoAuxilioService.listar(pageable);
+    // ------------------- Beneficio ------------------- //
+    public Page<Beneficio> listarBeneficios(Pageable pageable) {
+        return beneficioService.listar(pageable);
     }
 
-    public TipoAuxilio buscarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
-        return tipoAuxilioService.buscar(id);
+    public Page<Beneficio> listarBeneficiosPorTipo(Long tipoId, Pageable pageable) throws BeneficioNotFoundException {
+        return beneficioService.listarPorTipo(tipoId, pageable);
     }
 
-    public TipoAuxilio salvarTipoAuxilio(TipoAuxilio tipoAuxilio) {
-        return tipoAuxilioService.salvar(tipoAuxilio);
+    public Page<Beneficio> listarBeneficiosPorEstudanteId(Long estudanteId, Pageable pageable) throws EstudanteNotFoundException {
+        return beneficioService.listarPorEstudante(estudanteId, pageable);
     }
 
-    public TipoAuxilio editarTipoAuxilio(Long id, TipoAuxilio tipoAuxilio) throws TipoAuxilioNotFoundException {
-        return tipoAuxilioService.editar(id, tipoAuxilio);
+    public Beneficio buscarBeneficios(Long id) throws BeneficioNotFoundException {
+        return beneficioService.buscar(id);
     }
 
-    public void deletarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
-        tipoAuxilioService.deletar(id);
-    }
-
-    public void desativarTipoAuxilio(Long id) throws TipoAuxilioNotFoundException {
-        tipoAuxilioService.desativar(id);
-    }
-
-    // ------------------- Auxilio ------------------- //
-    public Page<Auxilio> listarAuxilios(Pageable pageable) {
-        return auxilioService.listar(pageable);
-    }
-
-    public List<Auxilio> listarAuxilios() {
-        return auxilioService.listar();
-    }
-
-    public Page<Auxilio> listarAuxiliosPorTipo(Long tipoId, Pageable pageable) throws AuxilioNotFoundException {
-        return auxilioService.listarPorTipo(tipoId, pageable);
-    }
-
-    public Page<Auxilio> listarAuxiliosPorEstudanteId(Long estudanteId, Pageable pageable) throws EstudanteNotFoundException {
-        List<Auxilio> auxilios = estudanteService.buscarEstudante(estudanteId).getAuxilios();
-        return new PageImpl<>(auxilios, pageable, auxilios.size());
-    }
-
-    public Auxilio buscarAuxilio(Long id) throws AuxilioNotFoundException {
-        return auxilioService.buscar(id);
-    }
-
-    public Auxilio buscarAuxilioPorPagamentoId(Long pagamentoId) throws AuxilioNotFoundException {
-        return auxilioService.buscarPorPagamentoId(pagamentoId);
-    }
-
-    public Auxilio salvarAuxilio(Long estudanteId, Auxilio auxilio, MultipartFile termo)
-            throws TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
+    public Beneficio salvarBeneficios(Long estudanteId, Beneficio beneficio, MultipartFile termo, Long tipoBeneficioId)
+            throws TipoBeneficioNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
-        auxilio.setId(null);
-
-        if (auxilio.getTipoAuxilio() != null) {
-            TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
-            auxilio.setTipoAuxilio(tipoAuxilio);
-            auxilio.setValorPagamento(auxilio.getValorBolsa());
-        }
-
-        if (auxilio.getTipoBolsa() != null) {
-            TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
-            auxilio.setTipoBolsa(tipoBolsa);
-        }
+        TipoBeneficio tipoBeneficio = tipoBeneficioService.buscar(tipoBeneficioId);
+        beneficio.setEstudantes(estudante);
+        beneficio.setTipoBeneficio(tipoBeneficio);
 
         MultipartFile[] arquivos = { termo };
         List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
-        auxilio.setTermo(documentos.getFirst());
+        beneficio.setTermo(documentos.getFirst());
 
-        auxilio.addEstudante(estudante);
 
-        auxilio = auxilioService.salvar(auxilio);
-        return auxilio;
+        return beneficioService.salvar(beneficio);
+
     }
 
-    public Auxilio editarAuxilio(Long id, Auxilio auxilio, MultipartFile termo)
-            throws AuxilioNotFoundException, TipoAuxilioNotFoundException, TipoBolsaNotFoundException {
-        Auxilio aux = buscarAuxilio(id);
-        auxilio.setId(id);
-
-        if (auxilio.getTipoAuxilio() != null) {
-            TipoAuxilio tipoAuxilio = buscarTipoAuxilio(auxilio.getTipoAuxilio().getId());
-            auxilio.setTipoAuxilio(tipoAuxilio);
-            auxilio.setTipoBolsa(null);
-        }
-
-        if (auxilio.getTipoBolsa() != null) {
-            TipoBolsa tipoBolsa = buscarTipoBolsa(auxilio.getTipoBolsa().getId());
-            auxilio.setTipoBolsa(tipoBolsa);
-            auxilio.setTipoAuxilio(null);
-        }
+    public Beneficio editarBeneficios(Long id, Long estudanteId, Beneficio beneficio, MultipartFile termo, Long tipoBeneficioId)
+            throws BeneficioNotFoundException, TipoBeneficioNotFoundException {
+        Beneficio aux = buscarBeneficios(id);
+        Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+        TipoBeneficio tipoBeneficio = tipoBeneficioService.buscar(tipoBeneficioId);
+        beneficio.setEstudantes(estudante);
+        beneficio.setTipoBeneficio(tipoBeneficio);
 
         if (termo != null) {
             MultipartFile[] arquivos = { termo };
             List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
-            auxilio.setTermo(documentos.getFirst());
-            auxilio.getTermo().setId(aux.getTermo().getId());
+            beneficio.setTermo(documentos.getFirst());
+            beneficio.getTermo().setId(aux.getTermo().getId());
         }
 
-        return auxilioService.editar(id, auxilio);
+        return beneficioService.editar(aux, beneficio);
     }
 
-    public void deletarAuxilio(Long id) throws AuxilioNotFoundException {
-        auxilioService.deletar(id);
+    public void deletarBeneficio(Long id) throws BeneficioNotFoundException {
+        beneficioService.deletar(id);
     }
 
-    public Page<Auxilio> listarAuxiliosPendentesMesAtual(Pageable pageable) {
-        return auxilioService.listarAuxiliosPendentesMesAtual(pageable);
+    public List<Beneficio> listarBeneficiosPendentesMesAtual()  {
+        return beneficioService.listarBeneficiosPendentesMesAtual();
     }
 
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
-        List<Auxilio> auxilios = auxilioService
+        List<Beneficio> beneficios = beneficioService
                 .listar().stream()
                 .filter(aux -> aux.isAtivo() && aux.isStatus()
-                        && !aux.getInicioBolsa().isAfter(fim)
-                        && !aux.getFimBolsa().isBefore(inicio))
+                        && !aux.getInicioBeneficio().isAfter(fim)
+                        && !aux.getFimBeneficio().isBefore(inicio))
                 .toList();
 
-        List<AuxilioRelatorioResponse> detalhes = new ArrayList<>();
+        List<BeneficioRelatorioResponse> detalhes = new ArrayList<>();
         BigDecimal totalGeral = BigDecimal.ZERO;
 
-        for (Auxilio auxilio : auxilios) {
-            List<Estudante> estudantes = estudanteService.listarEstudantesPorAuxilioId(auxilio.getId());
+        for (Beneficio beneficio : beneficios) {
+            List<Estudante> estudantes = beneficioService.listarEstudantesPorAuxilio(beneficio.getId());
             List<EstudanteRelatorioResponse> estudantesDto = new ArrayList<>();
 
-            List<Pagamento> pagamentosFiltrados = auxilio.getPagamentos().stream()
+            List<Pagamento> pagamentosFiltrados = beneficio.getPagamentos().stream()
                     .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
                     .toList();
 
-            BigDecimal totalAuxilio = auxilio.getPagamentos().stream()
+            BigDecimal totalAuxilio = beneficio.getPagamentos().stream()
                     .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
                     .map(Pagamento::getValor)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -792,10 +686,10 @@ public class Fachada {
                         aluno.getCurso()));
             }
             totalGeral = totalGeral.add(totalAuxilio);
-            detalhes.add(new AuxilioRelatorioResponse(
-                    auxilio.getId(),
-                    auxilio.getTipoBolsa().getDescricao(),
-                    auxilio.getValorBolsa(),
+            detalhes.add(new BeneficioRelatorioResponse(
+                    beneficio.getId(),
+                    beneficio.getTipoBeneficio().getDescricao(),
+                    beneficio.getValorPagamento(),
                     pagamentosDto,
                     totalAuxilio,
                     estudantesDto));
@@ -809,44 +703,32 @@ public class Fachada {
         return pagamentoService.listar();
     }
 
-    public Page<Pagamento> listarPagamentos(Pageable pageable) {
-        return pagamentoService.listar(pageable);
+    public List<Pagamento> listarPagamentosPorBeneficioId(Long beneficioId) throws BeneficioNotFoundException {
+        return beneficioService.buscar(beneficioId).getPagamentos();
     }
 
-    public Page<Pagamento> listarPagamentosPorAuxilioId(Long auxilioId, Pageable pageable) throws AuxilioNotFoundException {
-        List<Pagamento> pagamentos = auxilioService.buscar(auxilioId).getPagamentos();
-        return new PageImpl<>(pagamentos, pageable, pagamentos.size());
-    }
-
-    public Page<Auxilio> listarPagosPorMes(int ano, int mes, Pageable pageable) throws AuxilioNotFoundException {
-        return auxilioService.listarPagosPorMes(ano, mes, pageable);
+    public List<Beneficio> listarPagosPorMes() throws BeneficioNotFoundException {
+        return beneficioService.listarPagosPorMes();
     }
 
     public Pagamento buscarPagamento(Long id) throws PagamentoNotFoundException {
         return pagamentoService.buscar(id);
     }
 
-    public List<Pagamento> salvarPagamentos(List<Pagamento> pagamentos, Long auxilioId) throws AuxilioNotFoundException {
-        Auxilio auxilio = buscarAuxilio(auxilioId);
-        List<Pagamento> rPagamentos = new ArrayList<>();
-        for (Pagamento pagamento : pagamentos) {
-            auxilio.addPagamento(pagamento);
-            pagamento.setId(null);
-            auxilio = auxilioService.editar(auxilioId, auxilio);
-            rPagamentos.add(auxilio.getPagamentos().getLast());
+    public List<Pagamento> salvarPagamentos(List<Pagamento> pagamentos) throws BeneficioNotFoundException {
+        for (Pagamento p : pagamentos) {
+            Long id = p.getBeneficio().getId();
+            Beneficio b = buscarBeneficios(id);
+            p.setBeneficio(b);
         }
-        return rPagamentos;
+        return pagamentoService.salvar(pagamentos);
     }
 
     public Pagamento editarPagamento(Long id, Pagamento pagamento) throws PagamentoNotFoundException {
         return pagamentoService.editar(id, pagamento);
     }
 
-    public void deletarPagamento(Long id) throws PagamentoNotFoundException, AuxilioNotFoundException {
-        Pagamento pagamento = buscarPagamento(id);
-        Auxilio auxilio = buscarAuxilioPorPagamentoId(id);
-        auxilio.getPagamentos().remove(pagamento);
-        auxilio = auxilioService.editar(auxilio.getId(), auxilio);
+    public void deletarPagamento(Long id) throws PagamentoNotFoundException {
         pagamentoService.deletar(id);
     }
 
@@ -859,12 +741,7 @@ public class Fachada {
     }
 
     public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
-        buscarEstudante(estudanteId);
-        return auxilioService.buscarPorEstudanteId(estudanteId).stream()
-                .flatMap(aux -> aux.getPagamentos().stream())
-                .filter(Pagamento::isAtivo)
-                .sorted(Comparator.comparing(Pagamento::getData).reversed())
-                .toList();
+        return pagamentoService.listarPorEstudanteId(estudanteId);
     }
 
     // ------------------- Armazenamento ------------------- //
