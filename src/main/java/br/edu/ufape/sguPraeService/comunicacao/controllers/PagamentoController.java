@@ -1,9 +1,7 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
-<<<<<<< correcao-editar-prae
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
-=======
->>>>>>> main
+
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
@@ -11,6 +9,9 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoRequest;
 import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
@@ -64,25 +65,19 @@ public class PagamentoController {
     }
 
     @PatchMapping("/{id}")
-<<<<<<< correcao-editar-prae
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     public ResponseEntity<PagamentoResponse> editar(@PathVariable Long id, @RequestBody PagamentoPatchRequest dto
     ) throws PagamentoNotFoundException {
         Pagamento atualizado = fachada.editarPagamento(id, dto);
         return ResponseEntity.ok(
-                new PagamentoResponse(atualizado, getEstudantesPorPagamentoId(atualizado.getId()), modelMapper)
+                new PagamentoResponse(atualizado, modelMapper)
         );
-=======
-    public ResponseEntity<PagamentoResponse> editar(@PathVariable Long id, @Valid @RequestBody PagamentoRequest entity) throws PagamentoNotFoundException {
-        Pagamento response = fachada.editarPagamento(id, entity.convertToEntity(entity, modelMapper));
-        return new ResponseEntity<>(new PagamentoResponse(response, modelMapper), HttpStatus.OK);
->>>>>>> main
     }
 
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws PagamentoNotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws PagamentoNotFoundException, BeneficioNotFoundException {
         fachada.deletarPagamento(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -95,13 +90,11 @@ public class PagamentoController {
     }
 
     @GetMapping("/valor/{min}/{max}")
-    public List<PagamentoResponse> listarPorValor(
+    public Page<PagamentoResponse> listarPorValor(@PageableDefault(sort = "id") Pageable pageable,
             @PathVariable BigDecimal min,
             @PathVariable BigDecimal max) {
-        return fachada.listarPagamentosPorValor(min, max)
-                .stream()
-                .map(p -> new PagamentoResponse(p, modelMapper))
-                .toList();
+        return   fachada.listarPagamentosPorValor(min, max, pageable)
+                .map(p -> new PagamentoResponse(p, modelMapper));
     }
 
     @GetMapping("/estudante/{estudanteId}")
@@ -110,5 +103,6 @@ public class PagamentoController {
                 .map(p -> new PagamentoResponse(p, modelMapper))
                 .toList();
     }
+
 }
 

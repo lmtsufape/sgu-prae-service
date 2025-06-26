@@ -27,4 +27,6 @@ public interface PagamentoService {
     List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max);
 
     Page<Pagamento> listarPorValor(BigDecimal min, BigDecimal max, Pageable pageable);
+
+    List<Pagamento> listarPorEstudanteId(Long estudanteId);
 }
