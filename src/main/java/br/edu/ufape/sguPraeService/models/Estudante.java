@@ -1,13 +1,11 @@
 package br.edu.ufape.sguPraeService.models;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -35,12 +33,5 @@ public class Estudante {
     @ManyToOne
     private TipoEtnia tipoEtnia;
 
-    @ManyToMany
-    @JoinTable(name = "estudante_auxilio", joinColumns = @JoinColumn(name = "estudante_id"), inverseJoinColumns = @JoinColumn(name = "auxilio_id"))
-    @JsonManagedReference
-    private List<Auxilio> auxilios;
 
-    public void addAuxilio(Auxilio auxilio) {
-        this.auxilios.add(auxilio);
-    }
 }

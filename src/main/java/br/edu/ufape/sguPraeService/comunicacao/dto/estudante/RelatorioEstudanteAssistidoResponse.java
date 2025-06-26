@@ -19,6 +19,6 @@ public class RelatorioEstudanteAssistidoResponse {
     private boolean deficiente;
     private String tipoDeficiencia;
     private String etnia;
-    private List<RelatorioAuxilioResponse> auxilios;
+    private List<RelatorioBeneficioResponse> auxilios;
 }
 

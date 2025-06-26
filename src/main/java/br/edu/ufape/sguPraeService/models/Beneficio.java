@@ -14,44 +14,35 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
-public class Auxilio {
+public class Beneficio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne()
-    private TipoAuxilio tipoAuxilio;
+    private TipoBeneficio tipoBeneficio;
 
-    @ManyToOne()
-    private TipoBolsa tipoBolsa;
-
-    private int horasBolsa;
-    private LocalDate inicioBolsa;
-    private LocalDate fimBolsa;
+    private int horasBeneficio;
+    private LocalDate inicioBeneficio;
+    private LocalDate fimBeneficio;
     private String parecerTermino;
-    private BigDecimal valorBolsa;
     private BigDecimal valorPagamento;
     private boolean status = true;
     private boolean ativo = true;
 
-    @ManyToMany(mappedBy = "auxilios")
-    @JsonBackReference
-    private List<Estudante> estudantes = new ArrayList<>();
+    @ManyToOne
+    private Estudante estudantes;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Documento termo;
 
-    @OneToMany(mappedBy="auxilio", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy= "beneficio", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
     private List<Pagamento> pagamentos = new ArrayList<>();
 
     public void addPagamento(Pagamento pagamento) {
-    	pagamento.setAuxilio(this);
+    	pagamento.setBeneficio(this);
         pagamentos.add(pagamento);
     }
 
-    public void addEstudante(Estudante estudante) {
-        estudante.addAuxilio(this);
-        estudantes.add(estudante);
-    }
 }

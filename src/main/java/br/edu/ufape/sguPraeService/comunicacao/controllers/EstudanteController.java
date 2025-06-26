@@ -67,15 +67,15 @@ public class EstudanteController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores")
-    public ResponseEntity<Page<CredorResponse>> listarCredoresComAuxiliosAtivos(@PageableDefault(sort = "id") Pageable pageable) {
-        Page<CredorResponse> credores = fachada.listarCredoresComAuxiliosAtivos(pageable);
+    public ResponseEntity<Page<CredorResponse>> listarCredoresComBeneficiosAtivos(@PageableDefault(sort = "id") Pageable pageable) {
+        Page<CredorResponse> credores = fachada.listarCredoresComBeneficiosAtivos(pageable);
         return ResponseEntity.ok(credores);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
-    @GetMapping("/credores/auxilio/{id}")
-    public ResponseEntity<Page<CredorResponse>> listarCredoresPorAuxilio(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) {
-        Page<CredorResponse> credores = fachada.listarCredoresPorAuxilio(id, pageable);
+    @GetMapping("/credores/beneficio/{id}")
+    public ResponseEntity<Page<CredorResponse>> listarCredoresPorBeneficio(@PathVariable Long id, @PageableDefault(sort = "id") Pageable pageable) {
+        Page<CredorResponse> credores = fachada.listarCredoresPorBeneficio(id, pageable);
         return ResponseEntity.ok(credores);
     }
 
