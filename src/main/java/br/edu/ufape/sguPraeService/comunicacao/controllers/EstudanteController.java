@@ -105,7 +105,7 @@ public class EstudanteController {
         return ResponseEntity.ok(relatorio);
     }
 
-    @PreAuthorize("hasRole('ESTUDANTE')")
+    @PreAuthorize("hasAnyRole('ESTUDANTE', 'ALUNO')")
     @GetMapping("/current")
     public ResponseEntity<EstudanteResponse> buscarEstudanteAtual() throws EstudanteNotFoundException {
         EstudanteResponse estudante = fachada.buscarEstudanteAtual();
