@@ -27,7 +27,6 @@ public class EstudanteResponse {
     private TipoEtniaResponse tipoEtnia;
     private EnderecoResponse endereco;
     private DadosBancariosResponse dadosBancarios;
-    private List<BeneficioResponse> auxilios;
 
     public EstudanteResponse(Estudante estudante,  ModelMapper modelMapper) {
         if (estudante == null) throw new IllegalArgumentException("Estudante não pode ser nulo");
