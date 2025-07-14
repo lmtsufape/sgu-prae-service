@@ -28,32 +28,32 @@ public class AgendamentoController {
     @PreAuthorize("hasRole('ESTUDANTE')")
     @PostMapping("/{vagaId}/agendar")
     public ResponseEntity<AgendamentoResponse> agendarVaga(@PathVariable Long vagaId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AgendamentoResponse(fachada.agendarVaga(vagaId), modelMapper));
+        return ResponseEntity.status(HttpStatus.CREATED).body(fachada.agendarVaga(vagaId));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AgendamentoResponse> buscarAgendamento(@PathVariable Long id) {
-        return ResponseEntity.ok(new AgendamentoResponse(fachada.buscarAgendamento(id), modelMapper));
+        return ResponseEntity.ok(fachada.buscarAgendamento(id));
     }
 
     @GetMapping("/estudante")
     public Page<AgendamentoResponse> listarAgendamentosPorEstudanteAtual(@PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarAgendamentoPorEstudanteAtual(pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
+        return fachada.listarAgendamentoPorEstudanteAtual(pageable);
     }
 
     @GetMapping("/estudante/{estudanteId}")
     public Page<AgendamentoResponse> listarAgendamentosPorEstudante(@PathVariable Long estudanteId, @PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarAgendamentosPorEstudante(estudanteId, pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
+        return fachada.listarAgendamentosPorEstudante(estudanteId, pageable);
     }
 
     @GetMapping("/profissional")
     public Page<AgendamentoResponse> listarAgendamentosPorProfissionalAtual(@PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarAgendamentoPorProfissionalAtual(pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
+        return fachada.listarAgendamentoPorProfissionalAtual(pageable);
     }
 
     @GetMapping("/profissional/{profissionalId}")
     public Page<AgendamentoResponse> listarAgendamentosPorProfissional(@PathVariable Long profissionalId, @PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarAgendamentosPorProfissional(profissionalId, pageable).map(agendamento -> new AgendamentoResponse(agendamento, modelMapper));
+        return fachada.listarAgendamentosPorProfissional(profissionalId, pageable);
     }
 
     @PostMapping( "{id}/cancelar")
