@@ -813,13 +813,7 @@ public class Fachada {
         return pagamentoService.salvar(List.of(pagamento)).getFirst();
     }
 
-
-    public void deletarPagamento(Long id) throws PagamentoNotFoundException, BeneficioNotFoundException {
-        Pagamento pagamento = buscarPagamento(id);
-        Beneficio beneficio = pagamento.getBeneficio();
-        beneficio.getPagamentos().remove(pagamento);
-        beneficioService.editar(beneficio, beneficio);
-
+    public void deletarPagamento(Long id) throws PagamentoNotFoundException {
         pagamentoService.deletar(id);
     }
 
