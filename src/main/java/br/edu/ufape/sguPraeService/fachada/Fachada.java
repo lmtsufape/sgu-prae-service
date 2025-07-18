@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
@@ -26,10 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.EstudanteRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.PagamentoRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.RelatorioFinanceiroResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
@@ -772,6 +769,19 @@ public class Fachada {
                     estudantesDto));
         }
         return new RelatorioFinanceiroResponse(detalhes, totalGeral);
+    }
+
+    public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
+        BeneficioResponse response = new BeneficioResponse(beneficio, modelMapper);
+
+        if (beneficio.getEstudantes() != null && beneficio.getEstudantes().getUserId() != null) {
+            AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(beneficio.getEstudantes().getUserId());
+            if (response.getEstudantes() != null) {
+                response.getEstudantes().setAluno(aluno);
+            }
+        }
+
+        return response;
     }
 
     // ------------------- Pagamento ------------------- //

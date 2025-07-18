@@ -12,15 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioResponse;
@@ -43,22 +35,21 @@ public class BeneficioController {
 
     @GetMapping
     public Page<BeneficioResponse> listar(@PageableDefault(sort = "id") Pageable pageable) {
-        Page<Beneficio> beneficios = fachada.listarBeneficios(pageable);
-        return beneficios.map(beneficio -> new BeneficioResponse(beneficio, modelMapper));
+        return fachada.listarBeneficios(pageable)
+                .map(fachada::mapToBeneficioResponse);
     }
 
     @GetMapping("/estudante/{estudanteId}")
     public Page<BeneficioResponse> listarPorEstudanteId(@PageableDefault(sort = "id") Pageable pageable, @PathVariable Long estudanteId)
             throws EstudanteNotFoundException {
-        Page<Beneficio> beneficios = fachada.listarBeneficiosPorEstudanteId(estudanteId,pageable);
-        return beneficios.map(beneficio -> new BeneficioResponse(beneficio, modelMapper));
-
+        return fachada.listarBeneficiosPorEstudanteId(estudanteId, pageable)
+                .map(fachada::mapToBeneficioResponse);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BeneficioResponse> buscar(@PathVariable Long id) throws BeneficioNotFoundException {
-        Beneficio response = fachada.buscarBeneficios(id);
-        return new ResponseEntity<>(new BeneficioResponse(response, modelMapper), HttpStatus.OK);
+        Beneficio beneficio = fachada.buscarBeneficios(id);
+        return ResponseEntity.ok(fachada.mapToBeneficioResponse(beneficio));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
@@ -67,31 +58,32 @@ public class BeneficioController {
             throws BeneficioNotFoundException, IOException {
         Beneficio beneficio = fachada.buscarBeneficios(id);
         DocumentoResponse termo = fachada.converterDocumentosParaBase64(List.of(beneficio.getTermo())).getFirst();
-        return new ResponseEntity<>(termo, HttpStatus.OK);
+        return ResponseEntity.ok(termo);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<BeneficioResponse> salvar(@Valid @ModelAttribute BeneficioRequest entity)
             throws TipoBeneficioNotFoundException {
-        Beneficio response = entity.convertToEntity(entity, modelMapper);
-        response = fachada.salvarBeneficios(entity.getEstudanteId(), response, entity.getTermo(), entity.getTipoBeneficioId());
-        return new ResponseEntity<>(new BeneficioResponse(response, modelMapper), HttpStatus.CREATED);
+        Beneficio beneficio = entity.convertToEntity(entity, modelMapper);
+        beneficio = fachada.salvarBeneficios(entity.getEstudanteId(), beneficio, entity.getTermo(), entity.getTipoBeneficioId());
+        return new ResponseEntity<>(fachada.mapToBeneficioResponse(beneficio), HttpStatus.CREATED);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping(value = "/{id}", consumes = "multipart/form-data")
     public ResponseEntity<BeneficioResponse> editar(@PathVariable Long id, @Valid @ModelAttribute BeneficioRequest entity)
-            throws BeneficioNotFoundException, TipoBeneficioNotFoundException{
-        Beneficio response = fachada.editarBeneficios(id, entity.getEstudanteId(), entity.convertToEntity(entity, modelMapper), entity.getTermo(), entity.getTipoBeneficioId());
-        return new ResponseEntity<>(new BeneficioResponse(response, modelMapper), HttpStatus.OK);
+            throws BeneficioNotFoundException, TipoBeneficioNotFoundException {
+        Beneficio beneficio = entity.convertToEntity(entity, modelMapper);
+        beneficio = fachada.editarBeneficios(id, entity.getEstudanteId(), beneficio, entity.getTermo(), entity.getTipoBeneficioId());
+        return ResponseEntity.ok(fachada.mapToBeneficioResponse(beneficio));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) throws BeneficioNotFoundException {
         fachada.deletarBeneficio(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
@@ -100,17 +92,19 @@ public class BeneficioController {
         List<Beneficio> beneficios = fachada.listarPagosPorMes();
         return ResponseEntity.ok(
                 beneficios.stream()
-                        .map(aux -> new BeneficioResponse(aux, modelMapper))
-                        .toList());
+                        .map(fachada::mapToBeneficioResponse)
+                        .toList()
+        );
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/tipo/{id}")
-    public ResponseEntity<Page<BeneficioResponse>> listarPorTipo(@PageableDefault(sort = "id") Pageable pageable, @PathVariable Long id) throws BeneficioNotFoundException {
-        Page<Beneficio> beneficios = fachada.listarBeneficiosPorTipo(id, pageable);
+    public ResponseEntity<Page<BeneficioResponse>> listarPorTipo(@PageableDefault(sort = "id") Pageable pageable, @PathVariable Long id)
+            throws BeneficioNotFoundException {
         return ResponseEntity.ok(
-                beneficios
-                        .map(aux -> new BeneficioResponse(aux, modelMapper)));
+                fachada.listarBeneficiosPorTipo(id, pageable)
+                        .map(fachada::mapToBeneficioResponse)
+        );
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
@@ -119,8 +113,9 @@ public class BeneficioController {
         List<Beneficio> beneficios = fachada.listarBeneficiosPendentesMesAtual();
         return ResponseEntity.ok(
                 beneficios.stream()
-                        .map(aux -> new BeneficioResponse(aux, modelMapper))
-                        .toList());
+                        .map(fachada::mapToBeneficioResponse)
+                        .toList()
+        );
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
