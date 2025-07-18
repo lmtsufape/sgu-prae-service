@@ -12,6 +12,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoRespon
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
@@ -792,8 +793,7 @@ public class Fachada {
 
     public List<Pagamento> listarPagamentosPorBeneficioId(Long beneficioId) throws BeneficioNotFoundException {
         Beneficio beneficio = beneficioService.buscar(beneficioId);
-        List<Pagamento> pagamentos = new ArrayList<>(beneficio.getPagamentos());
-        return pagamentos;
+        return new ArrayList<>(beneficio.getPagamentos());
     }
 
     public List<Beneficio> listarPagosPorMes() throws BeneficioNotFoundException {
@@ -839,6 +839,26 @@ public class Fachada {
 
     public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
         return pagamentoService.listarPorEstudanteId(estudanteId);
+    }
+
+    public PagamentoResponse mapToPagamentoResponse(Pagamento pagamento) {
+        PagamentoResponse response = new PagamentoResponse(pagamento, modelMapper);
+
+        if (pagamento.getBeneficio() != null) {
+            Beneficio beneficio = pagamento.getBeneficio();
+            BeneficioResponse beneficioResponse = new BeneficioResponse(beneficio, modelMapper);
+
+            if (beneficio.getEstudantes() != null && beneficio.getEstudantes().getUserId() != null) {
+                AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(beneficio.getEstudantes().getUserId());
+                if (beneficioResponse.getEstudantes() != null) {
+                    beneficioResponse.getEstudantes().setAluno(aluno);
+                }
+            }
+
+            response.setBeneficio(beneficioResponse);
+        }
+
+        return response;
     }
 
     // ------------------- Armazenamento ------------------- //

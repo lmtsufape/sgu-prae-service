@@ -1,26 +1,25 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
-
-import br.edu.ufape.sguPraeService.fachada.Fachada;
-import br.edu.ufape.sguPraeService.models.Pagamento;
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoRequest;
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
 import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
+import br.edu.ufape.sguPraeService.fachada.Fachada;
+import br.edu.ufape.sguPraeService.models.Pagamento;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
-import org.springframework.http.HttpStatus;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,26 +28,32 @@ public class PagamentoController {
     private final Fachada fachada;
     private final ModelMapper modelMapper;
 
-
     @GetMapping
     public List<PagamentoResponse> listar() {
-        return fachada.listarPagamentos().stream().map(pagamento -> new PagamentoResponse(pagamento, modelMapper)).toList();
+        return fachada.listarPagamentos()
+                .stream()
+                .map(fachada::mapToPagamentoResponse)
+                .toList();
     }
-    
+
     @GetMapping("/beneficio/{beneficioId}")
     public List<PagamentoResponse> listarPorBeneficioId(@PathVariable Long beneficioId) throws BeneficioNotFoundException {
-        return fachada.listarPagamentosPorBeneficioId(beneficioId).stream().map(pagamento -> new PagamentoResponse(pagamento, modelMapper)).toList();
+        return fachada.listarPagamentosPorBeneficioId(beneficioId)
+                .stream()
+                .map(fachada::mapToPagamentoResponse)
+                .toList();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PagamentoResponse> buscar(@PathVariable Long id) throws PagamentoNotFoundException {
-        Pagamento response = fachada.buscarPagamento(id);
-        return new ResponseEntity<>(new PagamentoResponse(response, modelMapper), HttpStatus.OK);
+        Pagamento pagamento = fachada.buscarPagamento(id);
+        return ResponseEntity.ok(fachada.mapToPagamentoResponse(pagamento));
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping
-    public ResponseEntity<List<PagamentoResponse>> salvar(@Valid @RequestBody List<PagamentoRequest> entities) throws BeneficioNotFoundException {
+    public ResponseEntity<List<PagamentoResponse>> salvar(@Valid @RequestBody List<PagamentoRequest> entities)
+            throws BeneficioNotFoundException {
         if (entities.isEmpty()) return ResponseEntity.badRequest().build();
 
         List<Pagamento> pagamentos = entities.stream()
@@ -58,7 +63,7 @@ public class PagamentoController {
         List<Pagamento> salvos = fachada.salvarPagamentos(pagamentos);
 
         List<PagamentoResponse> response = salvos.stream()
-                .map(p -> new PagamentoResponse(p, modelMapper))
+                .map(fachada::mapToPagamentoResponse)
                 .toList();
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -66,43 +71,36 @@ public class PagamentoController {
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
-    public ResponseEntity<PagamentoResponse> editar(@PathVariable Long id, @RequestBody PagamentoPatchRequest dto
-    ) throws PagamentoNotFoundException {
+    public ResponseEntity<PagamentoResponse> editar(@PathVariable Long id, @RequestBody PagamentoPatchRequest dto)
+            throws PagamentoNotFoundException {
         Pagamento atualizado = fachada.editarPagamento(id, dto);
-        return ResponseEntity.ok(
-                new PagamentoResponse(atualizado, modelMapper)
-        );
+        return ResponseEntity.ok(fachada.mapToPagamentoResponse(atualizado));
     }
-
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws PagamentoNotFoundException, BeneficioNotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws PagamentoNotFoundException {
         fachada.deletarPagamento(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PatchMapping("desativar/{id}")
     public ResponseEntity<Void> desativar(@PathVariable Long id) throws PagamentoNotFoundException {
         fachada.desativarPagamento(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/valor/{min}/{max}")
-    public Page<PagamentoResponse> listarPorValor(@PageableDefault(sort = "id") Pageable pageable,
-            @PathVariable BigDecimal min,
-            @PathVariable BigDecimal max) {
-        return   fachada.listarPagamentosPorValor(min, max, pageable)
-                .map(p -> new PagamentoResponse(p, modelMapper));
+    public Page<PagamentoResponse> listarPorValor(@PageableDefault(sort = "id") Pageable pageable, @PathVariable BigDecimal min, @PathVariable BigDecimal max) {
+        return fachada.listarPagamentosPorValor(min, max, pageable)
+                .map(fachada::mapToPagamentoResponse);
     }
 
     @GetMapping("/estudante/{estudanteId}")
     public List<PagamentoResponse> listarPorEstudante(@PathVariable Long estudanteId) {
         return fachada.listarPagamentosPorEstudante(estudanteId).stream()
-                .map(p -> new PagamentoResponse(p, modelMapper))
+                .map(fachada::mapToPagamentoResponse)
                 .toList();
     }
-
 }
-
