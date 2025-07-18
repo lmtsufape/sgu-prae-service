@@ -781,7 +781,9 @@ public class Fachada {
     }
 
     public List<Pagamento> listarPagamentosPorBeneficioId(Long beneficioId) throws BeneficioNotFoundException {
-        return beneficioService.buscar(beneficioId).getPagamentos();
+        Beneficio beneficio = beneficioService.buscar(beneficioId);
+        List<Pagamento> pagamentos = new ArrayList<>(beneficio.getPagamentos());
+        return pagamentos;
     }
 
     public List<Beneficio> listarPagosPorMes() throws BeneficioNotFoundException {
