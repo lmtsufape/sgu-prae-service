@@ -9,8 +9,10 @@ import java.util.stream.Collectors;
 
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
@@ -26,10 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.EstudanteRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.PagamentoRelatorioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.RelatorioFinanceiroResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
@@ -774,6 +772,19 @@ public class Fachada {
         return new RelatorioFinanceiroResponse(detalhes, totalGeral);
     }
 
+    public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
+        BeneficioResponse response = new BeneficioResponse(beneficio, modelMapper);
+
+        if (beneficio.getEstudantes() != null && beneficio.getEstudantes().getUserId() != null) {
+            AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(beneficio.getEstudantes().getUserId());
+            if (response.getEstudantes() != null) {
+                response.getEstudantes().setAluno(aluno);
+            }
+        }
+
+        return response;
+    }
+
     // ------------------- Pagamento ------------------- //
 
     public List<Pagamento> listarPagamentos() {
@@ -781,7 +792,8 @@ public class Fachada {
     }
 
     public List<Pagamento> listarPagamentosPorBeneficioId(Long beneficioId) throws BeneficioNotFoundException {
-        return beneficioService.buscar(beneficioId).getPagamentos();
+        Beneficio beneficio = beneficioService.buscar(beneficioId);
+        return new ArrayList<>(beneficio.getPagamentos());
     }
 
     public List<Beneficio> listarPagosPorMes() throws BeneficioNotFoundException {
@@ -813,13 +825,7 @@ public class Fachada {
         return pagamentoService.salvar(List.of(pagamento)).getFirst();
     }
 
-
-    public void deletarPagamento(Long id) throws PagamentoNotFoundException, BeneficioNotFoundException {
-        Pagamento pagamento = buscarPagamento(id);
-        Beneficio beneficio = pagamento.getBeneficio();
-        beneficio.getPagamentos().remove(pagamento);
-        beneficioService.editar(beneficio, beneficio);
-
+    public void deletarPagamento(Long id) throws PagamentoNotFoundException {
         pagamentoService.deletar(id);
     }
 
@@ -833,6 +839,26 @@ public class Fachada {
 
     public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
         return pagamentoService.listarPorEstudanteId(estudanteId);
+    }
+
+    public PagamentoResponse mapToPagamentoResponse(Pagamento pagamento) {
+        PagamentoResponse response = new PagamentoResponse(pagamento, modelMapper);
+
+        if (pagamento.getBeneficio() != null) {
+            Beneficio beneficio = pagamento.getBeneficio();
+            BeneficioResponse beneficioResponse = new BeneficioResponse(beneficio, modelMapper);
+
+            if (beneficio.getEstudantes() != null && beneficio.getEstudantes().getUserId() != null) {
+                AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(beneficio.getEstudantes().getUserId());
+                if (beneficioResponse.getEstudantes() != null) {
+                    beneficioResponse.getEstudantes().setAluno(aluno);
+                }
+            }
+
+            response.setBeneficio(beneficioResponse);
+        }
+
+        return response;
     }
 
     // ------------------- Armazenamento ------------------- //

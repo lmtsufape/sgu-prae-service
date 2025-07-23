@@ -58,14 +58,12 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     @Transactional
     public void deletar(Long id) throws PagamentoNotFoundException {
         Pagamento pagamento = buscar(id);
+        Beneficio beneficio = pagamento.getBeneficio();
 
-        List<Beneficio> beneficios = beneficioRepository.findByPagamentos_Id(id);
-        for (Beneficio aux : beneficios) {
-            aux.getPagamentos().remove(pagamento);
-            beneficioRepository.save(aux);
-        }
-        pagamentoRepository.delete(pagamento);
+        beneficio.getPagamentos().removeIf(p -> p.getId().equals(id));
+        beneficioRepository.save(beneficio);
     }
+
 
     @Override
     public List<Pagamento> listarPorValor(BigDecimal min, BigDecimal max) {
