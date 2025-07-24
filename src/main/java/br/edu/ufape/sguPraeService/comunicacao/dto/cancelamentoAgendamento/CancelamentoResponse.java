@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.modelmapper.ModelMapper;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
 public class CancelamentoResponse {
@@ -23,6 +24,10 @@ public class CancelamentoResponse {
     public CancelamentoResponse(CancelamentoAgendamento cancelamento, ModelMapper modelMapper) {
         if (cancelamento == null) throw new IllegalArgumentException("CancelamentoAgendamento não pode ser nulo");
         modelMapper.map(cancelamento,this);
+        this.dataCancelamento = cancelamento.getDataCancelamento()
+        .atZone(ZoneId.of("UTC"))
+        .withZoneSameInstant(ZoneId.of("America/Sao_Paulo"))
+        .toLocalDateTime();
         this.tipoAtendimento = cancelamento.getAgendamento().getVaga().getCronograma().getTipoAtendimento().getNome();
     }
 }

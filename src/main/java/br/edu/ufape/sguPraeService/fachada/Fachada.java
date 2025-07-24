@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
@@ -224,24 +225,24 @@ public class Fachada {
         }
 
         if(estudanteUpdateRequest.getDeficiente() != null){
-             estudanteParcial.setDeficiente(estudanteUpdateRequest.getDeficiente());
+            estudanteParcial.setDeficiente(estudanteUpdateRequest.getDeficiente());
         }
 
         if(estudanteUpdateRequest.getTipoDeficiencia() != null){
-             estudanteParcial.setTipoDeficiencia(estudanteUpdateRequest.getTipoDeficiencia());
+            estudanteParcial.setTipoDeficiencia(estudanteUpdateRequest.getTipoDeficiencia());
         }
 
         if(estudanteUpdateRequest.getTipoEtniaId() != null){
-             estudanteParcial.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(estudanteUpdateRequest.getTipoEtniaId()));
+            estudanteParcial.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(estudanteUpdateRequest.getTipoEtniaId()));
         }
 
         if(estudanteUpdateRequest.getEndereco() != null){
             EnderecoRequest enderecoDTO = estudanteUpdateRequest.getEndereco();
             Endereco enderecoAtualizado = enderecoDTO.convertToEntity(enderecoDTO, this.modelMapper);
-             estudanteParcial.setEndereco(enderecoService.editarEndereco( estudante.getEndereco().getId(), enderecoAtualizado));
+            estudanteParcial.setEndereco(enderecoService.editarEndereco( estudante.getEndereco().getId(), enderecoAtualizado));
         }
 
-         Estudante estudanteAtualizado = estudanteService.atualizarEstudante(estudanteParcial, estudante);
+        Estudante estudanteAtualizado = estudanteService.atualizarEstudante(estudanteParcial, estudante);
         return new EstudanteResponse(estudanteAtualizado, modelMapper);
     }
 
@@ -470,7 +471,7 @@ public class Fachada {
             tipoAtendimento.setNome(dto.getNome());
         }
 
-         if (dto.getTempoAtendimento() != null) {
+        if (dto.getTempoAtendimento() != null) {
             tipoAtendimento.setTempoAtendimento(dto.getTempoAtendimento());
         }
 
@@ -545,7 +546,7 @@ public class Fachada {
     // ------------------- Agendamento ------------------- //
 
     @Transactional
-    public Agendamento agendarVaga(Long id) throws VagaNotFoundException, UnavailableVagaException {
+    public AgendamentoResponse agendarVaga(Long id) throws VagaNotFoundException, UnavailableVagaException {
         try {
             Vaga vaga = vagaService.buscar(id);
             Estudante estudante = estudanteService.buscarPorUserId(authenticatedUserProvider.getUserId());
@@ -553,7 +554,8 @@ public class Fachada {
             if (vaga.isDisponivel()) {
                 vaga.setDisponivel(false);
                 vagaService.salvar(vaga);
-                return agendamentoService.agendar(vaga, estudante);
+                Agendamento agendamento = agendamentoService.agendar(vaga, estudante);
+                return mapToAgendamentoResponse(agendamento);
             }
 
             throw new UnavailableVagaException();
@@ -569,7 +571,7 @@ public class Fachada {
         Agendamento agendamento = agendamentoService.buscar(id);
         if (!Objects.equals(agendamento.getEstudante().getUserId(), authenticatedUserProvider.getUserId())
                 && !Objects.equals(agendamento.getVaga().getCronograma().getProfissional().getUserId(),
-                        authenticatedUserProvider.getUserId())) {
+                authenticatedUserProvider.getUserId())) {
             throw new GlobalAccessDeniedException("Você não tem permissão para acessar este recurso");
         }
 
@@ -582,26 +584,31 @@ public class Fachada {
         return cancelamentoService.salvar(cancelamento);
     }
 
-    public Agendamento buscarAgendamento(Long id) throws AgendamentoNotFoundException {
-        return agendamentoService.buscar(id);
+    public AgendamentoResponse buscarAgendamento(Long id) throws AgendamentoNotFoundException {
+        Agendamento agendamento = agendamentoService.buscar(id);
+        return mapToAgendamentoResponse(agendamento);
     }
 
-    public Page<Agendamento> listarAgendamentosPorEstudante(Long estudanteId, Pageable pageable) {
+    public Page<AgendamentoResponse> listarAgendamentosPorEstudante(Long estudanteId, Pageable pageable) {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
-        return agendamentoService.listarAgendamentosPorEstudante(estudante, pageable);
+        return agendamentoService.listarAgendamentosPorEstudante(estudante, pageable)
+                .map(this::mapToAgendamentoResponse);
     }
 
-    public Page<Agendamento> listarAgendamentosPorProfissional(Long userId, Pageable pageable) {
+    public Page<AgendamentoResponse> listarAgendamentosPorProfissional(Long userId, Pageable pageable) {
         Profissional profissional = profissionalService.buscar(userId);
-        return agendamentoService.listarPorProfissional(profissional, pageable);
+        return agendamentoService.listarPorProfissional(profissional, pageable)
+                .map(this::mapToAgendamentoResponse);
     }
 
-    public Page<Agendamento> listarAgendamentoPorEstudanteAtual(Pageable pageable) {
-        return agendamentoService.listarAgendamentosEstudanteAtual(pageable);
+    public Page<AgendamentoResponse> listarAgendamentoPorEstudanteAtual(Pageable pageable) {
+        return agendamentoService.listarAgendamentosEstudanteAtual(pageable)
+                .map(this::mapToAgendamentoResponse);
     }
 
-    public Page<Agendamento> listarAgendamentoPorProfissionalAtual(Pageable pageable) {
-        return agendamentoService.listarPorProfissionalAtual(pageable);
+    public Page<AgendamentoResponse> listarAgendamentoPorProfissionalAtual(Pageable pageable) {
+        return agendamentoService.listarPorProfissionalAtual(pageable)
+                .map(this::mapToAgendamentoResponse);
     }
 
     public Page<CancelamentoAgendamento> listarCancelamentosPorEstudanteAtual(Pageable pageable) {
@@ -616,6 +623,16 @@ public class Fachada {
         return cancelamentoService.buscar(id);
     }
 
+    private AgendamentoResponse mapToAgendamentoResponse(Agendamento agendamento) {
+        AgendamentoResponse response = new AgendamentoResponse(agendamento, modelMapper);
+        if (agendamento.getEstudante() != null && agendamento.getEstudante().getUserId() != null) {
+            AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(agendamento.getEstudante().getUserId());
+            if (response.getEstudante() != null) {
+                response.getEstudante().setAluno(aluno);
+            }
+        }
+        return response;
+    }
 
 
     // ------------------- TipoBeneficio ------------------- //

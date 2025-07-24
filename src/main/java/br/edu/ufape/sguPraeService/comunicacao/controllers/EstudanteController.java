@@ -94,8 +94,6 @@ public class EstudanteController {
         return fachada.listarCredoresPorCurso(id, pageable);
     }
 
-
-
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/{id}/relatorio")
     public ResponseEntity<RelatorioEstudanteAssistidoResponse> gerarRelatorioAssistido(
@@ -113,7 +111,7 @@ public class EstudanteController {
     }
 
     @PreAuthorize("hasAnyRole('GESTOR', 'PROFISSIONAL') and hasRole('PRAE_ACCESS')")
-    @GetMapping("/{userId}")
+    @GetMapping("/userid/{userId}")
     public ResponseEntity<EstudanteResponse> buscarEstudantePorUserId(@PathVariable UUID userId) throws EstudanteNotFoundException {
         EstudanteResponse estudante = fachada.buscarEstudantePorUserId(userId);
         return ResponseEntity.ok(estudante);
