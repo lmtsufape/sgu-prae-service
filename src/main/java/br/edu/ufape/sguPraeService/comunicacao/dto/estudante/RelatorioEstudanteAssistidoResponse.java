@@ -18,7 +18,6 @@ public class RelatorioEstudanteAssistidoResponse {
     private String contatoFamilia;
     private boolean deficiente;
     private String tipoDeficiencia;
-    private String etnia;
     private List<RelatorioBeneficioResponse> auxilios;
 }
 

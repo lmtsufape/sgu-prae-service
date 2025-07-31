@@ -48,7 +48,6 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFou
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.VagaNotFoundException;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AgendamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.ArmazenamentoService;
@@ -63,7 +62,6 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoBeneficioService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.TipoEtniaService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
@@ -80,7 +78,6 @@ public class Fachada {
     private final VagaService vagaService;
     private final EnderecoService enderecoService;
     private final DadosBancariosService dadosBancariosService;
-    private final TipoEtniaService tipoEtniaService;
     private final EstudanteService estudanteService;
     private final AuthServiceHandler authServiceHandler;
     private final ModelMapper modelMapper;
@@ -151,9 +148,8 @@ public class Fachada {
     // ================== Estudante ================== //
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackSalvarEstudante")
-    public EstudanteResponse salvarEstudante(Estudante estudante, Long tipoEtniaId) throws TipoEtniaNotFoundException {
+    public EstudanteResponse salvarEstudante(Estudante estudante)  {
         UUID userId = authenticatedUserProvider.getUserId();
-        estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(tipoEtniaId));
         estudante.setUserId(userId);
 
         Estudante novoEstudante = estudanteService.salvarEstudante(estudante);
@@ -209,7 +205,7 @@ public class Fachada {
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
     public EstudanteResponse atualizarEstudante(EstudanteUpdateRequest estudanteUpdateRequest)
-            throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+            throws EstudanteNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
         Estudante estudanteParcial = new Estudante();
         Estudante estudante = estudanteService.buscarPorUserId(userId);
@@ -230,9 +226,6 @@ public class Fachada {
             estudanteParcial.setTipoDeficiencia(estudanteUpdateRequest.getTipoDeficiencia());
         }
 
-        if(estudanteUpdateRequest.getTipoEtniaId() != null){
-            estudanteParcial.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(estudanteUpdateRequest.getTipoEtniaId()));
-        }
 
         if(estudanteUpdateRequest.getEndereco() != null){
             EnderecoRequest enderecoDTO = estudanteUpdateRequest.getEndereco();
@@ -329,7 +322,6 @@ public class Fachada {
                 estudante.getContatoFamilia(),
                 estudante.isDeficiente(),
                 estudante.getTipoDeficiencia(),
-                estudante.getTipoEtnia() != null ? estudante.getTipoEtnia().getTipo() : null,
                 beneficios);
     }
 
@@ -399,29 +391,6 @@ public class Fachada {
         response.setAluno(userInfo);
         return response;
     }
-
-    // ================== TipoEtnia ================== //
-
-    public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
-        return tipoEtniaService.salvarTipoEtnia(tipoEtnia);
-    }
-
-    public TipoEtnia buscarTipoEtnia(Long id) throws TipoEtniaNotFoundException {
-        return tipoEtniaService.buscarTipoEtnia(id);
-    }
-
-    public Page<TipoEtnia> listarTiposEtnia(Pageable pageable) {
-        return tipoEtniaService.listarTiposEtnia(pageable);
-    }
-
-    public TipoEtnia atualizarTipoEtnia(Long id, TipoEtnia tipoEtnia) throws TipoEtniaNotFoundException {
-        return tipoEtniaService.atualizarTipoEtnia(id, tipoEtnia);
-    }
-
-    public void deletarTipoEtnia(Long id) throws TipoEtniaNotFoundException {
-        tipoEtniaService.deletarTipoEtnia(id);
-    }
-
 
     // ================== Dados Bancarios ================== //
 

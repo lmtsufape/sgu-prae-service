@@ -20,6 +20,7 @@ public class AlunoResponse {
     String telefone;
     String matricula;
     private Curso curso;
+    private TipoEtnia tipoEtnia;
 
     @Getter
     @Setter
@@ -29,4 +30,14 @@ public class AlunoResponse {
         private Long id;
         private String nome;
     }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TipoEtnia {
+        private Long id;
+        private String tipo;
+    }
+
 }
