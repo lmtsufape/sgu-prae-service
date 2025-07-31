@@ -5,7 +5,6 @@ import java.util.UUID;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoEtniaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import jakarta.validation.Valid;
@@ -46,15 +45,15 @@ public class EstudanteController {
 
     @PreAuthorize("hasRole('ALUNO')")
     @PostMapping
-    public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest) throws TipoEtniaNotFoundException {
+    public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest)  {
         Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante, estudanteRequest.getTipoEtniaId());
+        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
     }
 
     @PreAuthorize("hasRole('ESTUDANTE')")
     @PatchMapping
-    public ResponseEntity<EstudanteResponse> atualizarEstudante(@Valid @RequestBody EstudanteUpdateRequest estudanteUpdateRequest) throws EstudanteNotFoundException, TipoEtniaNotFoundException {
+    public ResponseEntity<EstudanteResponse> atualizarEstudante(@Valid @RequestBody EstudanteUpdateRequest estudanteUpdateRequest) throws EstudanteNotFoundException {
         EstudanteResponse estudanteAtualizado = fachada.atualizarEstudante(estudanteUpdateRequest);
         return ResponseEntity.ok(estudanteAtualizado);
     }

@@ -1,9 +1,8 @@
 package br.edu.ufape.sguPraeService.comunicacao.dto.estudante;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioResponse;
+
 import br.edu.ufape.sguPraeService.comunicacao.dto.dadosBancarios.DadosBancariosResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.tipoEtnia.TipoEtniaResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import lombok.AllArgsConstructor;
@@ -24,7 +23,6 @@ public class EstudanteResponse {
     private String contatoFamilia;
     private boolean deficiente;
     private String tipoDeficiencia;
-    private TipoEtniaResponse tipoEtnia;
     private EnderecoResponse endereco;
     private DadosBancariosResponse dadosBancarios;
 

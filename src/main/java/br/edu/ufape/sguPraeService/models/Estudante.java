@@ -30,8 +30,5 @@ public class Estudante {
     @OneToOne(cascade = CascadeType.ALL)
     private Endereco endereco;
 
-    @ManyToOne
-    private TipoEtnia tipoEtnia;
-
 
 }

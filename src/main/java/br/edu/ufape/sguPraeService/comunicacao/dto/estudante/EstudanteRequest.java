@@ -38,8 +38,6 @@ public class EstudanteRequest {
     @Size(max = 100, message = "O campo 'deficiencia' deve ter no máximo 100 caracteres.")
     private String tipoDeficiencia;
 
-    @NotNull(message = "Defina o tipo de Etnia.")
-    private Long tipoEtniaId;
 
     @Valid
     @NotNull(message = "Endereço é obrigatório.")
