@@ -29,10 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.CredorResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioBeneficioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteAssistidoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
@@ -115,6 +111,15 @@ public class Fachada {
 
     public ProfissionalResponse buscarProfissional(Long id) throws ProfissionalNotFoundException {
         Profissional profissional = profissionalService.buscar(id);
+        FuncionarioResponse userInfo = authServiceHandler.buscarTecnicoPorId(profissional.getUserId());
+        ProfissionalResponse response = new ProfissionalResponse(profissional, modelMapper);
+        response.setTecnico(userInfo);
+        return response;
+    }
+    
+    public ProfissionalResponse buscarProfissionalAtual() throws ProfissionalNotFoundException {
+        UUID userId = authenticatedUserProvider.getUserId();
+        Profissional profissional = profissionalService.buscarPorUserId(userId);
         FuncionarioResponse userInfo = authServiceHandler.buscarTecnicoPorId(profissional.getUserId());
         ProfissionalResponse response = new ProfissionalResponse(profissional, modelMapper);
         response.setTecnico(userInfo);
