@@ -19,5 +19,7 @@ public interface CronogramaService {
 
     Cronograma salvar(Cronograma entity);
 
+    boolean existeCronogramaPorTipoAtendimento(Long tipoAtendimentoId);
+
     void deletar(Long id);
 }

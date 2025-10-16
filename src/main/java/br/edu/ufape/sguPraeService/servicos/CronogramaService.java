@@ -42,6 +42,10 @@
      public Cronograma salvar(Cronograma entity) {
          return repository.save(entity);
      }
+
+     public boolean existeCronogramaPorTipoAtendimento(Long tipoAtendimentoId) {
+            return repository.existsByTipoAtendimento_Id(tipoAtendimentoId);
+     }
  
 
      @Override

@@ -14,6 +14,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
+import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
 import jakarta.ws.rs.NotAllowedException;
@@ -36,11 +37,6 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.RelatorioEstudanteA
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.EstudanteSemAuxilioAtivoException;
-import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
-import br.edu.ufape.sguPraeService.exceptions.TipoBeneficioNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
@@ -450,6 +446,10 @@ public class Fachada {
     }
 
     public void deletarTipoAtendimento(Long id) throws TipoAtendimentoNotFoundException {
+        if (cronogramaService.existeCronogramaPorTipoAtendimento(id)) {
+            throw new TipoAtendimentoComCronogramaException();
+        }
+
         tipoAtendimentoService.deletar(id);
     }
 
