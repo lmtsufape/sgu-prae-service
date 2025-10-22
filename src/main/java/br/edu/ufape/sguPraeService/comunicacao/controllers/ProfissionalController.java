@@ -1,60 +1,65 @@
- package br.edu.ufape.sguPraeService.comunicacao.controllers;
- 
- import br.edu.ufape.sguPraeService.fachada.Fachada;
- import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
- import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalRequest;
- import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
- 
- 
- import org.modelmapper.ModelMapper;
- import org.springframework.security.access.prepost.PreAuthorize;
- import org.springframework.web.bind.annotation.*;
- import org.springframework.http.ResponseEntity;
- import jakarta.validation.Valid;
- import lombok.RequiredArgsConstructor;
- import java.util.List;
+package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
- import org.springframework.http.HttpStatus;
- 
- @RestController
- @RequiredArgsConstructor
- @RequestMapping("/profissional")
- public class ProfissionalController {
-     private final Fachada fachada;
-     private final ModelMapper modelMapper;
- 
- 
-     @GetMapping
-     public List<ProfissionalResponse> listar() {
-         return fachada.listarProfissionais();
-     }
- 
-     @GetMapping("/{id}")
-     public ResponseEntity<ProfissionalResponse> buscar(@PathVariable Long id) throws ProfissionalNotFoundException {
-         return ResponseEntity.ok(fachada.buscarProfissional(id));
-     }
+import br.edu.ufape.sguPraeService.fachada.Fachada;
+import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalRequest;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
 
-     @PreAuthorize("(hasAnyRole('TECNICO', 'PROFESSOR')) and hasRole('PRAE_ACCESS')")
-     @PostMapping
-     public ResponseEntity<ProfissionalResponse> salvar(@Valid @RequestBody ProfissionalRequest entity) {
+import org.modelmapper.ModelMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import java.util.List;
 
-            return ResponseEntity.status(HttpStatus.CREATED).
-                    body(modelMapper.map(fachada.salvarProfissional(entity.convertToEntity(entity, modelMapper)),
-                            ProfissionalResponse.class));
-     }
+import org.springframework.http.HttpStatus;
 
-     @PreAuthorize("hasRole('PROFISSIONAL')")
-     @PatchMapping
-     public ResponseEntity<ProfissionalResponse> editar(@Valid @RequestBody ProfissionalRequest entity) throws ProfissionalNotFoundException {
-         ProfissionalResponse response = fachada.editarProfissional(entity.convertToEntity(entity, modelMapper));
-         return ResponseEntity.ok(response);
-     }
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/profissional")
+public class ProfissionalController {
+    private final Fachada fachada;
+    private final ModelMapper modelMapper;
 
-     @DeleteMapping("/{id}")
-     public ResponseEntity<Void> delete(@PathVariable Long id) throws ProfissionalNotFoundException {
-         fachada.deletarProfissional(id);
-         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-     }
+    @GetMapping
+    public List<ProfissionalResponse> listar() {
+        return fachada.listarProfissionais();
+    }
 
- }
- 
+    @GetMapping("/{id}")
+    public ResponseEntity<ProfissionalResponse> buscar(@PathVariable Long id) throws ProfissionalNotFoundException {
+        return ResponseEntity.ok(fachada.buscarProfissional(id));
+    }
+
+    @PreAuthorize("(hasAnyRole('TECNICO', 'PROFESSOR')) and hasRole('PRAE_ACCESS')")
+    @PostMapping
+    public ResponseEntity<ProfissionalResponse> salvar(@Valid @RequestBody ProfissionalRequest entity) {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(modelMapper.map(fachada.salvarProfissional(entity.convertToEntity(entity, modelMapper)),
+                        ProfissionalResponse.class));
+    }
+
+    @PreAuthorize("hasRole('PROFISSIONAL')")
+    @GetMapping("/current")
+    public ResponseEntity<ProfissionalResponse> buscarProfissionalAtual() throws ProfissionalNotFoundException {
+        ProfissionalResponse profissional = fachada.buscarProfissionalAtual();
+        return ResponseEntity.ok(profissional);
+    }
+
+    @PreAuthorize("hasRole('PROFISSIONAL')")
+    @PatchMapping
+    public ResponseEntity<ProfissionalResponse> editar(@Valid @RequestBody ProfissionalRequest entity)
+            throws ProfissionalNotFoundException {
+        ProfissionalResponse response = fachada.editarProfissional(entity.convertToEntity(entity, modelMapper));
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) throws ProfissionalNotFoundException {
+        fachada.deletarProfissional(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+}
