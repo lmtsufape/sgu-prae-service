@@ -69,5 +69,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
+    @ExceptionHandler(TipoAtendimentoComCronogramaException.class)
+    public ResponseEntity<Object> handleTipoAtendimentoComCronogramaException(TipoAtendimentoComCronogramaException ex, HttpServletRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getRequestURI());
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
+
 
 }
