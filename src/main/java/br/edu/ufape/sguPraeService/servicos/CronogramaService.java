@@ -9,6 +9,9 @@
  import org.springframework.data.domain.Page;
  import org.springframework.data.domain.Pageable;
  import org.springframework.stereotype.Service;
+ import com.querydsl.core.types.Predicate;
+ import com.querydsl.core.BooleanBuilder;
+ import br.edu.ufape.sguPraeService.models.QCronograma;
 
  import java.util.UUID;
 
@@ -17,10 +20,15 @@
  public class CronogramaService implements br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService {
      private final CronogramaRepository repository;
      private final AuthenticatedUserProvider authenticatedUserProvider;
- 
+
      @Override
-     public Page<Cronograma> listar(Pageable pageable) {
-         return repository.findAllByAtivoTrue(pageable);
+     public Page<Cronograma> listar(Predicate predicate, Pageable pageable) {
+         QCronograma qCronograma = QCronograma.cronograma;
+         BooleanBuilder filtroBase = new BooleanBuilder();
+         filtroBase.and(qCronograma.ativo.isTrue());
+
+         Predicate predicadoFinal = filtroBase.and(predicate);
+         return repository.findAll(predicadoFinal, pageable);
      }
 
      @Override

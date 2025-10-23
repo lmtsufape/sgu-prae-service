@@ -5,6 +5,7 @@ import br.edu.ufape.sguPraeService.models.Estudante;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.querydsl.core.types.Predicate;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +20,7 @@ public interface EstudanteService {
 
     Page<Estudante> buscarPorUserIds(List<UUID> userIds, Pageable pageable);
 
-    Page<Estudante> listarEstudantes(Pageable pageable);
+    Page<Estudante> listarEstudantes(Predicate predicate, Pageable pageable);
 
     Estudante atualizarEstudante(Estudante estudante, Estudante existente) throws EstudanteNotFoundException;
 

@@ -5,11 +5,12 @@ import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.querydsl.core.types.Predicate;
 
 import java.util.List;
 
 public interface BeneficioService {
-    Page<Beneficio> listar(Pageable pageable);
+    Page<Beneficio> listar(Predicate predicate, Pageable pageable);
 
     List<Beneficio> listar();
 
