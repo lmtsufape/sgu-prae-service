@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.querydsl.core.types.Predicate;
+import org.springframework.data.querydsl.binding.QuerydslPredicate;
 
 @RestController
 @RequestMapping("/estudantes")
@@ -26,8 +28,10 @@ public class EstudanteController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    public Page<EstudanteResponse> listarEstudantes(@PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarEstudantes(pageable);
+    public Page<EstudanteResponse> listarEstudantes(
+            @QuerydslPredicate(root = Estudante.class) Predicate predicate,
+            @PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarEstudantes(predicate, pageable);
     }
 
     @GetMapping("/curso/{id}")

@@ -4,10 +4,11 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimento
 import br.edu.ufape.sguPraeService.models.TipoAtendimento;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.querydsl.core.types.Predicate;
 
 
 public interface TipoAtendimentoService {
-    Page<TipoAtendimento> listar(Pageable pageable);
+    Page<TipoAtendimento> listar(Predicate predicate, Pageable pageable);
 
     TipoAtendimento buscar(Long id) throws TipoAtendimentoNotFoundException;
 

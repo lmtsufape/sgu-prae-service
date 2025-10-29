@@ -4,12 +4,12 @@ import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFo
 import br.edu.ufape.sguPraeService.models.Cronograma;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
+import com.querydsl.core.types.Predicate;
 
 import java.util.UUID;
 
 public interface CronogramaService {
-    Page<Cronograma> listar(Pageable pageable);
+    Page<Cronograma> listar(Predicate predicate, Pageable pageable);
 
     Page<Cronograma> listarPorTipoAtendimento(Long id, Pageable pageable);
 

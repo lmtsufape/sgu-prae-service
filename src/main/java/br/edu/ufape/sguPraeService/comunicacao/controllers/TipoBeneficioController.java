@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import com.querydsl.core.types.Predicate;
+import org.springframework.data.querydsl.binding.QuerydslPredicate;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,8 +26,10 @@ public class TipoBeneficioController {
 
 
     @GetMapping
-    public Page<TipoBeneficioResponse> listar(@PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarTipoBeneficios(pageable).map(tipoBeneficio -> new TipoBeneficioResponse(tipoBeneficio, modelMapper));
+    public Page<TipoBeneficioResponse> listar(
+            @QuerydslPredicate(root = TipoBeneficio.class) Predicate predicate,
+            @PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarTipoBeneficios(predicate, pageable).map(tipoBeneficio -> new TipoBeneficioResponse(tipoBeneficio, modelMapper));
     }
 
     @GetMapping("/{id}")

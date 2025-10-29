@@ -4,10 +4,11 @@ import br.edu.ufape.sguPraeService.exceptions.TipoBeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.models.TipoBeneficio;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.querydsl.core.types.Predicate;
 
 
 public interface TipoBeneficioService {
-    Page<TipoBeneficio> listar(Pageable pageable);
+    Page<TipoBeneficio> listar(Predicate predicate, Pageable pageable);
 
     TipoBeneficio buscar(Long id) throws TipoBeneficioNotFoundException;
 

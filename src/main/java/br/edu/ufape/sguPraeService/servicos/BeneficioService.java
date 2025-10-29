@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import br.edu.ufape.sguPraeService.dados.BeneficioRepository;
 import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import lombok.RequiredArgsConstructor;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.BooleanBuilder;
+import br.edu.ufape.sguPraeService.models.QBeneficio;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +24,13 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 	private final ModelMapper modelMapper;
 
 	@Override
-	public Page<Beneficio> listar(Pageable pageable) {
-		return beneficioRepository.findAll(pageable);
+	public Page<Beneficio> listar(Predicate predicate, Pageable pageable) {
+		QBeneficio qBeneficio = QBeneficio.beneficio;
+		BooleanBuilder filtroBase = new BooleanBuilder();
+		filtroBase.and(qBeneficio.ativo.isTrue());
+
+		Predicate predicadoFinal = filtroBase.and(predicate);
+		return beneficioRepository.findAll(predicadoFinal, pageable);
 	}
 
 	@Override

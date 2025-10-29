@@ -2,6 +2,7 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.models.Pagamento;
+import com.querydsl.core.types.Predicate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 public interface PagamentoService {
     List<Pagamento> listar();
 
-    Page<Pagamento> listar(Pageable pageable);
+    Page<Pagamento> listar(Predicate predicate, Pageable pageable);
 
     Pagamento buscar(Long id) throws PagamentoNotFoundException;
 

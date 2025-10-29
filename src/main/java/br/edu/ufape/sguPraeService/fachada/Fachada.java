@@ -59,6 +59,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import com.querydsl.core.types.Predicate;
 
 @Log4j2
 @Component
@@ -169,8 +170,8 @@ public class Fachada {
         return response;
     }
 
-    public Page<EstudanteResponse> listarEstudantes(Pageable pageable) throws EstudanteNotFoundException {
-        Page<Estudante> estudantes = estudanteService.listarEstudantes(pageable);
+    public Page<EstudanteResponse> listarEstudantes(Predicate predicate, Pageable pageable) throws EstudanteNotFoundException {
+        Page<Estudante> estudantes = estudanteService.listarEstudantes(predicate, pageable);
 
         if (estudantes.isEmpty()) {
             return Page.empty();
@@ -420,8 +421,8 @@ public class Fachada {
     }
 
     // ------------------- TipoAtendimento ------------------- //
-    public Page<TipoAtendimento> listarTipoAtendimentos(Pageable pageable) {
-        return tipoAtendimentoService.listar(pageable);
+    public Page<TipoAtendimento> listarTipoAtendimentos(Predicate predicate, Pageable pageable) {
+        return tipoAtendimentoService.listar(predicate, pageable);
     }
 
     public TipoAtendimento buscarTipoAtendimento(Long id) throws TipoAtendimentoNotFoundException {
@@ -468,8 +469,8 @@ public class Fachada {
         return cronogramaService.listarPorProfissional(authenticatedUserProvider.getUserId(), pageable);
     }
 
-    public Page<Cronograma> listarCronogramas(Pageable pageable) {
-        return cronogramaService.listar(pageable);
+    public Page<Cronograma> listarCronogramas(Predicate predicate, Pageable pageable) {
+        return cronogramaService.listar(predicate, pageable);
     }
 
     public Page<Cronograma> listarCronogramasPorTipoAtendimento(Long tipoAtendimentoId, Pageable pageable) {
@@ -608,8 +609,8 @@ public class Fachada {
 
 
     // ------------------- TipoBeneficio ------------------- //
-    public Page<TipoBeneficio> listarTipoBeneficios(Pageable pageable) {
-        return tipoBeneficioService.listar(pageable);
+    public Page<TipoBeneficio> listarTipoBeneficios(Predicate predicate, Pageable pageable) {
+        return tipoBeneficioService.listar(predicate, pageable);
     }
 
     public TipoBeneficio buscarTipoBeneficio(Long id) throws TipoBeneficioNotFoundException {
@@ -633,8 +634,8 @@ public class Fachada {
     }
 
     // ------------------- Beneficio ------------------- //
-    public Page<Beneficio> listarBeneficios(Pageable pageable) {
-        return beneficioService.listar(pageable);
+    public Page<Beneficio> listarBeneficios(Predicate predicate, Pageable pageable) {
+        return beneficioService.listar(predicate, pageable);
     }
 
     public Page<Beneficio> listarBeneficiosPorTipo(Long tipoId, Pageable pageable) throws BeneficioNotFoundException {
@@ -761,8 +762,8 @@ public class Fachada {
 
     // ------------------- Pagamento ------------------- //
 
-    public List<Pagamento> listarPagamentos() {
-        return pagamentoService.listar();
+    public Page<Pagamento> listarPagamentos(Predicate predicate, Pageable pageable) {
+        return pagamentoService.listar(predicate, pageable);
     }
 
     public List<Pagamento> listarPagamentosPorBeneficioId(Long beneficioId) throws BeneficioNotFoundException {

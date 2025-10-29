@@ -11,6 +11,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import br.edu.ufape.sguPraeService.models.QEstudante;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
 
 import java.util.List;
 import java.util.UUID;
@@ -50,8 +53,14 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public Page<Estudante> listarEstudantes(Pageable pageable) {
-        return estudanteRepository.findAllByAtivoTrue(pageable);
+    public Page<Estudante> listarEstudantes(Predicate predicate, Pageable pageable) {
+        QEstudante qEstudante = QEstudante.estudante;
+        BooleanBuilder filtroBase = new BooleanBuilder();
+        filtroBase.and(qEstudante.ativo.isTrue());
+
+        Predicate predicadoFinal = filtroBase.and(predicate);
+
+        return estudanteRepository.findAll(predicadoFinal, pageable);
     }
 
     @Override

@@ -25,6 +25,8 @@ import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.querydsl.core.types.Predicate;
+import org.springframework.data.querydsl.binding.QuerydslPredicate;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,8 +36,10 @@ public class BeneficioController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    public Page<BeneficioResponse> listar(@PageableDefault(sort = "id") Pageable pageable) {
-        return fachada.listarBeneficios(pageable)
+    public Page<BeneficioResponse> listar(
+            @QuerydslPredicate(root = Beneficio.class) Predicate predicate,
+            @PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarBeneficios(predicate, pageable)
                 .map(fachada::mapToBeneficioResponse);
     }
 

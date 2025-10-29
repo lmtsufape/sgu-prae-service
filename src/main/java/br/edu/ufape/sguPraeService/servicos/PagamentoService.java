@@ -11,6 +11,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.BooleanBuilder;
+import br.edu.ufape.sguPraeService.models.QPagamento;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -26,8 +29,13 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     public List<Pagamento> listar() { return pagamentoRepository.findAll(); }
 
     @Override
-    public Page<Pagamento> listar(Pageable pageable) {
-        return pagamentoRepository.findAll(pageable);
+    public Page<Pagamento> listar(Predicate predicate, Pageable pageable) {
+        QPagamento qPagamento = QPagamento.pagamento;
+        BooleanBuilder filtroBase = new BooleanBuilder();
+        filtroBase.and(qPagamento.ativo.isTrue());
+
+        Predicate predicadoFinal = filtroBase.and(predicate);
+        return pagamentoRepository.findAll(predicadoFinal, pageable);
     }
 
     @Override

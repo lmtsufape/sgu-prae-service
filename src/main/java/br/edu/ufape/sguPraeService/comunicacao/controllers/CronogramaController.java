@@ -15,6 +15,8 @@
  import org.springframework.security.access.prepost.PreAuthorize;
  import org.springframework.web.bind.annotation.*;
  import org.springframework.http.ResponseEntity;
+ import com.querydsl.core.types.Predicate; // Adicionar
+ import org.springframework.data.querydsl.binding.QuerydslPredicate;
 
  import jakarta.validation.Valid;
  import lombok.RequiredArgsConstructor;
@@ -32,8 +34,10 @@
 
 
      @GetMapping
-     public Page<CronogramaResponse> listar(@PageableDefault(sort = "id") Pageable pageable) {
-         return fachada.listarCronogramas(pageable).map(cronograma -> new CronogramaResponse(cronograma, modelMapper));
+     public Page<CronogramaResponse> listar(
+             @QuerydslPredicate(root = Cronograma.class) Predicate predicate,
+             @PageableDefault(sort = "id") Pageable pageable) {
+         return fachada.listarCronogramas(predicate, pageable).map(cronograma -> new CronogramaResponse(cronograma, modelMapper)); // Passar Predicate
      }
 
      @GetMapping("/{id}")

@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.querydsl.core.types.Predicate;
+import org.springframework.data.querydsl.binding.QuerydslPredicate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,11 +31,11 @@ public class PagamentoController {
     private final ModelMapper modelMapper;
 
     @GetMapping
-    public List<PagamentoResponse> listar() {
-        return fachada.listarPagamentos()
-                .stream()
-                .map(fachada::mapToPagamentoResponse)
-                .toList();
+    public Page<PagamentoResponse> listar(
+            @QuerydslPredicate(root = Pagamento.class) Predicate predicate,
+            @PageableDefault(sort = "id") Pageable pageable) {
+        return fachada.listarPagamentos(predicate, pageable)
+                .map(fachada::mapToPagamentoResponse);
     }
 
     @GetMapping("/beneficio/{beneficioId}")

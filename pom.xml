@@ -29,6 +29,8 @@
     <properties>
         <java.version>24</java.version>
         <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <!-- Adicionada propriedade para versão do QueryDSL -->
+        <querydsl.version>5.1.0</querydsl.version>
     </properties>
     <dependencies>
         <dependency>
@@ -81,14 +83,14 @@
             <version>33.4.0-android</version>
         </dependency>
         <dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.18.0</version>
-		</dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.18.0</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.14</version>
+            <version>4.5.14</version> <!-- Você pode considerar atualizar se houver versões mais recentes compatíveis -->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -133,6 +135,22 @@
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
 
+        <!-- === Dependências do QueryDSL adicionadas === -->
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-jpa</artifactId>
+            <version>${querydsl.version}</version>
+            <classifier>jakarta</classifier> <!-- Essencial para Spring Boot 3+ -->
+        </dependency>
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-apt</artifactId>
+            <version>${querydsl.version}</version>
+            <classifier>jakarta</classifier> <!-- Essencial para Spring Boot 3+ -->
+            <scope>provided</scope> <!-- Apenas necessário durante a compilação -->
+        </dependency>
+        <!-- === Fim das dependências do QueryDSL === -->
+
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -148,18 +166,7 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
+            <!-- Plugin do Spring Boot (sem alterações) -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -172,6 +179,46 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- Plugin Maven Compiler ATUALIZADO para incluir QueryDSL -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <!-- A versão pode já estar definida no seu parent POM, mas é bom garantir -->
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <!-- Caminhos dos processadores de anotação -->
+                    <annotationProcessorPaths>
+                        <!-- QueryDSL APT -->
+                        <path>
+                            <groupId>com.querydsl</groupId>
+                            <artifactId>querydsl-apt</artifactId>
+                            <version>${querydsl.version}</version>
+                            <classifier>jakarta</classifier>
+                        </path>
+                        <!-- Jakarta Persistence API -->
+                        <path>
+                            <groupId>jakarta.persistence</groupId>
+                            <artifactId>jakarta.persistence-api</artifactId>
+                            <!-- A versão do Jakarta Persistence API é gerenciada pelo Spring Boot Parent -->
+                            <version>${jakarta-persistence.version}</version>
+                        </path>
+                        <!-- Lombok (mantido da sua configuração original) -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <!-- A versão do Lombok é gerenciada pelo Spring Boot Parent -->
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <!-- Diretório de saída para as Q-classes -->
+                    <generatedSourcesDirectory>${project.build.directory}/generated-sources/java</generatedSourcesDirectory>
+                </configuration>
+            </plugin>
+            <!-- Fim da atualização do Maven Compiler Plugin -->
+
         </plugins>
     </build>
 

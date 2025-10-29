@@ -15,6 +15,8 @@
  import org.springframework.security.access.prepost.PreAuthorize;
  import org.springframework.web.bind.annotation.*;
  import org.springframework.http.ResponseEntity;
+ import com.querydsl.core.types.Predicate;
+ import org.springframework.data.querydsl.binding.QuerydslPredicate;
  
  import jakarta.validation.Valid;
  import lombok.RequiredArgsConstructor;
@@ -26,12 +28,14 @@
  public class TipoAtendimentoController {
      private final Fachada fachada;
      private final ModelMapper modelMapper;
- 
- 
+
+
      @GetMapping
-     public Page<TipoAtendimentoResponse> listar(@PageableDefault (sort = "id") Pageable pageable) {
-            return fachada.listarTipoAtendimentos(pageable)
-                    .map(tipoAtendimento -> new TipoAtendimentoResponse(tipoAtendimento, modelMapper));
+     public Page<TipoAtendimentoResponse> listar(
+             @QuerydslPredicate(root = TipoAtendimento.class) Predicate predicate,
+             @PageableDefault (sort = "id") Pageable pageable) {
+         return fachada.listarTipoAtendimentos(predicate, pageable)
+                 .map(tipoAtendimento -> new TipoAtendimentoResponse(tipoAtendimento, modelMapper));
      }
  
      @GetMapping("/{id}")

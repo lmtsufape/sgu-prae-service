@@ -8,15 +8,16 @@
  import org.springframework.data.domain.Pageable;
  import org.springframework.stereotype.Service;
  import lombok.RequiredArgsConstructor;
+ import com.querydsl.core.types.Predicate;
 
  @Service @RequiredArgsConstructor
  public class TipoAtendimentoService implements br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService {
      private final TipoAtendimentoRepository repository;
      private final ModelMapper modelMapper;
- 
+
      @Override
-     public Page<TipoAtendimento> listar(Pageable pageable) {
-         return repository.findAll(pageable);
+     public Page<TipoAtendimento> listar(Predicate predicate, Pageable pageable) {
+         return repository.findAll(predicate, pageable);
      }
 
 
