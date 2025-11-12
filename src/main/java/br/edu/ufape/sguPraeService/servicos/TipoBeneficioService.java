@@ -8,6 +8,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.BooleanBuilder;
+import br.edu.ufape.sguPraeService.models.QTipoBeneficio;
 
 @Service @RequiredArgsConstructor
 public class TipoBeneficioService implements br.edu.ufape.sguPraeService.servicos.interfaces.TipoBeneficioService {
@@ -15,7 +18,14 @@ public class TipoBeneficioService implements br.edu.ufape.sguPraeService.servico
     private final ModelMapper modelMapper;
 
     @Override
-    public Page<TipoBeneficio> listar(Pageable pageable) { return tipoBeneficioRepository.findAll(pageable); }
+    public Page<TipoBeneficio> listar(Predicate predicate, Pageable pageable) {
+        QTipoBeneficio qTipoBeneficio = QTipoBeneficio.tipoBeneficio;
+        BooleanBuilder filtroBase = new BooleanBuilder();
+        filtroBase.and(qTipoBeneficio.ativo.isTrue());
+
+        Predicate predicadoFinal = filtroBase.and(predicate);
+        return tipoBeneficioRepository.findAll(predicadoFinal, pageable);
+    }
 
     @Override
     public TipoBeneficio buscar(Long id) throws TipoBeneficioNotFoundException {
