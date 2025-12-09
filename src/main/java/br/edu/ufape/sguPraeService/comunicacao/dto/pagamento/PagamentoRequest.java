@@ -27,6 +27,12 @@ public class PagamentoRequest {
     private BigDecimal valor;
     @NotNull(message = "A data é obrigatória")
 	private LocalDate data;
+    @NotNull(message = "O mês de referência é obrigatório")
+	private Integer mesReferencia;
+    @NotNull(message = "O ano de referência é obrigatório")
+	private Integer anoReferencia;
+    @NotNull(message = "O número do lote é obrigatório")
+	private String numeroLote;
 
     public Pagamento convertToEntity(PagamentoRequest pagamentoRequest, ModelMapper modelMapper) {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);

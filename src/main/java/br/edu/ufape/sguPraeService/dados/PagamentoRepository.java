@@ -29,6 +29,11 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
     default void customize(QuerydslBindings bindings, @NonNull QPagamento root) {
         bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));
 
+        bindings.bind(root.numeroLote).first((path, value) -> path.eq(value));
+
+        bindings.bind(root.mesReferencia).first((path, value) -> path.eq(value));
+        bindings.bind(root.anoReferencia).first((path, value) -> path.eq(value));
+
         bindings.bind(root.data).all((path, value) -> {
             if (value.isEmpty()) {
                 return Optional.empty();

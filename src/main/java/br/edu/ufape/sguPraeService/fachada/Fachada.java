@@ -8,10 +8,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
+import br.edu.ufape.sguPraeService.auth.AuthServiceClient;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoCPFRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
 import br.edu.ufape.sguPraeService.exceptions.*;
@@ -82,6 +84,7 @@ public class Fachada {
     private final BeneficioService beneficioService;
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
+    private final AuthServiceClient authServiceClient;
 
     @Value("${authClient.client-id}")
     private String clientId;
@@ -815,6 +818,45 @@ public class Fachada {
     public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
         return pagamentoService.listarPorEstudanteId(estudanteId);
     }
+
+    @Transactional
+    public Pagamento salvarPagamentoPorCpf(PagamentoCPFRequest request) {
+        List<AlunoResponse> alunos = authServiceClient.buscarAlunoPorCpf(request.getCpf());
+
+        if (alunos.isEmpty()) {
+            throw new EstudanteNotFoundException();
+        }
+
+        UUID userId = alunos.getFirst().getId();
+        Estudante estudante = estudanteService.buscarPorUserId(userId);
+
+        List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudante.getId());
+
+        if (beneficiosAtivos.isEmpty()) {
+            throw new EstudanteSemAuxilioAtivoException();
+        }
+
+        Beneficio beneficioSelecionado;
+        if (request.getTipoBeneficioId() != null) {
+            beneficioSelecionado = beneficiosAtivos.stream().filter(b -> b.getTipoBeneficio().getId().equals(request.getTipoBeneficioId())).findFirst().orElseThrow(() -> new IllegalArgumentException("O estudante não possui o benefício informado ativo"));
+        } else {
+            if (beneficiosAtivos.size() > 1) {
+                throw new IllegalArgumentException("O estudante possui multiplos beneficios ativos ("+ beneficiosAtivos.size() +"). É obrigatório informar o Tipo de beneficio.");
+            }
+            beneficioSelecionado = beneficiosAtivos.getFirst();
+        }
+
+        Pagamento pagamento = new Pagamento();
+        pagamento.setValor(request.getValor());
+        pagamento.setData(request.getData());
+        pagamento.setMesReferencia(request.getMesReferencia());
+        pagamento.setAnoReferencia(request.getAnoReferencia());
+        pagamento.setNumeroLote(request.getNumeroLote());
+        pagamento.setBeneficio(beneficioSelecionado);
+
+        return pagamentoService.salvarIndividual(pagamento);
+    }
+
 
     public PagamentoResponse mapToPagamentoResponse(Pagamento pagamento) {
         PagamentoResponse response = new PagamentoResponse(pagamento, modelMapper);

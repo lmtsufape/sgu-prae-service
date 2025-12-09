@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoCPFRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
@@ -69,6 +70,13 @@ public class PagamentoController {
                 .toList();
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    @PostMapping("/cpf")
+    public ResponseEntity<PagamentoResponse> criarPagamentoPorCpf(@Valid @RequestBody PagamentoCPFRequest request) {
+        Pagamento pagamento = fachada.salvarPagamentoPorCpf(request);
+        return new ResponseEntity<>(new PagamentoResponse(pagamento, modelMapper), HttpStatus.CREATED);
     }
 
     @PatchMapping("/{id}")
