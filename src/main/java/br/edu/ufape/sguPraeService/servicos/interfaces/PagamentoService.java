@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.servicos.interfaces;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.FolhaPagamentoResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.models.Pagamento;
 import com.querydsl.core.types.Predicate;
@@ -32,4 +33,6 @@ public interface PagamentoService {
     Page<Pagamento> listarPorValor(BigDecimal min, BigDecimal max, Pageable pageable);
 
     List<Pagamento> listarPorEstudanteId(Long estudanteId);
+
+    FolhaPagamentoResponse gerarFolhaPagamento(Integer ano, Integer mes, String numeroLote);
 }

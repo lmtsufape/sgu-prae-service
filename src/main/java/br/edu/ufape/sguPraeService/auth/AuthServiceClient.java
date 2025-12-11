@@ -35,5 +35,5 @@ public interface AuthServiceClient {
     FuncionarioResponse buscarFuncionarioPorId(@PathVariable("userId") UUID userId);
 
     @GetMapping("/aluno")
-    List<AlunoResponse> buscarAlunoPorCpf(@RequestParam("cpf") String cpf);
+    AlunoResponse buscarAlunoPorCpf(@RequestParam("cpf") String cpf);
 }
