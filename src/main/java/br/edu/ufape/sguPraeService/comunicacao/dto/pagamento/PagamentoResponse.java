@@ -17,6 +17,9 @@ public class PagamentoResponse {
     private Long id;
     private BigDecimal valor;
 	private LocalDate data;
+    private Integer mesReferencia;
+    private Integer anoReferencia;
+    private Long numeroLote;
     private BeneficioResponse beneficio;
 
     public PagamentoResponse(Pagamento pagamento, ModelMapper modelMapper){

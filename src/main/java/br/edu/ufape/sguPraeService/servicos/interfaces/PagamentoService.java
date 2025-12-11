@@ -19,6 +19,8 @@ public interface PagamentoService {
 
     List<Pagamento> salvar(List<Pagamento> pagamentos);
 
+    Pagamento salvarIndividual(Pagamento pagamento);
+
     Pagamento editar(Long id, Pagamento entity) throws PagamentoNotFoundException;
 
     void deletar(Long id) throws PagamentoNotFoundException;

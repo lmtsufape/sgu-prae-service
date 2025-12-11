@@ -22,6 +22,9 @@ public class Pagamento {
     private Long id;
 	private BigDecimal valor;
 	private LocalDate data;
+	private Integer mesReferencia;
+	private Integer anoReferencia;
+	private String numeroLote;
 	private boolean ativo = true;
 	@ManyToOne
 	@JsonManagedReference

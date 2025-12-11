@@ -49,6 +49,9 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
+    public Pagamento salvarIndividual(Pagamento pagamento) { return pagamentoRepository.save(pagamento);}
+
+    @Override
     public Pagamento editar(Long id, Pagamento entity) throws PagamentoNotFoundException {
         Pagamento Pagamento = buscar(id);
         modelMapper.map(entity, Pagamento);
