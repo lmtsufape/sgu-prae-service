@@ -19,7 +19,7 @@ public class PagamentoResponse {
 	private LocalDate data;
     private Integer mesReferencia;
     private Integer anoReferencia;
-    private Long numeroLote;
+    private String numeroLote;
     private BeneficioResponse beneficio;
 
     public PagamentoResponse(Pagamento pagamento, ModelMapper modelMapper){

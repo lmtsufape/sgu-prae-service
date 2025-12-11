@@ -25,6 +25,9 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
     List<Pagamento> findByValorBetween(BigDecimal min, BigDecimal max);
     Page<Pagamento> findByValorBetween(BigDecimal min, BigDecimal max, Pageable pageable);
 
+    List<Pagamento> findByAnoReferenciaAndMesReferencia(Integer anoReferencia, Integer mesReferencia);
+    List<Pagamento> findByAnoReferenciaAndMesReferenciaAndNumeroLote(Integer anoReferencia, Integer mesReferencia, String numeroLote);
+
     @Override
     default void customize(QuerydslBindings bindings, @NonNull QPagamento root) {
         bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));

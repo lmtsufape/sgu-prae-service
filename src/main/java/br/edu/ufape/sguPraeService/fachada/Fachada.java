@@ -13,12 +13,10 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoRespon
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoCPFRequest;
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
 import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -821,13 +819,13 @@ public class Fachada {
 
     @Transactional
     public Pagamento salvarPagamentoPorCpf(PagamentoCPFRequest request) {
-        List<AlunoResponse> alunos = authServiceClient.buscarAlunoPorCpf(request.getCpf());
+        AlunoResponse aluno = authServiceClient.buscarAlunoPorCpf(request.getCpf());
 
-        if (alunos.isEmpty()) {
+        if (aluno == null) {
             throw new EstudanteNotFoundException();
         }
 
-        UUID userId = alunos.getFirst().getId();
+        UUID userId = aluno.getId();
         Estudante estudante = estudanteService.buscarPorUserId(userId);
 
         List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudante.getId());
@@ -855,6 +853,52 @@ public class Fachada {
         pagamento.setBeneficio(beneficioSelecionado);
 
         return pagamentoService.salvarIndividual(pagamento);
+    }
+
+    public FolhaPagamentoResponse gerarFolhaPagamento(Integer ano, Integer mes, String numeroLote) {
+        // 1. Gera a folha com dados locais (bancários e valores)
+        FolhaPagamentoResponse folha = pagamentoService.gerarFolhaPagamento(ano, mes, numeroLote);
+
+        if (folha.getItens().isEmpty()) {
+            return folha;
+        }
+
+        // 2. Extrai a lista de UUIDs distintos para busca em lote
+        List<UUID> userIds = folha.getItens().stream()
+                .map(ItemFolhaPagamentoResponse::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 3. Busca em Lote no Auth Service (1 Requisição apenas!)
+        Map<UUID, AlunoResponse> mapaAlunos;
+        try {
+            List<AlunoResponse> alunosEncontrados = authServiceHandler.buscarAlunos(userIds);
+
+            // Transforma a lista em Mapa para acesso rápido O(1)
+            mapaAlunos = alunosEncontrados.stream()
+                    .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
+
+        } catch (Exception e) {
+            // Em caso de falha crítica (fallback retornou lista vazia), criamos mapa vazio
+            mapaAlunos = new HashMap<>();
+        }
+
+        // 4. Preenche os dados na folha
+        for (ItemFolhaPagamentoResponse item : folha.getItens()) {
+            AlunoResponse aluno = mapaAlunos.get(item.getUserId());
+
+            if (aluno != null) {
+                item.setNomeEstudante(aluno.getNome());
+                item.setCpf(aluno.getCpf());
+                item.setMatricula(aluno.getMatricula());
+            } else {
+                // Caso o aluno não venha do Auth (ex: deletado ou erro parcial)
+                item.setNomeEstudante("Nome não disponível");
+                item.setCpf("---");
+            }
+        }
+
+        return folha;
     }
 
 

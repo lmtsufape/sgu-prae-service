@@ -1,13 +1,11 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoCPFRequest;
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoPatchRequest;
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoRequest;
-import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.PagamentoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.*;
 import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Pagamento;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -112,5 +110,16 @@ public class PagamentoController {
         return fachada.listarPagamentosPorEstudante(estudanteId).stream()
                 .map(fachada::mapToPagamentoResponse)
                 .toList();
+    }
+
+    // ...
+    @GetMapping("/folha")
+    @Operation(summary = "Consultar Folha de Pagamento", description = "Gera a folha consolidada por aluno, filtrando por ano e mês (obrigatórios) e lote (opcional).")
+    public ResponseEntity<FolhaPagamentoResponse> consultarFolha(
+            @RequestParam Integer ano,
+            @RequestParam Integer mes,
+            @RequestParam(required = false) String numeroLote) {
+
+        return ResponseEntity.ok(fachada.gerarFolhaPagamento(ano, mes, numeroLote));
     }
 }
