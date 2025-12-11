@@ -6,8 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.util.*;
 
 import br.edu.ufape.sguPraeService.models.QCronograma;
 import com.querydsl.core.types.dsl.StringPath;
@@ -32,10 +32,22 @@ public interface CronogramaRepository extends JpaRepository<Cronograma, Long>,
     @Override
     default void customize(QuerydslBindings bindings, @NonNull QCronograma root) {
         bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));
+
         bindings.bind(root.data).all((path, value) -> {
-            // Exemplo simples: equals
-            return Optional.of(path.eq(value.iterator().next()));
+            if (value.isEmpty()) {
+                return Optional.empty();
+            }
+            List<LocalDate> datas = new ArrayList<>(value);
+            Collections.sort(datas);
+            if (datas.size() == 1) {
+                // 1. Filtro de data exata
+                return Optional.of(path.eq(datas.getFirst()));
+            } else {
+                // 2. Filtro de período
+                return Optional.of(path.between(datas.getFirst(), datas.getLast()));
+            }
         });
+
         bindings.bind(root.profissional.id).first((path, value) -> path.eq(value));
         bindings.bind(root.tipoAtendimento.id).first((path, value) -> path.eq(value));
         bindings.excluding(root.ativo, root.vagas);
