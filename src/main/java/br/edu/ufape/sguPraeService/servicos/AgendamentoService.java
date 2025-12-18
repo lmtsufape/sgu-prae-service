@@ -6,6 +6,7 @@ import br.edu.ufape.sguPraeService.dados.AgendamentoRepository;
 import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.models.*;
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -28,11 +29,12 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
     }
 
     @Override
-    public Agendamento agendar(Vaga vaga, Estudante estudante) {
+    public Agendamento agendar(Vaga vaga, Estudante estudante, ModalidadeAgendamento modalidade) {
         Agendamento agendamento = new Agendamento();
         agendamento.setData(vaga.getCronograma().getData());
         agendamento.setVaga(vaga);
         agendamento.setEstudante(estudante);
+        agendamento.setModalidade(modalidade);
         return repository.save(agendamento);
     }
 

@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.comunicacao.dto.agendamento;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.vaga.VagaResponse;
 import br.edu.ufape.sguPraeService.models.Agendamento;
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,8 @@ public class AgendamentoResponse {
     private String tipoAtendimento;
 
     private VagaResponse vaga;
+
+    private ModalidadeAgendamento modalidade;
 
     private EstudanteResponse estudante;
 

@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.fachada;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
 import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -151,9 +153,22 @@ public class Fachada {
     // ================== Estudante ================== //
 
     @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackSalvarEstudante")
-    public EstudanteResponse salvarEstudante(Estudante estudante)  {
+    public EstudanteResponse salvarEstudante(Estudante estudante, List<MultipartFile> arquivos) {
         UUID userId = authenticatedUserProvider.getUserId();
         estudante.setUserId(userId);
+
+        if (arquivos != null && !arquivos.isEmpty()) {
+            MultipartFile[] arrayArquivos = arquivos.toArray(new MultipartFile[0]);
+
+            try {
+                List<Documento> documentosSalvos = armazenamentoService.salvarArquivo(arrayArquivos);
+
+                estudante.adicionarDocumentos(documentosSalvos);
+
+            } catch (Exception e) {
+                throw new RuntimeException("Erro ao processar documentos do estudante", e);
+            }
+        }
 
         Estudante novoEstudante = estudanteService.salvarEstudante(estudante);
         AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
@@ -161,6 +176,11 @@ public class Fachada {
         EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
         response.setAluno(userInfo);
         return response;
+    }
+
+    // Sobrecarga para manter compatibilidade caso algum lugar chame sem arquivos
+    public EstudanteResponse salvarEstudante(Estudante estudante) {
+        return salvarEstudante(estudante, null);
     }
 
     public EstudanteResponse buscarEstudante(Long id) throws EstudanteNotFoundException {
@@ -313,8 +333,8 @@ public class Fachada {
                 .map(beneficio -> new RelatorioBeneficioResponse(
                         beneficio.getTipoBeneficio().getTipo(),
                         beneficio.getValorPagamento(),
-                        beneficio.getInicioBeneficio(),
-                        beneficio.getFimBeneficio()))
+                        beneficio.getInicioBeneficio().atEndOfMonth(),
+                        beneficio.getFimBeneficio().atEndOfMonth()))
                 .collect(Collectors.toList());
 
         var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
@@ -520,15 +540,17 @@ public class Fachada {
     // ------------------- Agendamento ------------------- //
 
     @Transactional
-    public AgendamentoResponse agendarVaga(Long id) throws VagaNotFoundException, UnavailableVagaException {
+    public AgendamentoResponse agendarVaga(Long vagaId, ModalidadeAgendamento modalidade) throws VagaNotFoundException, UnavailableVagaException {
         try {
-            Vaga vaga = vagaService.buscar(id);
+            Vaga vaga = vagaService.buscar(vagaId);
             Estudante estudante = estudanteService.buscarPorUserId(authenticatedUserProvider.getUserId());
 
             if (vaga.isDisponivel()) {
                 vaga.setDisponivel(false);
                 vagaService.salvar(vaga);
-                Agendamento agendamento = agendamentoService.agendar(vaga, estudante);
+
+                Agendamento agendamento = agendamentoService.agendar(vaga, estudante, modalidade);
+
                 return mapToAgendamentoResponse(agendamento);
             }
 
@@ -697,7 +719,7 @@ public class Fachada {
         return beneficioService.buscarPorPagamento(pagamentoId);
     }
 
-    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(LocalDate inicio, LocalDate fim) {
+    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(YearMonth inicio, YearMonth fim) {
         List<Beneficio> beneficios = beneficioService
                 .listar().stream()
                 .filter(aux -> aux.isAtivo() && aux.isStatus()
@@ -713,11 +735,11 @@ public class Fachada {
             List<EstudanteRelatorioResponse> estudantesDto = new ArrayList<>();
 
             List<Pagamento> pagamentosFiltrados = beneficio.getPagamentos().stream()
-                    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+                    .filter(p -> !p.getData().isBefore(inicio.atEndOfMonth()) && !p.getData().isAfter(fim.atEndOfMonth()) && p.isAtivo())
                     .toList();
 
             BigDecimal totalAuxilio = beneficio.getPagamentos().stream()
-                    .filter(p -> !p.getData().isBefore(inicio) && !p.getData().isAfter(fim) && p.isAtivo())
+                    .filter(p -> !p.getData().isBefore(inicio.atEndOfMonth()) && !p.getData().isAfter(fim.atEndOfMonth()) && p.isAtivo())
                     .map(Pagamento::getValor)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 

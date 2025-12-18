@@ -2,8 +2,11 @@ package br.edu.ufape.sguPraeService.comunicacao.dto.beneficio;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
+import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.modelmapper.ModelMapper;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
@@ -24,12 +27,19 @@ public class BeneficioResponse {
 	private TipoBeneficioResponse tipoBeneficio;
 
 	private int horasBeneficio;
-	private LocalDate inicioBeneficio;
-	private LocalDate fimBeneficio;
-	private String parecerTermino;
+
+	@JsonFormat(pattern = "MM/yyyy")
+	private YearMonth inicioBeneficio;
+
+	@JsonFormat(pattern = "MM/yyyy")
+	private YearMonth fimBeneficio;
+
 	private BigDecimal valorPagamento;
 	private boolean status;
 	private EstudanteResponse estudantes;
+
+	private MotivoEncerramento motivoEncerramento;
+	private String parecerTermino;
 
 	public BeneficioResponse(Beneficio beneficio, ModelMapper modelMapper) {
 		if (beneficio == null)

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -30,5 +32,11 @@ public class Estudante {
     @OneToOne(cascade = CascadeType.ALL)
     private Endereco endereco;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "estudante_id")
+    private List<Documento> documentos = new ArrayList<>();
 
+    public void adicionarDocumentos(List<Documento> docs) {
+        this.documentos.addAll(docs);
+    }
 }
