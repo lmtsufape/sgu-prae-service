@@ -1,6 +1,7 @@
 package br.edu.ufape.sguPraeService.models;
 
 
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,6 +21,8 @@ public class Agendamento {
     @Column(nullable = false)
     private LocalDate data;
 
+    @Enumerated(EnumType.STRING)
+    private ModalidadeAgendamento modalidade;
 
     private boolean ativo = true;
 

@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.cancelamentoAgendamento.CancelamentoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.cancelamentoAgendamento.CancelamentoResponse;
@@ -26,9 +27,10 @@ public class AgendamentoController {
 
 
     @PreAuthorize("hasRole('ESTUDANTE')")
-    @PostMapping("/{vagaId}/agendar")
-    public ResponseEntity<AgendamentoResponse> agendarVaga(@PathVariable Long vagaId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(fachada.agendarVaga(vagaId));
+    @PostMapping("/agendar")
+    public ResponseEntity<AgendamentoResponse> agendarVaga(@Valid @RequestBody AgendamentoRequest request) {
+        AgendamentoResponse response = fachada.agendarVaga(request.getVagaId(), request.getModalidade());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")
