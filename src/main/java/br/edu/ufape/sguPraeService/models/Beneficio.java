@@ -2,9 +2,11 @@ package br.edu.ufape.sguPraeService.models;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,13 +24,15 @@ public class Beneficio {
     @ManyToOne()
     private TipoBeneficio tipoBeneficio;
 
-    private int horasBeneficio;
-    private LocalDate inicioBeneficio;
-    private LocalDate fimBeneficio;
+    private YearMonth inicioBeneficio;
+    private YearMonth fimBeneficio;
     private String parecerTermino;
     private BigDecimal valorPagamento;
     private boolean status = true;
     private boolean ativo = true;
+
+    @Enumerated(EnumType.STRING)
+    private MotivoEncerramento motivoEncerramento;
 
     @ManyToOne
     private Estudante estudantes;

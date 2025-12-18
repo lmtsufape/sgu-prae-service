@@ -2,13 +2,14 @@ package br.edu.ufape.sguPraeService.dados;
 
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.Estudante;
+import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,13 +22,17 @@ import org.springframework.data.querydsl.binding.QuerydslBinderCustomizer;
 import org.springframework.data.querydsl.binding.QuerydslBindings;
 import org.springframework.lang.NonNull;
 
-
 public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
         QuerydslPredicateExecutor<Beneficio>,
         QuerydslBinderCustomizer<QBeneficio> {
 
   List<Beneficio> findByAtivoTrue();
 
+  long countByEstudantesIdAndAtivoTrue(Long estudanteId);
+
+  Page<Beneficio> findByMotivoEncerramentoNotNull(Pageable pageable);
+
+  Page<Beneficio> findByMotivoEncerramento(MotivoEncerramento motivo, Pageable pageable);
 
   Page<Beneficio> findByTipoBeneficioId(@Param("tipoId") Long tipoId, Pageable pageable);
 
@@ -54,10 +59,11 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
     bindings.bind(root.estudantes.id).first((path, value) -> path.eq(value));
     bindings.bind(root.tipoBeneficio.id).first((path, value) -> path.eq(value));
 
-    // Binding para inicioBeneficio
+    bindings.bind(root.motivoEncerramento).first((path, value) -> path.eq(value));
+
     bindings.bind(root.inicioBeneficio).all((path, value) -> {
       if (value.isEmpty()) return Optional.empty();
-      List<LocalDate> datasInicio = new ArrayList<>(value);
+      List<YearMonth> datasInicio = new ArrayList<>(value);
       Collections.sort(datasInicio);
       if (datasInicio.size() == 1) {
         return Optional.of(path.eq(datasInicio.getFirst()));
@@ -66,10 +72,9 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
       }
     });
 
-    // Binding para fimBeneficio
     bindings.bind(root.fimBeneficio).all((path, value) -> {
       if (value.isEmpty()) return Optional.empty();
-      List<LocalDate> datasFim = new ArrayList<>(value);
+      List<YearMonth> datasFim = new ArrayList<>(value);
       Collections.sort(datasFim);
       if (datasFim.size() == 1) {
         return Optional.of(path.eq(datasFim.getFirst()));

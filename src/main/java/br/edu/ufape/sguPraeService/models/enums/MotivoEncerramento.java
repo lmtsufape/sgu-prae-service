@@ -1,0 +1,12 @@
+package br.edu.ufape.sguPraeService.models.enums;
+
+public enum MotivoEncerramento {
+    CONCLUSAO_CURSO,
+    MIGRACAO_OUTRO_BENEFICIO,
+    TRANCAMENTO_MATRICULA,
+    DESISTENCIA_CURSO,
+    REPROVACAO_POR_FALTA,
+    RENDIMENTO_INSUFICIENTE,
+    OMISSAO_DADOS,
+    OUTRO
+}

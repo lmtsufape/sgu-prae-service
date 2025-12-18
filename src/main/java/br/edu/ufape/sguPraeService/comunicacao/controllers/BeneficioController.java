@@ -2,6 +2,7 @@ package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -125,8 +126,8 @@ public class BeneficioController {
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/relatorio/financeiro")
     public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
-            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate inicio,
-            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fim) {
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") YearMonth inicio,
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") YearMonth fim) {
         RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(inicio, fim);
         return ResponseEntity.ok(relatorio);
     }

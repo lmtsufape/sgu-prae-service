@@ -55,6 +55,12 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 
 	@Override
 	public Beneficio salvar(Beneficio entity) {
+		if (entity.getId() == null) {
+			long qtdAtivos = beneficioRepository.countByEstudantesIdAndAtivoTrue(entity.getEstudantes().getId());
+			if (qtdAtivos >= 2) {
+			throw new IllegalArgumentException("O estudante já possui o limite de benefícios ativos");
+			}
+		}
 		return beneficioRepository.save(entity);
 	}
 
