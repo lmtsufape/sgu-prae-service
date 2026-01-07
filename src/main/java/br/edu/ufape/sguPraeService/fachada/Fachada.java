@@ -711,8 +711,9 @@ public class Fachada {
         beneficioService.deletar(id);
     }
 
-    public List<Beneficio> listarBeneficiosPendentesMesAtual()  {
-        return beneficioService.listarBeneficiosPendentesMesAtual();
+    public Page<BeneficioResponse> listarBeneficiosPendentesMesAtual(Predicate predicate, Pageable pageable) {
+        Page<Beneficio> pageBeneficios = beneficioService.listarBeneficiosPendentesMesAtual(predicate, pageable);
+        return pageBeneficios.map(this::mapToBeneficioResponse);
     }
 
     public List<Beneficio> buscarBeneficioPorPagamentoId(Long pagamentoId) {
@@ -794,8 +795,8 @@ public class Fachada {
         return new ArrayList<>(beneficio.getPagamentos());
     }
 
-    public List<Beneficio> listarPagosPorMes() throws BeneficioNotFoundException {
-        return beneficioService.listarPagosPorMes();
+    public Page<Beneficio> listarPagosPorMes(Pageable pageable) {
+        return beneficioService.listarPagosPorMes(pageable);
     }
 
     public Pagamento buscarPagamento(Long id) throws PagamentoNotFoundException {
