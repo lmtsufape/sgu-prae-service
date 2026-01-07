@@ -5,6 +5,7 @@ import java.util.List;
 
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.Estudante;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -82,10 +83,23 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		return beneficioRepository.findByPagamentos_Id(pagamentoId);
 	}
 
-    @Override
-    public List<Beneficio> listarPagosPorMes()  {
-        return beneficioRepository.findByAtivoTrue();
-    }
+	@Override
+	public Page<Beneficio> listarPagosPorMes(Pageable pageable) {
+		QBeneficio qBeneficio = QBeneficio.beneficio;
+		LocalDate agora = LocalDate.now();
+
+		LocalDate inicioMes = agora.withDayOfMonth(1);
+		LocalDate fimMes = agora.withDayOfMonth(agora.lengthOfMonth());
+
+
+		BooleanExpression isAtivo = qBeneficio.ativo.isTrue();
+
+		BooleanExpression temPagamentoNesteMes = qBeneficio.pagamentos.any().data.between(inicioMes, fimMes);
+
+		BooleanExpression jaPago = isAtivo.and(temPagamentoNesteMes);
+
+		return beneficioRepository.findAll(jaPago, pageable);
+	}
 
     @Override
     public Page<Beneficio> listarPorTipo(Long tipoId, Pageable pageable) {
@@ -93,16 +107,25 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
 	@Override
-	public List<Beneficio> listarBeneficiosPendentesMesAtual() {
-		List<Beneficio> ativos = beneficioRepository.findByAtivoTrue();
+	public Page<Beneficio> listarBeneficiosPendentesMesAtual(Predicate predicate, Pageable pageable) {
+		QBeneficio qBeneficio = QBeneficio.beneficio;
 		LocalDate agora = LocalDate.now();
 
-		return ativos.stream()
-				.filter(aux -> aux.getPagamentos().stream()
-						.noneMatch(p -> p.getData() != null &&
-								p.getData().getMonth() == agora.getMonth() &&
-								p.getData().getYear() == agora.getYear()))
-				.toList();
+		LocalDate inicioMes = agora.withDayOfMonth(1);
+		LocalDate fimMes = agora.withDayOfMonth(agora.lengthOfMonth());
+
+		BooleanExpression isAtivo = qBeneficio.ativo.isTrue();
+
+		BooleanExpression temPagamentoNesteMes = qBeneficio.pagamentos.any().data.between(inicioMes, fimMes);
+
+		BooleanExpression ehPendente = isAtivo.and(temPagamentoNesteMes.not());
+
+		BooleanBuilder filtroFinal = new BooleanBuilder();
+		filtroFinal.and(ehPendente);
+		filtroFinal.and(predicate);
+
+
+		return beneficioRepository.findAll(filtroFinal, pageable);
 	}
 
 	@Override

@@ -30,9 +30,9 @@ public interface BeneficioService {
 
     List<Beneficio> buscarPorPagamento(Long pagamentoId);
 
-    List<Beneficio> listarPagosPorMes() throws BeneficioNotFoundException;
+    Page<Beneficio> listarPagosPorMes(Pageable pageable);
 
-    List<Beneficio> listarBeneficiosPendentesMesAtual();
+    Page<Beneficio> listarBeneficiosPendentesMesAtual(Predicate predicate, Pageable pageable);
 
     Page<Estudante> listarEstudantesComBeneficioAtivo(Pageable pageable);
 

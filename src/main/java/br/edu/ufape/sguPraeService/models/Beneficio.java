@@ -6,6 +6,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.edu.ufape.sguPraeService.dados.conversores.YearMonthConverter;
 import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
@@ -24,8 +25,12 @@ public class Beneficio {
     @ManyToOne()
     private TipoBeneficio tipoBeneficio;
 
+    @Convert(converter = YearMonthConverter.class)
     private YearMonth inicioBeneficio;
+
+    @Convert(converter = YearMonthConverter.class)
     private YearMonth fimBeneficio;
+
     private String parecerTermino;
     private BigDecimal valorPagamento;
     private boolean status = true;

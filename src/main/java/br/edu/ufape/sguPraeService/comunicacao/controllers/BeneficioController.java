@@ -93,12 +93,13 @@ public class BeneficioController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/pagos")
-    public ResponseEntity<List<BeneficioResponse>> listarPagosPorMes() throws BeneficioNotFoundException {
-        List<Beneficio> beneficios = fachada.listarPagosPorMes();
+    public ResponseEntity<Page<BeneficioResponse>> listarPagosPorMes(
+            @PageableDefault(sort = "id") Pageable pageable // Adicionado Pageable
+    ) throws BeneficioNotFoundException {
+        Page<Beneficio> pageBeneficios = fachada.listarPagosPorMes(pageable);
+
         return ResponseEntity.ok(
-                beneficios.stream()
-                        .map(fachada::mapToBeneficioResponse)
-                        .toList()
+                pageBeneficios.map(fachada::mapToBeneficioResponse)
         );
     }
 
@@ -114,13 +115,12 @@ public class BeneficioController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/pendentes")
-    public ResponseEntity<List<BeneficioResponse>> listarAuxiliosPendentesMesAtual() {
-        List<Beneficio> beneficios = fachada.listarBeneficiosPendentesMesAtual();
-        return ResponseEntity.ok(
-                beneficios.stream()
-                        .map(fachada::mapToBeneficioResponse)
-                        .toList()
-        );
+    public ResponseEntity<Page<BeneficioResponse>> listarAuxiliosPendentesMesAtual(
+            @QuerydslPredicate(root = Beneficio.class) Predicate predicate,
+            @PageableDefault(sort = "id") Pageable pageable
+    ) {
+        Page<BeneficioResponse> beneficios = fachada.listarBeneficiosPendentesMesAtual(predicate, pageable);
+        return ResponseEntity.ok(beneficios);
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
