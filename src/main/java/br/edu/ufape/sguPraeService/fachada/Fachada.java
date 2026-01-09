@@ -527,6 +527,7 @@ public class Fachada {
         }
         cronogramaExistente.setData(cronograma.getData());
         cronogramaExistente.setTipoAtendimento(tipoAtendimento);
+        cronogramaExistente.setModalidade( cronograma.getModalidade());
         List<Vaga> novas = vagaService
                 .gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
         cronogramaExistente.trocarVagas(novas);
