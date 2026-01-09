@@ -31,6 +31,7 @@ public class AgendamentoResponse {
         if (agendamento == null) throw new IllegalArgumentException("Agendamento não pode ser nulo");
         modelMapper.map(agendamento, this);
         this.tipoAtendimento = agendamento.getVaga().getCronograma().getTipoAtendimento().getNome();
+        this.modalidade = agendamento.getVaga().getCronograma().getModalidade();
     }
 
 }

@@ -9,6 +9,4 @@ public class AgendamentoRequest {
     @NotNull(message = "O ID da vaga é obrigatório")
     private Long vagaId;
 
-    @NotNull(message = "A modalidade é obrigatória")
-    private ModalidadeAgendamento modalidade;
 }

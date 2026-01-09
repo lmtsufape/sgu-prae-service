@@ -29,12 +29,11 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
     }
 
     @Override
-    public Agendamento agendar(Vaga vaga, Estudante estudante, ModalidadeAgendamento modalidade) {
+    public Agendamento agendar(Vaga vaga, Estudante estudante) {
         Agendamento agendamento = new Agendamento();
         agendamento.setData(vaga.getCronograma().getData());
         agendamento.setVaga(vaga);
         agendamento.setEstudante(estudante);
-        agendamento.setModalidade(modalidade);
         return repository.save(agendamento);
     }
 

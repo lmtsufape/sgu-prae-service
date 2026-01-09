@@ -540,7 +540,7 @@ public class Fachada {
     // ------------------- Agendamento ------------------- //
 
     @Transactional
-    public AgendamentoResponse agendarVaga(Long vagaId, ModalidadeAgendamento modalidade) throws VagaNotFoundException, UnavailableVagaException {
+    public AgendamentoResponse agendarVaga(Long vagaId) throws VagaNotFoundException, UnavailableVagaException {
         try {
             Vaga vaga = vagaService.buscar(vagaId);
             Estudante estudante = estudanteService.buscarPorUserId(authenticatedUserProvider.getUserId());
@@ -549,7 +549,7 @@ public class Fachada {
                 vaga.setDisponivel(false);
                 vagaService.salvar(vaga);
 
-                Agendamento agendamento = agendamentoService.agendar(vaga, estudante, modalidade);
+                Agendamento agendamento = agendamentoService.agendar(vaga, estudante);
 
                 return mapToAgendamentoResponse(agendamento);
             }

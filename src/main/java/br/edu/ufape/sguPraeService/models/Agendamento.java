@@ -21,9 +21,6 @@ public class Agendamento {
     @Column(nullable = false)
     private LocalDate data;
 
-    @Enumerated(EnumType.STRING)
-    private ModalidadeAgendamento modalidade;
-
     private boolean ativo = true;
 
     @ManyToOne

@@ -29,7 +29,7 @@ public class AgendamentoController {
     @PreAuthorize("hasRole('ESTUDANTE')")
     @PostMapping("/agendar")
     public ResponseEntity<AgendamentoResponse> agendarVaga(@Valid @RequestBody AgendamentoRequest request) {
-        AgendamentoResponse response = fachada.agendarVaga(request.getVagaId(), request.getModalidade());
+        AgendamentoResponse response = fachada.agendarVaga(request.getVagaId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

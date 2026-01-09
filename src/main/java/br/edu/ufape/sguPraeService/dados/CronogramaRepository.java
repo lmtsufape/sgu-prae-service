@@ -48,6 +48,7 @@ public interface CronogramaRepository extends JpaRepository<Cronograma, Long>,
             }
         });
 
+        bindings.bind(root.modalidade).first((path, value) -> path.eq(value));
         bindings.bind(root.profissional.id).first((path, value) -> path.eq(value));
         bindings.bind(root.tipoAtendimento.id).first((path, value) -> path.eq(value));
         bindings.excluding(root.ativo, root.vagas);
