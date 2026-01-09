@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.models;
 
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,10 @@ public class Cronograma {
 
     @Column(nullable = false)
     private LocalDate data;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ModalidadeAgendamento modalidade;
 
     @ManyToOne
     private Profissional profissional;

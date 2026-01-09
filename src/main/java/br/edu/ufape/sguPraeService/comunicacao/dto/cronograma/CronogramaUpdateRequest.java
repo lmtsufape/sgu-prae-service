@@ -2,6 +2,7 @@ package br.edu.ufape.sguPraeService.comunicacao.dto.cronograma;
 
 import br.edu.ufape.sguPraeService.models.Cronograma;
 
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,9 @@ public class CronogramaUpdateRequest {
 
     @NotNull(message = "Tipo de atendimento é obrigatório")
     private Long tipoAtendimentoId;
+
+    @NotNull(message = "A modalidade é obrigatória")
+    private ModalidadeAgendamento modalidade;
 
     public Cronograma convertToEntity(CronogramaUpdateRequest cronogramaRequest, ModelMapper modelMapper) {
         modelMapper.getConfiguration()

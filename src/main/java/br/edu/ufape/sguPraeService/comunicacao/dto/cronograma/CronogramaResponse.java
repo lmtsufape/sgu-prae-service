@@ -4,6 +4,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimen
 import br.edu.ufape.sguPraeService.comunicacao.dto.vaga.VagaResponse;
 import br.edu.ufape.sguPraeService.models.Cronograma;
 
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import lombok.Getter;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
@@ -18,6 +19,7 @@ public class CronogramaResponse {
     LocalDate data;
     TipoAtendimentoResponse tipoAtendimento;
     List<VagaResponse> vagas;
+    ModalidadeAgendamento modalidade;
 
     public CronogramaResponse(Cronograma cronograma, ModelMapper modelMapper){
         if (cronograma == null) throw new IllegalArgumentException("Cronograma não pode ser nulo");
