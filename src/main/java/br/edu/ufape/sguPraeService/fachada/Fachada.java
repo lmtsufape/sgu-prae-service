@@ -2,7 +2,6 @@ package br.edu.ufape.sguPraeService.fachada;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
 import java.util.function.Function;
@@ -10,6 +9,7 @@ import java.util.stream.Collectors;
 
 
 import br.edu.ufape.sguPraeService.auth.AuthServiceClient;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.PageResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
@@ -18,7 +18,6 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
 import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
-import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -843,27 +842,98 @@ public class Fachada {
 
     @Transactional
     public Pagamento salvarPagamentoPorCpf(PagamentoCPFRequest request) {
-        AlunoResponse aluno = authServiceClient.buscarAlunoPorCpf(request.getCpf());
+        log.info("Buscando aluno no Auth Service com CPF: {}", request.getCpf());
 
-        if (aluno == null) {
-            throw new EstudanteNotFoundException();
+        // Prepara as duas versões do CPF: com e sem formatação
+        String cpfOriginal = request.getCpf();
+        String cpfSemFormatacao = cpfOriginal.replaceAll("[^0-9]", "");
+        String cpfFormatado = formatarCpf(cpfSemFormatacao);
+
+        // Tenta buscar o aluno no Auth Service
+        PageResponse<AlunoResponse> page = null;
+
+        // Primeira tentativa: com o CPF como veio na requisição
+        try {
+            page = authServiceClient.buscarAlunoPorCpf(cpfOriginal);
+            if (page != null && page.getContent() != null && !page.getContent().isEmpty()) {
+                log.info("Aluno encontrado com CPF original: {}", cpfOriginal);
+            }
+        } catch (Exception e) {
+            log.warn("Erro ao buscar com CPF original: {}", cpfOriginal, e);
         }
 
+        // Segunda tentativa: se não encontrou e o CPF original não estava formatado, tenta com formatação
+        if ((page == null || page.getContent() == null || page.getContent().isEmpty()) && !cpfOriginal.equals(cpfFormatado)) {
+            try {
+                log.info("Tentando buscar com CPF formatado: {}", cpfFormatado);
+                page = authServiceClient.buscarAlunoPorCpf(cpfFormatado);
+                if (page != null && page.getContent() != null && !page.getContent().isEmpty()) {
+                    log.info("Aluno encontrado com CPF formatado: {}", cpfFormatado);
+                }
+            } catch (Exception e) {
+                log.warn("Erro ao buscar com CPF formatado: {}", cpfFormatado, e);
+            }
+        }
+
+        // Terceira tentativa: se não encontrou e o CPF original estava formatado, tenta sem formatação
+        if ((page == null || page.getContent() == null || page.getContent().isEmpty()) && !cpfOriginal.equals(cpfSemFormatacao)) {
+            try {
+                log.info("Tentando buscar com CPF sem formatação: {}", cpfSemFormatacao);
+                page = authServiceClient.buscarAlunoPorCpf(cpfSemFormatacao);
+                if (page != null && page.getContent() != null && !page.getContent().isEmpty()) {
+                    log.info("Aluno encontrado com CPF sem formatação: {}", cpfSemFormatacao);
+                }
+            } catch (Exception e) {
+                log.warn("Erro ao buscar com CPF sem formatação: {}", cpfSemFormatacao, e);
+            }
+        }
+
+        // Verifica se conseguiu encontrar o aluno em alguma das tentativas
+        if (page == null || page.getContent() == null || page.getContent().isEmpty()) {
+            log.error("Nenhum aluno encontrado após tentar com CPF original ({}), formatado ({}) e sem formatação ({})",
+                cpfOriginal, cpfFormatado, cpfSemFormatacao);
+            throw new EstudanteNotFoundException("Aluno com CPF " + request.getCpf() + " não encontrado no sistema de autenticação");
+        }
+
+        // Pega o primeiro aluno da lista
+        AlunoResponse aluno = page.getContent().getFirst();
+
+        if (aluno.getId() == null) {
+            log.error("Aluno encontrado mas sem ID para CPF: {}", request.getCpf());
+            throw new EstudanteNotFoundException("Aluno encontrado mas com dados inválidos");
+        }
+
+        log.info("Aluno encontrado: {} (userId: {})", aluno.getNome(), aluno.getId());
+
         UUID userId = aluno.getId();
-        Estudante estudante = estudanteService.buscarPorUserId(userId);
+        Estudante estudante;
+
+        try {
+            estudante = estudanteService.buscarPorUserId(userId);
+            log.info("Estudante encontrado no banco local: ID {}, Nome: {}", estudante.getId(), aluno.getNome());
+        } catch (Exception e) {
+            log.error("Estudante com userId {} não encontrado no banco local do PRAE", userId);
+            throw new EstudanteNotFoundException("Aluno existe no sistema mas não está cadastrado como estudante no PRAE");
+        }
 
         List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudante.getId());
 
         if (beneficiosAtivos.isEmpty()) {
+            log.warn("Estudante {} não possui benefícios ativos", estudante.getId());
             throw new EstudanteSemAuxilioAtivoException();
         }
 
         Beneficio beneficioSelecionado;
         if (request.getTipoBeneficioId() != null) {
-            beneficioSelecionado = beneficiosAtivos.stream().filter(b -> b.getTipoBeneficio().getId().equals(request.getTipoBeneficioId())).findFirst().orElseThrow(() -> new IllegalArgumentException("O estudante não possui o benefício informado ativo"));
+            beneficioSelecionado = beneficiosAtivos.stream()
+                .filter(b -> b.getTipoBeneficio().getId().equals(request.getTipoBeneficioId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("O estudante não possui o benefício informado ativo"));
         } else {
             if (beneficiosAtivos.size() > 1) {
-                throw new IllegalArgumentException("O estudante possui multiplos beneficios ativos ("+ beneficiosAtivos.size() +"). É obrigatório informar o Tipo de beneficio.");
+                throw new IllegalArgumentException(
+                    "O estudante possui múltiplos benefícios ativos ("+ beneficiosAtivos.size() +"). É obrigatório informar o Tipo de benefício."
+                );
             }
             beneficioSelecionado = beneficiosAtivos.getFirst();
         }
@@ -875,6 +945,8 @@ public class Fachada {
         pagamento.setAnoReferencia(request.getAnoReferencia());
         pagamento.setNumeroLote(request.getNumeroLote());
         pagamento.setBeneficio(beneficioSelecionado);
+
+        log.info("Salvando pagamento para estudante {} no benefício {}", estudante.getId(), beneficioSelecionado.getId());
 
         return pagamentoService.salvarIndividual(pagamento);
     }
@@ -950,5 +1022,24 @@ public class Fachada {
 
     public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
         return armazenamentoService.converterDocumentosParaBase64(documentos);
+    }
+
+    // ------------------- Métodos Auxiliares ------------------- //
+
+    /**
+     * Formata um CPF para o padrão XXX.YYY.ZZZ-MM
+     * @param cpf CPF apenas com números (11 dígitos)
+     * @return CPF formatado ou o CPF original se não tiver 11 dígitos
+     */
+    private String formatarCpf(String cpf) {
+        if (cpf == null || cpf.length() != 11) {
+            return cpf;
+        }
+        return String.format("%s.%s.%s-%s",
+            cpf.substring(0, 3),
+            cpf.substring(3, 6),
+            cpf.substring(6, 9),
+            cpf.substring(9, 11)
+        );
     }
 }
