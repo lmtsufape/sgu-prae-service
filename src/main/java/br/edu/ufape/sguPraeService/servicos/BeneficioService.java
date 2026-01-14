@@ -67,7 +67,15 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 
 	@Override
 	public Beneficio editar(Beneficio old, Beneficio entity) throws BeneficioNotFoundException {
+		var pagamentosOriginal = old.getPagamentos();
+		var termoOriginal = old.getTermo();
+
 		modelMapper.map(entity, old);
+		old.setPagamentos(pagamentosOriginal);
+		if (entity.getTermo() == null) {
+			old.setTermo(termoOriginal);
+		}
+
 		return beneficioRepository.save(old);
 	}
 

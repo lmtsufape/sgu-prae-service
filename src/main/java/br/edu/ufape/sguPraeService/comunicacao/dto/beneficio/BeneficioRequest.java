@@ -9,6 +9,7 @@ import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotNull;
@@ -28,9 +29,12 @@ public class BeneficioRequest {
 
     @NotNull(message = "A data de início do beneficio é obrigatória")
     @JsonFormat(pattern = "MM/yyyy")
+    @DateTimeFormat(pattern = "MM/yyyy")
     private YearMonth inicioBeneficio;
+
     @NotNull(message = "A data de fim do beneficio é obrigatória")
     @JsonFormat(pattern = "MM/yyyy")
+    @DateTimeFormat(pattern = "MM/yyyy")
     private YearMonth fimBeneficio;
 
     @NotNull(message = "O valor do beneficio é obrigatório")
