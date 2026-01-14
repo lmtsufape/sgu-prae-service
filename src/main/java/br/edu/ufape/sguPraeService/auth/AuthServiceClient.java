@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.auth;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.PageResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 
@@ -35,5 +36,5 @@ public interface AuthServiceClient {
     FuncionarioResponse buscarFuncionarioPorId(@PathVariable("userId") UUID userId);
 
     @GetMapping("/aluno")
-    AlunoResponse buscarAlunoPorCpf(@RequestParam("cpf") String cpf);
+    PageResponse<AlunoResponse> buscarAlunoPorCpf(@RequestParam("cpf") String cpf);
 }
