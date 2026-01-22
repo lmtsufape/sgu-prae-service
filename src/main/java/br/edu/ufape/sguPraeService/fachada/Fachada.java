@@ -707,6 +707,21 @@ public class Fachada {
         return beneficioService.editar(aux, beneficio);
     }
 
+    @Transactional
+    public void cancelarBeneficio(Long id, BeneficioCancelamentoRequest request) throws BeneficioNotFoundException {
+        Beneficio beneficio = beneficioService.buscar(id);
+
+        beneficio.setMotivoEncerramento(request.getMotivoEncerramento());
+        beneficio.setParecerTermino(request.getParecerTermino());
+
+
+        beneficio.setFimBeneficio(java.time.YearMonth.now());
+
+        beneficio.setAtivo(false);
+
+        beneficioService.salvar(beneficio);
+    }
+
     public void deletarBeneficio(Long id) throws BeneficioNotFoundException {
         beneficioService.deletar(id);
     }
