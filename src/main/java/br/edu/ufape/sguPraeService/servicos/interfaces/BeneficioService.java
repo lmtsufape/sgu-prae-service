@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.servicos.interfaces;
 import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.Estudante;
+import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.querydsl.core.types.Predicate;

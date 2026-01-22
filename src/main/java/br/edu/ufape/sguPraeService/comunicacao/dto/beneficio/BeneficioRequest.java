@@ -48,8 +48,6 @@ public class BeneficioRequest {
     @Positive(message = "Id do estudante inválido")
     private Long estudanteId;
 
-    private MotivoEncerramento motivoEncerramento;
-    private String parecerTermino;
 
     public Beneficio convertToEntity(BeneficioRequest beneficioRequest, ModelMapper modelMapper) {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);

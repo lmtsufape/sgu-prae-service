@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioCancelamentoRequest;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -82,6 +83,17 @@ public class BeneficioController {
         Beneficio beneficio = entity.convertToEntity(entity, modelMapper);
         beneficio = fachada.editarBeneficios(id, entity.getEstudanteId(), beneficio, entity.getTermo(), entity.getTipoBeneficioId());
         return ResponseEntity.ok(fachada.mapToBeneficioResponse(beneficio));
+    }
+
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<Void> cancelarBeneficio(
+            @PathVariable Long id,
+            @Valid @RequestBody BeneficioCancelamentoRequest request)
+            throws BeneficioNotFoundException {
+
+        fachada.cancelarBeneficio(id, request);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
