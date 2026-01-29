@@ -150,4 +150,8 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 	public Page<Estudante> listarEstudantesPorAuxilio(Long id, Pageable pageable) {
 		return beneficioRepository.findEstudantesByBeneficioId(id, pageable);
 	}
+
+	public Long contarEstudantesBeneficiados() {
+		return beneficioRepository.countDistinctEstudantesAtivos();
+	}
 }

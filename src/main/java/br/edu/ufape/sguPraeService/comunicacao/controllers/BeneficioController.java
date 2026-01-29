@@ -143,4 +143,10 @@ public class BeneficioController {
         RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(inicio, fim);
         return ResponseEntity.ok(relatorio);
     }
+
+    @GetMapping("/quantidade/beneficiados")
+    public ResponseEntity<Long> getQuantidadeEstudantesBeneficiados() {
+        Long quantidade = fachada.contarEstudantesBeneficiados();
+        return ResponseEntity.ok(quantidade);
+    }
 }

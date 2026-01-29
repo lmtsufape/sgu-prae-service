@@ -799,6 +799,10 @@ public class Fachada {
         return response;
     }
 
+    public Long contarEstudantesBeneficiados() {
+        return beneficioService.contarEstudantesBeneficiados();
+    }
+
     // ------------------- Pagamento ------------------- //
 
     public Page<Pagamento> listarPagamentos(Predicate predicate, Pageable pageable) {

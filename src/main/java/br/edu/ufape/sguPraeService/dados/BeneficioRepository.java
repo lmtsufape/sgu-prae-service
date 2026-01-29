@@ -51,6 +51,8 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
   @Query("SELECT b.estudantes FROM Beneficio b WHERE b.ativo = true AND b.id = :beneficioId")
   Page<Estudante> findEstudantesByBeneficioId(@Param("beneficioId") Long beneficioId, Pageable pageable);
 
+  @Query("SELECT COUNT(DISTINCT b.estudantes.id) FROM Beneficio b WHERE b.ativo = true")
+  Long countDistinctEstudantesAtivos();
 
   @Override
   default void customize(QuerydslBindings bindings, @NonNull QBeneficio root) {

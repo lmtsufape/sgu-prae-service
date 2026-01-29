@@ -40,4 +40,6 @@ public interface BeneficioService {
     List<Estudante> listarEstudantesPorAuxilio(Long id);
 
     Page<Estudante> listarEstudantesPorAuxilio(Long id, Pageable pageable);
+
+    Long contarEstudantesBeneficiados();
 }
