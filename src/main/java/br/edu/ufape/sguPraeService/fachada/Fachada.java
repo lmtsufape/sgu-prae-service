@@ -1012,6 +1012,9 @@ public class Fachada {
         return folha;
     }
 
+    public BigDecimal obterValorTotalPagamentosAtivos() {
+        return pagamentoService.obterValorTotalPagamentosAtivos();
+    }
 
     public PagamentoResponse mapToPagamentoResponse(Pagamento pagamento) {
         PagamentoResponse response = new PagamentoResponse(pagamento, modelMapper);

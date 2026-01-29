@@ -122,4 +122,11 @@ public class PagamentoController {
 
         return ResponseEntity.ok(fachada.gerarFolhaPagamento(ano, mes, numeroLote));
     }
+
+    @Operation(summary = "Retorna o valor total em reais de pagamentos já realizados de todos os benefícios")
+    @GetMapping("/total")
+    public ResponseEntity<BigDecimal> getValorTotalPagamentos() {
+        BigDecimal total = fachada.obterValorTotalPagamentosAtivos();
+        return ResponseEntity.ok(total);
+    }
 }
