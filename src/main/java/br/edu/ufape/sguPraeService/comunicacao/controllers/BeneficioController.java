@@ -149,4 +149,10 @@ public class BeneficioController {
         Long quantidade = fachada.contarEstudantesBeneficiados();
         return ResponseEntity.ok(quantidade);
     }
+
+    @GetMapping("/quantidade/cursos")
+    public ResponseEntity<Long> getQuantidadeCursosDistintosComBeneficio() {
+        Long quantidade = fachada.contarCursosDistintosComBeneficioAtivo();
+        return ResponseEntity.ok(quantidade);
+    }
 }

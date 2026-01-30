@@ -42,4 +42,6 @@ public interface BeneficioService {
     Page<Estudante> listarEstudantesPorAuxilio(Long id, Pageable pageable);
 
     Long contarEstudantesBeneficiados();
+
+    Long contarCursosDistintosComBeneficioAtivo();
 }

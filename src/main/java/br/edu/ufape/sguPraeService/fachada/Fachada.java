@@ -807,6 +807,10 @@ public class Fachada {
         return beneficioService.contarEstudantesBeneficiados();
     }
 
+    public Long contarCursosDistintosComBeneficioAtivo() {
+        return beneficioService.contarCursosDistintosComBeneficioAtivo();
+    }
+
     // ------------------- Pagamento ------------------- //
 
     public Page<Pagamento> listarPagamentos(Predicate predicate, Pageable pageable) {

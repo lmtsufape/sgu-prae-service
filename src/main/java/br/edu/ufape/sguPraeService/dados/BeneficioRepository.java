@@ -54,6 +54,9 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
   @Query("SELECT COUNT(DISTINCT b.estudantes.id) FROM Beneficio b WHERE b.ativo = true")
   Long countDistinctEstudantesAtivos();
 
+  @Query("SELECT DISTINCT b.estudantes.userId FROM Beneficio b WHERE b.ativo = true")
+  List<java.util.UUID> findDistinctEstudanteUserIdsWithBeneficioAtivo();
+
   @Override
   default void customize(QuerydslBindings bindings, @NonNull QBeneficio root) {
     bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));

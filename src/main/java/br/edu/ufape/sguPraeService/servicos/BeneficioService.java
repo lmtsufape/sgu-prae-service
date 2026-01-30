@@ -17,12 +17,15 @@ import lombok.RequiredArgsConstructor;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.BooleanBuilder;
 import br.edu.ufape.sguPraeService.models.QBeneficio;
+import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 
 @Service
 @RequiredArgsConstructor
 public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService {
 	private final BeneficioRepository beneficioRepository;
 	private final ModelMapper modelMapper;
+	private final AuthServiceHandler authServiceHandler;
 
 	@Override
 	public Page<Beneficio> listar(Predicate predicate, Pageable pageable) {
@@ -153,5 +156,19 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 
 	public Long contarEstudantesBeneficiados() {
 		return beneficioRepository.countDistinctEstudantesAtivos();
+	}
+
+    @Override
+	public Long contarCursosDistintosComBeneficioAtivo() {
+		List<java.util.UUID> userIds = beneficioRepository.findDistinctEstudanteUserIdsWithBeneficioAtivo();
+		if (userIds.isEmpty()) return 0L;
+		List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+		return alunos.stream()
+			.map(AlunoResponse::getCurso)
+			.filter(java.util.Objects::nonNull)
+			.map(AlunoResponse.Curso::getId)
+			.filter(java.util.Objects::nonNull)
+			.distinct()
+			.count();
 	}
 }
