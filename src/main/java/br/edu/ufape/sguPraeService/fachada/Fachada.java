@@ -656,6 +656,10 @@ public class Fachada {
         tipoBeneficioService.desativar(id);
     }
 
+    public Long contarTiposBeneficio() {
+        return tipoBeneficioService.contarTiposAtivos();
+    }
+
     // ------------------- Beneficio ------------------- //
     public Page<Beneficio> listarBeneficios(Predicate predicate, Pageable pageable) {
         return beneficioService.listar(predicate, pageable);
