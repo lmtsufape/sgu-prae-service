@@ -1072,4 +1072,8 @@ public class Fachada {
             cpf.substring(9, 11)
         );
     }
+
+    public List<Object[]> obterValorTotalPorTipoBeneficio() {
+        return pagamentoService.obterValorTotalPorTipoBeneficio();
+    }
 }

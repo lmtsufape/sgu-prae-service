@@ -75,4 +75,10 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
 
     @Query("SELECT COALESCE(SUM(p.valor), 0) FROM Pagamento p WHERE p.ativo = true")
     BigDecimal findTotalPagamentosAtivos();
+
+    @Query("SELECT b.tipoBeneficio.id, b.tipoBeneficio.descricao, SUM(p.valor) " +
+           "FROM Pagamento p JOIN p.beneficio b " +
+           "WHERE p.ativo = true " +
+           "GROUP BY b.tipoBeneficio.id, b.tipoBeneficio.descricao")
+    List<Object[]> findValorTotalPorTipoBeneficio();
 }

@@ -21,6 +21,7 @@ import org.springframework.data.querydsl.binding.QuerydslPredicate;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -128,5 +129,19 @@ public class PagamentoController {
     public ResponseEntity<BigDecimal> getValorTotalPagamentos() {
         BigDecimal total = fachada.obterValorTotalPagamentosAtivos();
         return ResponseEntity.ok(total);
+    }
+
+    @GetMapping("/total/tipo/beneficio")
+    public ResponseEntity<List<Map<String, Object>>> getValorTotalPorTipoBeneficio() {
+        List<Object[]> resultado = fachada.obterValorTotalPorTipoBeneficio();
+        List<Map<String, Object>> resposta = new java.util.ArrayList<>();
+        for (Object[] row : resultado) {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("tipoBeneficioId", row[0]);
+            map.put("tipoBeneficioDescricao", row[1]);
+            map.put("valorTotal", row[2]);
+            resposta.add(map);
+        }
+        return ResponseEntity.ok(resposta);
     }
 }

@@ -37,4 +37,6 @@ public interface PagamentoService {
     FolhaPagamentoResponse gerarFolhaPagamento(Integer ano, Integer mes, String numeroLote);
 
     BigDecimal obterValorTotalPagamentosAtivos();
+
+    List<Object[]> obterValorTotalPorTipoBeneficio();
 }
