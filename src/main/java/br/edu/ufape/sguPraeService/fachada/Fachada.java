@@ -1048,6 +1048,10 @@ public class Fachada {
         return response;
     }
 
+    public List<Object[]> obterValorTotalPorTipoBeneficio() {
+        return pagamentoService.obterValorTotalPorTipoBeneficio();
+    }
+
     // ------------------- Armazenamento ------------------- //
 
     public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
@@ -1073,7 +1077,4 @@ public class Fachada {
         );
     }
 
-    public List<Object[]> obterValorTotalPorTipoBeneficio() {
-        return pagamentoService.obterValorTotalPorTipoBeneficio();
-    }
 }
