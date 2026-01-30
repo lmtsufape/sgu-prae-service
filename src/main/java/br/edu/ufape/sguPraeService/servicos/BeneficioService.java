@@ -171,4 +171,26 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 			.distinct()
 			.count();
 	}
+
+    public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso() {
+        List<java.util.UUID> userIds = beneficioRepository.findDistinctEstudanteUserIdsWithBeneficioAtivo();
+        if (userIds.isEmpty()) return java.util.Collections.emptyList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+        return alunos.stream()
+            .filter(a -> a.getCurso() != null && a.getCurso().getId() != null)
+            .collect(java.util.stream.Collectors.groupingBy(
+                a -> java.util.Map.of(
+                    "cursoId", a.getCurso().getId(),
+                    "cursoNome", a.getCurso().getNome()
+                ),
+                java.util.stream.Collectors.counting()
+            ))
+            .entrySet().stream()
+            .map(e -> {
+                java.util.Map<String, Object> map = new java.util.HashMap<>(e.getKey());
+                map.put("quantidadeBeneficiados", e.getValue());
+                return map;
+            })
+            .toList();
+    }
 }

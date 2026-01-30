@@ -44,4 +44,6 @@ public interface BeneficioService {
     Long contarEstudantesBeneficiados();
 
     Long contarCursosDistintosComBeneficioAtivo();
+
+    List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso();
 }

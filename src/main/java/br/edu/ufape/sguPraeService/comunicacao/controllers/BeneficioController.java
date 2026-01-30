@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioCancelamentoRequest;
 import org.modelmapper.ModelMapper;
@@ -154,5 +155,11 @@ public class BeneficioController {
     public ResponseEntity<Long> getQuantidadeCursosDistintosComBeneficio() {
         Long quantidade = fachada.contarCursosDistintosComBeneficioAtivo();
         return ResponseEntity.ok(quantidade);
+    }
+
+    @GetMapping("/quantidade/beneficiados/por/curso")
+    public ResponseEntity<List<Map<String, Object>>> getQuantidadeBeneficiadosPorCurso() {
+        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso();
+        return ResponseEntity.ok(resposta);
     }
 }

@@ -1048,6 +1048,10 @@ public class Fachada {
         return response;
     }
 
+    public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso() {
+        return beneficioService.obterQuantidadeBeneficiadosPorCurso();
+    }
+
     public List<Object[]> obterValorTotalPorTipoBeneficio() {
         return pagamentoService.obterValorTotalPorTipoBeneficio();
     }
