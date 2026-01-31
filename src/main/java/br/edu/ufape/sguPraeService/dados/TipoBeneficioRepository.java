@@ -4,6 +4,7 @@ import br.edu.ufape.sguPraeService.models.TipoBeneficio;
 import br.edu.ufape.sguPraeService.models.QTipoBeneficio;
 import com.querydsl.core.types.dsl.StringPath;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.binding.QuerydslBinderCustomizer;
 import org.springframework.data.querydsl.binding.QuerydslBindings;
@@ -18,4 +19,7 @@ public interface TipoBeneficioRepository extends JpaRepository<TipoBeneficio, Lo
         bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));
         bindings.excluding(root.ativo);
     }
+
+    @Query("SELECT COUNT(t) FROM TipoBeneficio t WHERE t.ativo = true")
+    Long countAtivos();
 }

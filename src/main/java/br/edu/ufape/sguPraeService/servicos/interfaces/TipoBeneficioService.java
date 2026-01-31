@@ -19,4 +19,6 @@ public interface TipoBeneficioService {
     void deletar(Long id) throws TipoBeneficioNotFoundException;
 
     void desativar(Long id) throws TipoBeneficioNotFoundException;
+
+    Long contarTiposAtivos();
 }

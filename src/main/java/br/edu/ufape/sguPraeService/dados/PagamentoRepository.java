@@ -17,6 +17,7 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.binding.QuerydslBinderCustomizer;
 import org.springframework.data.querydsl.binding.QuerydslBindings;
 import org.springframework.lang.NonNull;
+import org.springframework.data.jpa.repository.Query;
 
 public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
         QuerydslPredicateExecutor<Pagamento>,
@@ -71,4 +72,13 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
         bindings.bind(root.beneficio.id).first((path, value) -> path.eq(value));
         bindings.excluding(root.ativo);
     }
+
+    @Query("SELECT COALESCE(SUM(p.valor), 0) FROM Pagamento p WHERE p.ativo = true")
+    BigDecimal findTotalPagamentosAtivos();
+
+    @Query("SELECT b.tipoBeneficio.id, b.tipoBeneficio.descricao, SUM(p.valor) " +
+           "FROM Pagamento p JOIN p.beneficio b " +
+           "WHERE p.ativo = true " +
+           "GROUP BY b.tipoBeneficio.id, b.tipoBeneficio.descricao")
+    List<Object[]> findValorTotalPorTipoBeneficio();
 }
