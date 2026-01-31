@@ -739,55 +739,28 @@ public class Fachada {
         return beneficioService.buscarPorPagamento(pagamentoId);
     }
 
-    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(YearMonth inicio, YearMonth fim) {
-        List<Beneficio> beneficios = beneficioService
-                .listar().stream()
-                .filter(aux -> aux.isAtivo() && aux.isStatus()
-                        && !aux.getInicioBeneficio().isAfter(fim)
-                        && !aux.getFimBeneficio().isBefore(inicio))
-                .toList();
-
-        List<BeneficioRelatorioResponse> detalhes = new ArrayList<>();
-        BigDecimal totalGeral = BigDecimal.ZERO;
-
-        for (Beneficio beneficio : beneficios) {
-            List<Estudante> estudantes = beneficioService.listarEstudantesPorAuxilio(beneficio.getId());
-            List<EstudanteRelatorioResponse> estudantesDto = new ArrayList<>();
-
-            List<Pagamento> pagamentosFiltrados = beneficio.getPagamentos().stream()
-                    .filter(p -> !p.getData().isBefore(inicio.atEndOfMonth()) && !p.getData().isAfter(fim.atEndOfMonth()) && p.isAtivo())
-                    .toList();
-
-            BigDecimal totalAuxilio = beneficio.getPagamentos().stream()
-                    .filter(p -> !p.getData().isBefore(inicio.atEndOfMonth()) && !p.getData().isAfter(fim.atEndOfMonth()) && p.isAtivo())
-                    .map(Pagamento::getValor)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            List<PagamentoRelatorioResponse> pagamentosDto = pagamentosFiltrados.stream()
-                    .map(p -> new PagamentoRelatorioResponse(p.getValor(), p.getData()))
-                    .toList();
-
-            for (Estudante estudante : estudantes) {
-                var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
-
-                estudantesDto.add(new EstudanteRelatorioResponse(
-                        aluno.getNome(),
-                        aluno.getCpf(),
-                        aluno.getMatricula(),
-                        aluno.getEmail(),
-                        aluno.getTelefone(),
-                        aluno.getCurso()));
-            }
-            totalGeral = totalGeral.add(totalAuxilio);
-            detalhes.add(new BeneficioRelatorioResponse(
-                    beneficio.getId(),
-                    beneficio.getTipoBeneficio().getDescricao(),
-                    beneficio.getValorPagamento(),
-                    pagamentosDto,
-                    totalAuxilio,
-                    estudantesDto));
-        }
-        return new RelatorioFinanceiroResponse(detalhes, totalGeral);
+    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro() {
+        BigDecimal totalGeral = obterValorTotalPagamentosAtivos();
+        Long quantidadePessoasAtendidas = beneficioService.contarEstudantesBeneficiados();
+        Long quantidadeTiposBeneficio = tipoBeneficioService.contarTiposAtivos();
+        Long quantidadeCursosDistintos = beneficioService.contarCursosDistintosComBeneficioAtivo();
+        List<Object[]> valorPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio();
+        List<Map<String, Object>> valorTotalPorTipoBeneficio = valorPorTipo.stream().map(obj -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("tipoBeneficioId", obj[0]);
+            map.put("descricao", obj[1]);
+            map.put("valorTotal", obj[2]);
+            return map;
+        }).toList();
+        List<Map<String, Object>> quantidadeBeneficiadosPorCurso = beneficioService.obterQuantidadeBeneficiadosPorCurso();
+        return new RelatorioFinanceiroResponse(
+                totalGeral,
+                quantidadePessoasAtendidas,
+                quantidadeTiposBeneficio,
+                quantidadeCursosDistintos,
+                valorTotalPorTipoBeneficio,
+                quantidadeBeneficiadosPorCurso
+        );
     }
 
     public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
