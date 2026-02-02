@@ -54,4 +54,9 @@ public class TipoBeneficioService implements br.edu.ufape.sguPraeService.servico
         tipoBeneficio.setAtivo(false);
         tipoBeneficioRepository.save(tipoBeneficio);
     }
+
+    @Override
+    public Long contarTiposAtivos() {
+        return tipoBeneficioRepository.countAtivos();
+    }
 }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioCancelamentoRequest;
 import org.modelmapper.ModelMapper;
@@ -137,10 +138,26 @@ public class BeneficioController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/relatorio/financeiro")
-    public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
-            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") YearMonth inicio,
-            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") YearMonth fim) {
-        RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(inicio, fim);
+    public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro() {
+        RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro();
         return ResponseEntity.ok(relatorio);
+    }
+
+    @GetMapping("/quantidade/beneficiados")
+    public ResponseEntity<Long> getQuantidadeEstudantesBeneficiados() {
+        Long quantidade = fachada.contarEstudantesBeneficiados();
+        return ResponseEntity.ok(quantidade);
+    }
+
+    @GetMapping("/quantidade/cursos")
+    public ResponseEntity<Long> getQuantidadeCursosDistintosComBeneficio() {
+        Long quantidade = fachada.contarCursosDistintosComBeneficioAtivo();
+        return ResponseEntity.ok(quantidade);
+    }
+
+    @GetMapping("/quantidade/beneficiados/por/curso")
+    public ResponseEntity<List<Map<String, Object>>> getQuantidadeBeneficiadosPorCurso() {
+        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso();
+        return ResponseEntity.ok(resposta);
     }
 }

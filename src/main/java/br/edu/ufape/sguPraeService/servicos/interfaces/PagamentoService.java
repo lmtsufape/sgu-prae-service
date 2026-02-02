@@ -35,4 +35,8 @@ public interface PagamentoService {
     List<Pagamento> listarPorEstudanteId(Long estudanteId);
 
     FolhaPagamentoResponse gerarFolhaPagamento(Integer ano, Integer mes, String numeroLote);
+
+    BigDecimal obterValorTotalPagamentosAtivos();
+
+    List<Object[]> obterValorTotalPorTipoBeneficio();
 }

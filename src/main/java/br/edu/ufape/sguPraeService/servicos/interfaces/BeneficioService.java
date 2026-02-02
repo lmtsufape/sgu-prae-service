@@ -40,4 +40,10 @@ public interface BeneficioService {
     List<Estudante> listarEstudantesPorAuxilio(Long id);
 
     Page<Estudante> listarEstudantesPorAuxilio(Long id, Pageable pageable);
+
+    Long contarEstudantesBeneficiados();
+
+    Long contarCursosDistintosComBeneficioAtivo();
+
+    List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso();
 }
