@@ -49,6 +49,7 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.DadosBancariosService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.DocumentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.EnderecoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.EstudanteService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService;
@@ -56,6 +57,7 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoBeneficioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.DocumentoNotFoundException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -80,6 +82,7 @@ public class Fachada {
     private final AgendamentoService agendamentoService;
     private final CancelamentoService cancelamentoService;
     private final TipoBeneficioService tipoBeneficioService;
+    private final DocumentoService documentoService;
     private final BeneficioService beneficioService;
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
@@ -1030,6 +1033,36 @@ public class Fachada {
     }
 
     // ------------------- Armazenamento ------------------- //
+
+    // ------------------- Documentos (Upload Genérico) ------------------- //
+
+    /**
+     * Realiza o upload de um documento
+     * @param arquivo O arquivo a ser salvo
+     * @return Documento salvo com metadados persistidos
+     */
+    public Documento uploadDocumento(MultipartFile arquivo) {
+        return documentoService.salvar(arquivo);
+    }
+
+    /**
+     * Busca um documento pelo ID
+     * @param id ID do documento
+     * @return O documento encontrado
+     * @throws DocumentoNotFoundException se o documento não for encontrado
+     */
+    public Documento buscarDocumento(Long id) throws DocumentoNotFoundException {
+        return documentoService.buscar(id);
+    }
+
+    /**
+     * Remove um documento do sistema
+     * @param id ID do documento
+     * @throws DocumentoNotFoundException se o documento não for encontrado
+     */
+    public void deletarDocumento(Long id) throws DocumentoNotFoundException {
+        documentoService.deletar(id);
+    }
 
     public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
         return armazenamentoService.converterDocumentosParaBase64(documentos);
