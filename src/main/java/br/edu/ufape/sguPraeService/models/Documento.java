@@ -1,6 +1,5 @@
 package br.edu.ufape.sguPraeService.models;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.UUID;
 
 @Entity
 @NoArgsConstructor @AllArgsConstructor @Getter @Setter
@@ -19,4 +20,5 @@ public class Documento {
 
     private String nome;
     private String path;
+    private UUID userId;
 }

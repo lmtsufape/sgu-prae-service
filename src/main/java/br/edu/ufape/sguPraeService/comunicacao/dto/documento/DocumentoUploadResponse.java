@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,10 +16,12 @@ public class DocumentoUploadResponse {
     private Long id;
     private String nome;
     private String path;
+    private UUID userId;
 
     public DocumentoUploadResponse(Documento documento) {
         this.id = documento.getId();
         this.nome = documento.getNome();
         this.path = documento.getPath();
+        this.userId = documento.getUserId();
     }
 }
