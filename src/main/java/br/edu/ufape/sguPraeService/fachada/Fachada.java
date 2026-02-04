@@ -1046,19 +1046,35 @@ public class Fachada {
     }
 
     /**
-     * Busca um documento pelo ID
+     * Busca um documento pelo ID (apenas documentos do usuário logado)
      * @param id ID do documento
      * @return O documento encontrado
-     * @throws DocumentoNotFoundException se o documento não for encontrado
+     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
      */
     public Documento buscarDocumento(Long id) throws DocumentoNotFoundException {
         return documentoService.buscar(id);
     }
 
     /**
-     * Remove um documento do sistema
+     * Lista todos os documentos do usuário logado
+     * @return Lista de documentos do usuário
+     */
+    public List<Documento> listarDocumentosDoUsuario() {
+        return documentoService.listarPorUsuario();
+    }
+
+    /**
+     * Lista todos os documentos do sistema
+     * @return Lista de todos os documentos
+     */
+    public List<Documento> listarTodosDocumentos() {
+        return documentoService.listarTodos();
+    }
+
+    /**
+     * Remove um documento do sistema (apenas se pertencer ao usuário logado)
      * @param id ID do documento
-     * @throws DocumentoNotFoundException se o documento não for encontrado
+     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
      */
     public void deletarDocumento(Long id) throws DocumentoNotFoundException {
         documentoService.deletar(id);

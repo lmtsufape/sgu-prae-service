@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.servicos;
 
+import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.dados.DocumentoRepository;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.DocumentoNotFoundException;
 import br.edu.ufape.sguPraeService.models.Documento;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class DocumentoService implements br.edu.ufape.sguPraeService.servicos.interfaces.DocumentoService {
 
     private final DocumentoRepository documentoRepository;
+    private final AuthenticatedUserProvider authenticatedUserProvider;
     private final List<String> tiposPermitidos = List.of(
             "application/pdf",
             "image/jpeg",
@@ -39,6 +41,7 @@ public class DocumentoService implements br.edu.ufape.sguPraeService.servicos.in
     public Documento salvar(MultipartFile arquivo) {
         validarTipoArquivo(arquivo);
 
+        UUID userId = authenticatedUserProvider.getUserId();
         String uuid = UUID.randomUUID().toString();
         String extensao = FilenameUtils.getExtension(arquivo.getOriginalFilename());
         String nomeArquivoComUUID = uuid + "." + extensao;
@@ -55,8 +58,9 @@ public class DocumentoService implements br.edu.ufape.sguPraeService.servicos.in
             Documento documento = new Documento();
             documento.setNome(nomeArquivoComUUID);
             documento.setPath(caminho.toString());
+            documento.setUserId(userId);
 
-            log.info("Documento salvo com sucesso: {}", nomeArquivoComUUID);
+            log.info("Documento salvo com sucesso: {} para usuário: {}", nomeArquivoComUUID, userId);
             return documentoRepository.save(documento);
         } catch (IOException e) {
             log.error("Erro ao salvar arquivo: {}", e.getMessage());
@@ -66,14 +70,26 @@ public class DocumentoService implements br.edu.ufape.sguPraeService.servicos.in
 
     @Override
     public Documento buscar(Long id) throws DocumentoNotFoundException {
-        return documentoRepository.findById(id)
+        UUID userId = authenticatedUserProvider.getUserId();
+        return documentoRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new DocumentoNotFoundException(id));
+    }
+
+    @Override
+    public List<Documento> listarPorUsuario() {
+        UUID userId = authenticatedUserProvider.getUserId();
+        return documentoRepository.findByUserId(userId);
+    }
+
+    @Override
+    public List<Documento> listarTodos() {
+        return documentoRepository.findAll();
     }
 
     @Override
     @Transactional
     public void deletar(Long id) throws DocumentoNotFoundException {
-        Documento documento = buscar(id);
+        Documento documento = buscar(id); // Já valida se pertence ao usuário
 
         try {
             Path caminho = Paths.get(documento.getPath());
@@ -86,7 +102,7 @@ public class DocumentoService implements br.edu.ufape.sguPraeService.servicos.in
         }
 
         documentoRepository.delete(documento);
-        log.info("Documento removido do banco de dados: {}", id);
+        log.info("Documento removido do banco de dados: {} do usuário: {}", id, documento.getUserId());
     }
 
     private void validarTipoArquivo(MultipartFile arquivo) {
