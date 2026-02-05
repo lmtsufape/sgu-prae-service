@@ -50,14 +50,22 @@ public class EstudanteController {
         return ResponseEntity.ok(fachada.buscarEstudante(id));
     }
 
+//    @PreAuthorize("hasRole('ALUNO')")
+//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE) // Importante!
+//    public ResponseEntity<EstudanteResponse> criarEstudante(
+//            @RequestPart("dados") @Valid EstudanteRequest estudanteRequest, // JSON vem aqui
+//            @RequestPart(value = "arquivos", required = false) List<MultipartFile> arquivos // Arquivos vêm aqui
+//    ) {
+//        Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
+//        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante, arquivos);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
+//    }
+
     @PreAuthorize("hasRole('ALUNO')")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE) // Importante!
-    public ResponseEntity<EstudanteResponse> criarEstudante(
-            @RequestPart("dados") @Valid EstudanteRequest estudanteRequest, // JSON vem aqui
-            @RequestPart(value = "arquivos", required = false) List<MultipartFile> arquivos // Arquivos vêm aqui
-    ) {
+    @PostMapping
+    public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest)  {
         Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante, arquivos);
+        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
     }
 
