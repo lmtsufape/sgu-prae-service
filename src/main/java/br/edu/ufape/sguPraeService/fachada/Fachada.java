@@ -49,6 +49,7 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.DadosBancariosService;
+import br.edu.ufape.sguPraeService.servicos.interfaces.DocumentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.EnderecoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.EstudanteService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService;
@@ -56,6 +57,7 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.TipoBeneficioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.DocumentoNotFoundException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -80,6 +82,7 @@ public class Fachada {
     private final AgendamentoService agendamentoService;
     private final CancelamentoService cancelamentoService;
     private final TipoBeneficioService tipoBeneficioService;
+    private final DocumentoService documentoService;
     private final BeneficioService beneficioService;
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
@@ -656,6 +659,10 @@ public class Fachada {
         tipoBeneficioService.desativar(id);
     }
 
+    public Long contarTiposBeneficio() {
+        return tipoBeneficioService.contarTiposAtivos();
+    }
+
     // ------------------- Beneficio ------------------- //
     public Page<Beneficio> listarBeneficios(Predicate predicate, Pageable pageable) {
         return beneficioService.listar(predicate, pageable);
@@ -735,55 +742,28 @@ public class Fachada {
         return beneficioService.buscarPorPagamento(pagamentoId);
     }
 
-    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(YearMonth inicio, YearMonth fim) {
-        List<Beneficio> beneficios = beneficioService
-                .listar().stream()
-                .filter(aux -> aux.isAtivo() && aux.isStatus()
-                        && !aux.getInicioBeneficio().isAfter(fim)
-                        && !aux.getFimBeneficio().isBefore(inicio))
-                .toList();
-
-        List<BeneficioRelatorioResponse> detalhes = new ArrayList<>();
-        BigDecimal totalGeral = BigDecimal.ZERO;
-
-        for (Beneficio beneficio : beneficios) {
-            List<Estudante> estudantes = beneficioService.listarEstudantesPorAuxilio(beneficio.getId());
-            List<EstudanteRelatorioResponse> estudantesDto = new ArrayList<>();
-
-            List<Pagamento> pagamentosFiltrados = beneficio.getPagamentos().stream()
-                    .filter(p -> !p.getData().isBefore(inicio.atEndOfMonth()) && !p.getData().isAfter(fim.atEndOfMonth()) && p.isAtivo())
-                    .toList();
-
-            BigDecimal totalAuxilio = beneficio.getPagamentos().stream()
-                    .filter(p -> !p.getData().isBefore(inicio.atEndOfMonth()) && !p.getData().isAfter(fim.atEndOfMonth()) && p.isAtivo())
-                    .map(Pagamento::getValor)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            List<PagamentoRelatorioResponse> pagamentosDto = pagamentosFiltrados.stream()
-                    .map(p -> new PagamentoRelatorioResponse(p.getValor(), p.getData()))
-                    .toList();
-
-            for (Estudante estudante : estudantes) {
-                var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
-
-                estudantesDto.add(new EstudanteRelatorioResponse(
-                        aluno.getNome(),
-                        aluno.getCpf(),
-                        aluno.getMatricula(),
-                        aluno.getEmail(),
-                        aluno.getTelefone(),
-                        aluno.getCurso()));
-            }
-            totalGeral = totalGeral.add(totalAuxilio);
-            detalhes.add(new BeneficioRelatorioResponse(
-                    beneficio.getId(),
-                    beneficio.getTipoBeneficio().getDescricao(),
-                    beneficio.getValorPagamento(),
-                    pagamentosDto,
-                    totalAuxilio,
-                    estudantesDto));
-        }
-        return new RelatorioFinanceiroResponse(detalhes, totalGeral);
+    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro() {
+        BigDecimal totalGeral = obterValorTotalPagamentosAtivos();
+        Long quantidadePessoasAtendidas = beneficioService.contarEstudantesBeneficiados();
+        Long quantidadeTiposBeneficio = tipoBeneficioService.contarTiposAtivos();
+        Long quantidadeCursosDistintos = beneficioService.contarCursosDistintosComBeneficioAtivo();
+        List<Object[]> valorPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio();
+        List<Map<String, Object>> valorTotalPorTipoBeneficio = valorPorTipo.stream().map(obj -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("tipoBeneficioId", obj[0]);
+            map.put("descricao", obj[1]);
+            map.put("valorTotal", obj[2]);
+            return map;
+        }).toList();
+        List<Map<String, Object>> quantidadeBeneficiadosPorCurso = beneficioService.obterQuantidadeBeneficiadosPorCurso();
+        return new RelatorioFinanceiroResponse(
+                totalGeral,
+                quantidadePessoasAtendidas,
+                quantidadeTiposBeneficio,
+                quantidadeCursosDistintos,
+                valorTotalPorTipoBeneficio,
+                quantidadeBeneficiadosPorCurso
+        );
     }
 
     public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
@@ -797,6 +777,14 @@ public class Fachada {
         }
 
         return response;
+    }
+
+    public Long contarEstudantesBeneficiados() {
+        return beneficioService.contarEstudantesBeneficiados();
+    }
+
+    public Long contarCursosDistintosComBeneficioAtivo() {
+        return beneficioService.contarCursosDistintosComBeneficioAtivo();
     }
 
     // ------------------- Pagamento ------------------- //
@@ -1012,6 +1000,9 @@ public class Fachada {
         return folha;
     }
 
+    public BigDecimal obterValorTotalPagamentosAtivos() {
+        return pagamentoService.obterValorTotalPagamentosAtivos();
+    }
 
     public PagamentoResponse mapToPagamentoResponse(Pagamento pagamento) {
         PagamentoResponse response = new PagamentoResponse(pagamento, modelMapper);
@@ -1033,7 +1024,61 @@ public class Fachada {
         return response;
     }
 
+    public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso() {
+        return beneficioService.obterQuantidadeBeneficiadosPorCurso();
+    }
+
+    public List<Object[]> obterValorTotalPorTipoBeneficio() {
+        return pagamentoService.obterValorTotalPorTipoBeneficio();
+    }
+
     // ------------------- Armazenamento ------------------- //
+
+    // ------------------- Documentos (Upload Genérico) ------------------- //
+
+    /**
+     * Realiza o upload de um documento
+     * @param arquivo O arquivo a ser salvo
+     * @return Documento salvo com metadados persistidos
+     */
+    public Documento uploadDocumento(MultipartFile arquivo) {
+        return documentoService.salvar(arquivo);
+    }
+
+    /**
+     * Busca um documento pelo ID (apenas documentos do usuário logado)
+     * @param id ID do documento
+     * @return O documento encontrado
+     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
+     */
+    public Documento buscarDocumento(Long id) throws DocumentoNotFoundException {
+        return documentoService.buscar(id);
+    }
+
+    /**
+     * Lista todos os documentos do usuário logado
+     * @return Lista de documentos do usuário
+     */
+    public List<Documento> listarDocumentosDoUsuario() {
+        return documentoService.listarPorUsuario();
+    }
+
+    /**
+     * Lista todos os documentos do sistema
+     * @return Lista de todos os documentos
+     */
+    public List<Documento> listarTodosDocumentos() {
+        return documentoService.listarTodos();
+    }
+
+    /**
+     * Remove um documento do sistema (apenas se pertencer ao usuário logado)
+     * @param id ID do documento
+     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
+     */
+    public void deletarDocumento(Long id) throws DocumentoNotFoundException {
+        documentoService.deletar(id);
+    }
 
     public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
         return armazenamentoService.converterDocumentosParaBase64(documentos);
@@ -1057,4 +1102,5 @@ public class Fachada {
             cpf.substring(9, 11)
         );
     }
+
 }

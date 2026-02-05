@@ -18,12 +18,15 @@ import lombok.RequiredArgsConstructor;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.BooleanBuilder;
 import br.edu.ufape.sguPraeService.models.QBeneficio;
+import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 
 @Service
 @RequiredArgsConstructor
 public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService {
 	private final BeneficioRepository beneficioRepository;
 	private final ModelMapper modelMapper;
+	private final AuthServiceHandler authServiceHandler;
 
 	@Override
 	public Page<Beneficio> listar(Predicate predicate, Pageable pageable) {
@@ -151,4 +154,44 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 	public Page<Estudante> listarEstudantesPorAuxilio(Long id, Pageable pageable) {
 		return beneficioRepository.findEstudantesByBeneficioId(id, pageable);
 	}
+
+	public Long contarEstudantesBeneficiados() {
+		return beneficioRepository.countDistinctEstudantesAtivos();
+	}
+
+    @Override
+	public Long contarCursosDistintosComBeneficioAtivo() {
+		List<java.util.UUID> userIds = beneficioRepository.findDistinctEstudanteUserIdsWithBeneficioAtivo();
+		if (userIds.isEmpty()) return 0L;
+		List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+		return alunos.stream()
+			.map(AlunoResponse::getCurso)
+			.filter(java.util.Objects::nonNull)
+			.map(AlunoResponse.Curso::getId)
+			.filter(java.util.Objects::nonNull)
+			.distinct()
+			.count();
+	}
+
+    public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso() {
+        List<java.util.UUID> userIds = beneficioRepository.findDistinctEstudanteUserIdsWithBeneficioAtivo();
+        if (userIds.isEmpty()) return java.util.Collections.emptyList();
+        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+        return alunos.stream()
+            .filter(a -> a.getCurso() != null && a.getCurso().getId() != null)
+            .collect(java.util.stream.Collectors.groupingBy(
+                a -> java.util.Map.of(
+                    "cursoId", a.getCurso().getId(),
+                    "cursoNome", a.getCurso().getNome()
+                ),
+                java.util.stream.Collectors.counting()
+            ))
+            .entrySet().stream()
+            .map(e -> {
+                java.util.Map<String, Object> map = new java.util.HashMap<>(e.getKey());
+                map.put("quantidadeBeneficiados", e.getValue());
+                return map;
+            })
+            .toList();
+    }
 }

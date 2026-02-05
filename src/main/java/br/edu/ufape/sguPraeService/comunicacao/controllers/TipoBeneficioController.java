@@ -65,6 +65,10 @@ public class TipoBeneficioController {
         fachada.desativarTipoBeneficio(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/quantidade")
+    public ResponseEntity<Long> getQuantidadeTiposBeneficio() {
+        Long quantidade = fachada.contarTiposBeneficio();
+        return ResponseEntity.ok(quantidade);
+    }
 }
-
-

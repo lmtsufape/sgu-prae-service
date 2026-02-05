@@ -168,4 +168,13 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
 
         return folha;
     }
+
+    public BigDecimal obterValorTotalPagamentosAtivos() {
+        return pagamentoRepository.findTotalPagamentosAtivos();
+    }
+
+    @Override
+    public List<Object[]> obterValorTotalPorTipoBeneficio() {
+        return pagamentoRepository.findValorTotalPorTipoBeneficio();
+    }
 }
