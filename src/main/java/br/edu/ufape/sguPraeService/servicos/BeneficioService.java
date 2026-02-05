@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.servicos;
 import java.time.LocalDate;
 import java.util.List;
 
+import br.edu.ufape.sguPraeService.exceptions.LimiteBeneficiosExcedidoException;
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -59,7 +60,7 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		if (entity.getId() == null) {
 			long qtdAtivos = beneficioRepository.countByEstudantesIdAndAtivoTrue(entity.getEstudantes().getId());
 			if (qtdAtivos >= 2) {
-			throw new IllegalArgumentException("O estudante já possui o limite de benefícios ativos");
+				throw new LimiteBeneficiosExcedidoException("O estudante já possui o limite máximo de 2 benefícios ativos.");
 			}
 		}
 		return beneficioRepository.save(entity);
