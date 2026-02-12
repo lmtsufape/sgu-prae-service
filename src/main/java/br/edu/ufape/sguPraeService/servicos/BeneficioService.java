@@ -39,6 +39,15 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 	}
 
 	@Override
+	public Page<Beneficio> listarInativos(Predicate predicate, Pageable pageable) {
+		QBeneficio qBeneficio = QBeneficio.beneficio;
+		BooleanBuilder filtro = new BooleanBuilder();
+		filtro.and(qBeneficio.ativo.isFalse());
+		filtro.and(predicate);
+		return beneficioRepository.findAll(filtro, pageable);
+	}
+
+	@Override
 	public List<Beneficio> listar() {
 		return beneficioRepository.findAll();
 	}
