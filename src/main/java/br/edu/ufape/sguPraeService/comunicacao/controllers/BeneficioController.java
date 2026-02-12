@@ -46,6 +46,16 @@ public class BeneficioController {
                 .map(fachada::mapToBeneficioResponse);
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    @GetMapping("/inativos")
+    public ResponseEntity<Page<BeneficioResponse>> listarInativos(
+            @QuerydslPredicate(root = Beneficio.class) Predicate predicate, // Adiciona isso
+            @PageableDefault(sort = "id") Pageable pageable) {
+
+
+        return ResponseEntity.ok(fachada.listarBeneficiosInativos(predicate, pageable));
+    }
+
     @GetMapping("/estudante/{estudanteId}")
     public Page<BeneficioResponse> listarPorEstudanteId(@PageableDefault(sort = "id") Pageable pageable, @PathVariable Long estudanteId)
             throws EstudanteNotFoundException {
@@ -136,7 +146,7 @@ public class BeneficioController {
         return ResponseEntity.ok(beneficios);
     }
 
-    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+//    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')") Rota Publica
     @GetMapping("/relatorio/financeiro")
     public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro() {
         RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro();

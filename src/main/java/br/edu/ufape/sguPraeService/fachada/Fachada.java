@@ -668,6 +668,11 @@ public class Fachada {
         return beneficioService.listar(predicate, pageable);
     }
 
+    public Page<BeneficioResponse> listarBeneficiosInativos(Predicate predicate, Pageable pageable) {
+        return beneficioService.listarInativos(predicate, pageable)
+                .map(this::mapToBeneficioResponse);
+    }
+
     public Page<Beneficio> listarBeneficiosPorTipo(Long tipoId, Pageable pageable) throws BeneficioNotFoundException {
         return beneficioService.listarPorTipo(tipoId, pageable);
     }
