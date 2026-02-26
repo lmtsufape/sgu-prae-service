@@ -2,12 +2,12 @@ package br.edu.ufape.sguPraeService.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.http.HttpMethod;
 
 
 @EnableWebSecurity
@@ -24,6 +24,7 @@ public class WebConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api-doc/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/beneficio/relatorio/financeiro").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/tipo-beneficio").permitAll()
                         .anyRequest().authenticated()  // All other requests require authentication
                 ).oauth2ResourceServer(auth -> auth.jwt(token -> token.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter())));
         return http.build();

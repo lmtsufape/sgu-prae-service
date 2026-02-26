@@ -32,6 +32,18 @@ public class TipoBeneficioController {
         return fachada.listarTipoBeneficios(predicate, pageable).map(tipoBeneficio -> new TipoBeneficioResponse(tipoBeneficio, modelMapper));
     }
 
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    @GetMapping("/inativos")
+    public ResponseEntity<Page<TipoBeneficioResponse>> listarInativos(
+            @QuerydslPredicate(root = TipoBeneficio.class) Predicate predicate,
+            @PageableDefault(sort = "id") Pageable pageable) {
+
+        Page<TipoBeneficioResponse> page = fachada.listarTipoBeneficiosInativos(predicate, pageable)
+                .map(tipoBeneficio -> new TipoBeneficioResponse(tipoBeneficio, modelMapper));
+
+        return ResponseEntity.ok(page);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<TipoBeneficioResponse> buscar(@PathVariable Long id) throws TipoBeneficioNotFoundException {
         TipoBeneficio response = fachada.buscarTipoBeneficio(id);
