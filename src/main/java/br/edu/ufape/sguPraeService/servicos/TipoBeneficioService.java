@@ -20,11 +20,23 @@ public class TipoBeneficioService implements br.edu.ufape.sguPraeService.servico
     @Override
     public Page<TipoBeneficio> listar(Predicate predicate, Pageable pageable) {
         QTipoBeneficio qTipoBeneficio = QTipoBeneficio.tipoBeneficio;
-        BooleanBuilder filtroBase = new BooleanBuilder();
-        filtroBase.and(qTipoBeneficio.ativo.isTrue());
 
-        Predicate predicadoFinal = filtroBase.and(predicate);
-        return tipoBeneficioRepository.findAll(predicadoFinal, pageable);
+        BooleanBuilder filtro = new BooleanBuilder();
+        filtro.and(qTipoBeneficio.ativo.isTrue());
+        filtro.and(predicate); // Filtros da URL
+
+        return tipoBeneficioRepository.findAll(filtro, pageable);
+    }
+
+    @Override
+    public Page<TipoBeneficio> listarInativos(Predicate predicate, Pageable pageable) {
+        QTipoBeneficio qTipoBeneficio = QTipoBeneficio.tipoBeneficio;
+
+        BooleanBuilder filtro = new BooleanBuilder();
+        filtro.and(qTipoBeneficio.ativo.isFalse()); // Apenas inativos
+        filtro.and(predicate); // Filtros da URL
+
+        return tipoBeneficioRepository.findAll(filtro, pageable);
     }
 
     @Override

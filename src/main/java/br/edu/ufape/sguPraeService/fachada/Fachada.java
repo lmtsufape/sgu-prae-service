@@ -639,6 +639,10 @@ public class Fachada {
         return tipoBeneficioService.listar(predicate, pageable);
     }
 
+    public Page<TipoBeneficio> listarTipoBeneficiosInativos(Predicate predicate, Pageable pageable) {
+        return tipoBeneficioService.listarInativos(predicate, pageable);
+    }
+
     public TipoBeneficio buscarTipoBeneficio(Long id) throws TipoBeneficioNotFoundException {
         return tipoBeneficioService.buscar(id);
     }

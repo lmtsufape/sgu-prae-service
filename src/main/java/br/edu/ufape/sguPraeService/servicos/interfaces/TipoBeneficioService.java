@@ -10,6 +10,8 @@ import com.querydsl.core.types.Predicate;
 public interface TipoBeneficioService {
     Page<TipoBeneficio> listar(Predicate predicate, Pageable pageable);
 
+    Page<TipoBeneficio> listarInativos(Predicate predicate, Pageable pageable); // NOVO
+
     TipoBeneficio buscar(Long id) throws TipoBeneficioNotFoundException;
 
     TipoBeneficio salvar(TipoBeneficio entity);
