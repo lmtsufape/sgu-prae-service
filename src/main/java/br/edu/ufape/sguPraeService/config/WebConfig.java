@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.HttpMethod;
 
 
 @EnableWebSecurity
@@ -22,6 +23,7 @@ public class WebConfig {
                 )
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api-doc/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/beneficio/relatorio/financeiro").permitAll()
                         .anyRequest().authenticated()  // All other requests require authentication
                 ).oauth2ResourceServer(auth -> auth.jwt(token -> token.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter())));
         return http.build();
