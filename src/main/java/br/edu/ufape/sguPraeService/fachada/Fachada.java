@@ -49,7 +49,7 @@ import br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.DadosBancariosService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.DocumentoService;
+//import br.edu.ufape.sguPraeService.servicos.interfaces.DocumentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.EnderecoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.EstudanteService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService;
@@ -82,7 +82,7 @@ public class Fachada {
     private final AgendamentoService agendamentoService;
     private final CancelamentoService cancelamentoService;
     private final TipoBeneficioService tipoBeneficioService;
-    private final DocumentoService documentoService;
+//    private final DocumentoService documentoService;
     private final BeneficioService beneficioService;
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
@@ -183,6 +183,42 @@ public class Fachada {
     // Sobrecarga para manter compatibilidade caso algum lugar chame sem arquivos
     public EstudanteResponse salvarEstudante(Estudante estudante) {
         return salvarEstudante(estudante, null);
+    }
+
+    @Transactional
+    public void adicionarDocumentosEstudante(List<MultipartFile> arquivos) throws EstudanteNotFoundException {
+        // 1. Pega o ID do token
+        UUID userId = authenticatedUserProvider.getUserId();
+
+        // 2. Busca o estudante existente
+        Estudante estudante = estudanteService.buscarPorUserId(userId);
+
+        // 3. Salva os arquivos e vincula
+        if (arquivos != null && !arquivos.isEmpty()) {
+            MultipartFile[] arquivosArray = arquivos.toArray(new MultipartFile[0]);
+            try {
+                List<Documento> documentosSalvos = armazenamentoService.salvarArquivo(arquivosArray);
+                // Apenas adicionamos à lista do estudante existente
+                estudante.adicionarDocumentos(documentosSalvos);
+
+                // Salva a atualização
+                estudanteService.salvarEstudante(estudante);
+            } catch (Exception e) {
+                throw new RuntimeException("Erro ao processar novos documentos do estudante", e);
+            }
+        }
+    }
+
+    public List<DocumentoResponse> buscarDocumentosPorEstudante(Long estudanteId) throws EstudanteNotFoundException, IOException {
+        Estudante estudante = estudanteService.buscarEstudante(estudanteId);
+        List<Documento> documentos = estudante.getDocumentos();
+
+        if (documentos == null || documentos.isEmpty()) {
+            return List.of();
+        }
+
+        // Reaproveita o conversor do ArmazenamentoService
+        return armazenamentoService.converterDocumentosParaBase64(documentos);
     }
 
     public EstudanteResponse buscarEstudante(Long id) throws EstudanteNotFoundException {
@@ -1043,51 +1079,51 @@ public class Fachada {
 
     // ------------------- Armazenamento ------------------- //
 
-    // ------------------- Documentos (Upload Genérico) ------------------- //
-
-    /**
-     * Realiza o upload de um documento
-     * @param arquivo O arquivo a ser salvo
-     * @return Documento salvo com metadados persistidos
-     */
-    public Documento uploadDocumento(MultipartFile arquivo) {
-        return documentoService.salvar(arquivo);
-    }
-
-    /**
-     * Busca um documento pelo ID (apenas documentos do usuário logado)
-     * @param id ID do documento
-     * @return O documento encontrado
-     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
-     */
-    public Documento buscarDocumento(Long id) throws DocumentoNotFoundException {
-        return documentoService.buscar(id);
-    }
-
-    /**
-     * Lista todos os documentos do usuário logado
-     * @return Lista de documentos do usuário
-     */
-    public List<Documento> listarDocumentosDoUsuario() {
-        return documentoService.listarPorUsuario();
-    }
-
-    /**
-     * Lista todos os documentos do sistema
-     * @return Lista de todos os documentos
-     */
-    public List<Documento> listarTodosDocumentos() {
-        return documentoService.listarTodos();
-    }
-
-    /**
-     * Remove um documento do sistema (apenas se pertencer ao usuário logado)
-     * @param id ID do documento
-     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
-     */
-    public void deletarDocumento(Long id) throws DocumentoNotFoundException {
-        documentoService.deletar(id);
-    }
+//    // ------------------- Documentos (Upload Genérico) ------------------- //
+//
+//    /**
+//     * Realiza o upload de um documento
+//     * @param arquivo O arquivo a ser salvo
+//     * @return Documento salvo com metadados persistidos
+//     */
+//    public Documento uploadDocumento(MultipartFile arquivo) {
+//        return documentoService.salvar(arquivo);
+//    }
+//
+//    /**
+//     * Busca um documento pelo ID (apenas documentos do usuário logado)
+//     * @param id ID do documento
+//     * @return O documento encontrado
+//     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
+//     */
+//    public Documento buscarDocumento(Long id) throws DocumentoNotFoundException {
+//        return documentoService.buscar(id);
+//    }
+//
+//    /**
+//     * Lista todos os documentos do usuário logado
+//     * @return Lista de documentos do usuário
+//     */
+//    public List<Documento> listarDocumentosDoUsuario() {
+//        return documentoService.listarPorUsuario();
+//    }
+//
+//    /**
+//     * Lista todos os documentos do sistema
+//     * @return Lista de todos os documentos
+//     */
+//    public List<Documento> listarTodosDocumentos() {
+//        return documentoService.listarTodos();
+//    }
+//
+//    /**
+//     * Remove um documento do sistema (apenas se pertencer ao usuário logado)
+//     * @param id ID do documento
+//     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
+//     */
+//    public void deletarDocumento(Long id) throws DocumentoNotFoundException {
+//        documentoService.deletar(id);
+//    }
 
     public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
         return armazenamentoService.converterDocumentosParaBase64(documentos);

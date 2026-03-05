@@ -1,8 +1,11 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+
+import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
@@ -132,5 +135,22 @@ public class EstudanteController {
     public ResponseEntity<EstudanteResponse> buscarEstudantePorUserId(@PathVariable UUID userId) throws EstudanteNotFoundException {
         EstudanteResponse estudante = fachada.buscarEstudantePorUserId(userId);
         return ResponseEntity.ok(estudante);
+    }
+
+    @PostMapping(value = "/documentos", consumes = "multipart/form-data")
+    public ResponseEntity<Void> uploadDocumentos(
+            @Valid @ModelAttribute EstudanteDocumentoRequest request) throws EstudanteNotFoundException {
+
+        fachada.adicionarDocumentosEstudante(request.getArquivos());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/documentos")
+    public ResponseEntity<List<DocumentoResponse>> buscarDocumentosDoEstudante(@PathVariable Long id)
+            throws EstudanteNotFoundException, IOException {
+
+        List<DocumentoResponse> documentos = fachada.buscarDocumentosPorEstudante(id);
+        return ResponseEntity.ok(documentos);
     }
 }
