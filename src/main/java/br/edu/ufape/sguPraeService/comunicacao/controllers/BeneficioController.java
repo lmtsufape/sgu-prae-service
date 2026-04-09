@@ -6,7 +6,7 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioCancelamentoRequest;
+import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,9 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioRequest;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.BeneficioResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.RelatorioFinanceiroResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.exceptions.BeneficioNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.TipoBeneficioNotFoundException;
@@ -169,5 +166,15 @@ public class BeneficioController {
     public ResponseEntity<List<Map<String, Object>>> getQuantidadeBeneficiadosPorCurso() {
         List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso();
         return ResponseEntity.ok(resposta);
+    }
+
+    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
+    @PatchMapping("/{id}/prorrogar")
+    public ResponseEntity<BeneficioResponse> prorrogarBeneficio(
+            @PathVariable Long id,
+            @Valid @RequestBody BeneficioProrrogacaoRequest request) throws BeneficioNotFoundException {
+
+        BeneficioResponse beneficioProrrogado = fachada.prorrogarBeneficio(id, request);
+        return ResponseEntity.ok(beneficioProrrogado);
     }
 }

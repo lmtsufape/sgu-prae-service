@@ -31,6 +31,9 @@ public class Beneficio {
     @Convert(converter = YearMonthConverter.class)
     private YearMonth fimBeneficio;
 
+    @Column(length = 500)
+    private String observacaoProrrogacao;
+
     private String parecerTermino;
     private BigDecimal valorPagamento;
     private boolean status = true;

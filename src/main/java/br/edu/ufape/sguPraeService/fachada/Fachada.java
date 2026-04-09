@@ -785,6 +785,22 @@ public class Fachada {
         beneficioService.salvar(beneficio);
     }
 
+    @Transactional
+    public BeneficioResponse prorrogarBeneficio(Long id, BeneficioProrrogacaoRequest request) throws BeneficioNotFoundException {
+        Beneficio beneficio = beneficioService.buscar(id);
+
+        if (!beneficio.isAtivo()) {
+            throw new IllegalArgumentException("Não é possível prorrogar um benefício que já foi encerrado/inativado.");
+        }
+
+        beneficio.setFimBeneficio(request.getNovoPrazo());
+        beneficio.setObservacaoProrrogacao(request.getObservacoes());
+
+        Beneficio beneficioAtualizado = beneficioService.salvar(beneficio);
+
+        return mapToBeneficioResponse(beneficioAtualizado);
+    }
+
     public void deletarBeneficio(Long id) throws BeneficioNotFoundException {
         beneficioService.deletar(id);
     }
