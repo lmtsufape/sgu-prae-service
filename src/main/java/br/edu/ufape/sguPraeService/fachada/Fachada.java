@@ -816,27 +816,39 @@ public class Fachada {
     }
 
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro() {
-        BigDecimal totalGeral = obterValorTotalPagamentosAtivos();
-        Long quantidadePessoasAtendidas = beneficioService.contarEstudantesBeneficiados();
-        Long quantidadeTiposBeneficio = tipoBeneficioService.contarTiposAtivos();
-        Long quantidadeCursosDistintos = beneficioService.contarCursosDistintosComBeneficioAtivo();
-        List<Object[]> valorPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio();
-        List<Map<String, Object>> valorTotalPorTipoBeneficio = valorPorTipo.stream().map(obj -> {
-            Map<String, Object> map = new java.util.HashMap<>();
-            map.put("tipoBeneficioId", obj[0]);
-            map.put("descricao", obj[1]);
-            map.put("valorTotal", obj[2]);
-            return map;
-        }).toList();
-        List<Map<String, Object>> quantidadeBeneficiadosPorCurso = beneficioService.obterQuantidadeBeneficiadosPorCurso();
-        return new RelatorioFinanceiroResponse(
-                totalGeral,
-                quantidadePessoasAtendidas,
-                quantidadeTiposBeneficio,
-                quantidadeCursosDistintos,
-                valorTotalPorTipoBeneficio,
-                quantidadeBeneficiadosPorCurso
-        );
+        // 1. Coleta os dados financeiros globais usando o PagamentoService
+        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos();
+        Double totalGeral = (totalGeralBD != null) ? totalGeralBD.doubleValue() : 0.0;
+
+        // 2. Coleta a divisão de valores por Tipo de Benefício usando o PagamentoService
+        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio();
+        List<RelatorioFinanceiroResponse.ValorPorTipoDTO> valorPorTipo = dadosPorTipo.stream()
+                .map(obj -> new RelatorioFinanceiroResponse.ValorPorTipoDTO(
+                        (Long) obj[0],
+                        (String) obj[1],
+                        ((BigDecimal) obj[2]).doubleValue()
+                )).toList();
+
+        // 3. Coleta os dados de estudantes e cursos usando o BeneficioService
+        Long totalEstudantes = beneficioService.contarEstudantesBeneficiados();
+
+        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso();
+        List<RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO> beneficiadosPorCurso = dadosCursos.stream()
+                .map(map -> new RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO(
+                        (Long) map.get("cursoId"),
+                        (String) map.get("cursoNome"),
+                        (Long) map.get("quantidadeBeneficiados")
+                )).toList();
+
+        // 4. Constrói o objeto final espelhando a interface TypeScript do Frontend
+        return RelatorioFinanceiroResponse.builder()
+                .totalGeral(totalGeral)
+                .quantidadePessoasAtendidas(totalEstudantes != null ? totalEstudantes.intValue() : 0)
+                .quantidadeTiposBeneficio(valorPorTipo.size())
+                .quantidadeCursosDistintos(beneficiadosPorCurso.size())
+                .valorTotalPorTipoBeneficio(valorPorTipo)
+                .quantidadeBeneficiadosPorCurso(beneficiadosPorCurso)
+                .build();
     }
 
     public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
