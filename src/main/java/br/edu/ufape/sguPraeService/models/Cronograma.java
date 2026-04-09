@@ -24,9 +24,9 @@ public class Cronograma {
     @Column(nullable = false)
     private LocalDate data;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ModalidadeAgendamento modalidade;
+//    @Enumerated(EnumType.STRING)
+//    @Column(nullable = false)
+//    private ModalidadeAgendamento modalidade;
 
     @ManyToOne
     private Profissional profissional;

@@ -21,6 +21,7 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
         QuerydslPredicateExecutor<Agendamento>,
         QuerydslBinderCustomizer<QAgendamento> {
 
+    boolean existsByEstudante_UserIdAndDataAndAtivoTrue(java.util.UUID userId, LocalDate data);
 
     Page<Agendamento> findAllByEstudante_UserIdAndAtivoTrue(UUID userId, Pageable pageable);
 
@@ -56,7 +57,7 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
             }
         });
 
-        // Permitir filtragem por IDs de associações
+        bindings.bind(root.modalidade).first((path, value) -> path.eq(value));
         bindings.bind(root.vaga.id).first((path, value) -> path.eq(value));
         bindings.bind(root.estudante.id).first((path, value) -> path.eq(value));
         bindings.bind(root.vaga.cronograma.id).first((path, value) -> path.eq(value));

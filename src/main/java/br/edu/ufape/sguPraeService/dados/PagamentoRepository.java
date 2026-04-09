@@ -34,7 +34,6 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
         bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));
 
         bindings.bind(root.numeroLote).first((path, value) -> path.eq(value));
-
         bindings.bind(root.mesReferencia).first((path, value) -> path.eq(value));
         bindings.bind(root.anoReferencia).first((path, value) -> path.eq(value));
 
@@ -45,10 +44,8 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
             List<LocalDate> datas = new ArrayList<>(value);
             Collections.sort(datas);
             if (datas.size() == 1) {
-                // 1. Filtro de data exata
                 return Optional.of(path.eq(datas.getFirst()));
             } else {
-                // 2. Filtro de período
                 return Optional.of(path.between(datas.getFirst(), datas.getLast()));
             }
         });
@@ -61,24 +58,26 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
             Collections.sort(valores);
 
             if (valores.size() == 1) {
-                // 1. Filtro de valor exato
                 return Optional.of(path.eq(valores.getFirst()));
             } else {
-                // 2. Filtro between
                 return Optional.of(path.between(valores.getFirst(), valores.getLast()));
             }
         });
 
         bindings.bind(root.beneficio.id).first((path, value) -> path.eq(value));
+        bindings.bind(root.beneficio.tipoBeneficio.id).first((path, value) -> path.eq(value));
+        bindings.bind(root.beneficio.estudantes.id).first((path, value) -> path.eq(value));
+
         bindings.excluding(root.ativo);
+        bindings.excluding(root.beneficio.estudantes.documentos);
     }
 
     @Query("SELECT COALESCE(SUM(p.valor), 0) FROM Pagamento p WHERE p.ativo = true")
     BigDecimal findTotalPagamentosAtivos();
 
     @Query("SELECT b.tipoBeneficio.id, b.tipoBeneficio.descricao, SUM(p.valor) " +
-           "FROM Pagamento p JOIN p.beneficio b " +
-           "WHERE p.ativo = true " +
-           "GROUP BY b.tipoBeneficio.id, b.tipoBeneficio.descricao")
+            "FROM Pagamento p JOIN p.beneficio b " +
+            "WHERE p.ativo = true " +
+            "GROUP BY b.tipoBeneficio.id, b.tipoBeneficio.descricao")
     List<Object[]> findValorTotalPorTipoBeneficio();
 }

@@ -23,6 +23,10 @@ public class Agendamento {
 
     private boolean ativo = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ModalidadeAgendamento modalidade;
+
     @ManyToOne
     private Vaga vaga;
 

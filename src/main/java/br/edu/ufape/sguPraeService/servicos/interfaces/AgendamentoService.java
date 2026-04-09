@@ -13,7 +13,7 @@ public interface AgendamentoService {
 
     Agendamento salvar(Agendamento entity);
 
-    Agendamento agendar(Vaga vaga, Estudante estudante);
+    Agendamento agendar(Vaga vaga, Estudante estudante, ModalidadeAgendamento modalidade);
 
     Agendamento buscar(Long id) throws AgendamentoNotFoundException;
 
@@ -28,4 +28,6 @@ public interface AgendamentoService {
     Page<Agendamento> listarPorProfissional(Profissional profissional, Pageable pageable);
 
     Page<Agendamento> listarPorProfissionalAtual(Pageable pageable);
+
+    Agendamento alterarModalidade(Long id, ModalidadeAgendamento novaModalidade) throws AgendamentoNotFoundException;
 }

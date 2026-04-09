@@ -5,10 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class AgendamentoRequest {
-    @NotNull(message = "O ID da vaga é obrigatório")
-    private Long vagaId;
-
-    @NotNull(message = "A modalidade do agendamento é obrigatória")
+public class AgendamentoModalidadeRequest {
+    @NotNull(message = "A nova modalidade é obrigatória")
     private ModalidadeAgendamento modalidade;
 }

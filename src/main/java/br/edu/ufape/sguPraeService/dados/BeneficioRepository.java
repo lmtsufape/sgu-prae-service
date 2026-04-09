@@ -60,11 +60,18 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
   @Override
   default void customize(QuerydslBindings bindings, @NonNull QBeneficio root) {
     bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));
-    bindings.excluding(root.ativo, root.termo, root.pagamentos);
+
+
+    bindings.excluding(root.termo, root.pagamentos, root.estudantes.documentos);
+
+    // Bindings de relacionamentos
     bindings.bind(root.estudantes.id).first((path, value) -> path.eq(value));
     bindings.bind(root.tipoBeneficio.id).first((path, value) -> path.eq(value));
-
     bindings.bind(root.motivoEncerramento).first((path, value) -> path.eq(value));
+
+    //Permitir explicitamente o filtro pelo status ativo/inativo
+    bindings.bind(root.ativo).first((path, value) -> path.eq(value));
+
 
     bindings.bind(root.inicioBeneficio).all((path, value) -> {
       if (value.isEmpty()) return Optional.empty();
