@@ -27,8 +27,6 @@ public class CronogramaRequest {
     @NotNull(message = "Tipo de atendimento é obrigatório")
     private Long tipoAtendimentoId;
 
-    @NotNull(message = "A modalidade de atendimento é obrigatória")
-    private ModalidadeAgendamento modalidade;
 
     public List<Cronograma> convertToEntities(ModelMapper modelMapper) {
         modelMapper.getConfiguration()

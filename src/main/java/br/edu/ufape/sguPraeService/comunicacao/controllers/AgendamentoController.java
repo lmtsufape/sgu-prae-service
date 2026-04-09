@@ -1,10 +1,15 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoModalidadeRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.cancelamentoAgendamento.CancelamentoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.cancelamentoAgendamento.CancelamentoResponse;
+import br.edu.ufape.sguPraeService.exceptions.UnavailableVagaException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.VagaNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
+import br.edu.ufape.sguPraeService.models.Agendamento;
 import br.edu.ufape.sguPraeService.models.CancelamentoAgendamento;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +31,12 @@ public class AgendamentoController {
     private final ModelMapper modelMapper;
 
 
-    @PreAuthorize("hasRole('ESTUDANTE')")
-    @PostMapping("/agendar")
-    public ResponseEntity<AgendamentoResponse> agendarVaga(@Valid @RequestBody AgendamentoRequest request) {
-        AgendamentoResponse response = fachada.agendarVaga(request.getVagaId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @PreAuthorize("hasRole('ESTUDANTE')") // Ajuste conforme suas regras
+    @PostMapping
+    public ResponseEntity<AgendamentoResponse> agendar(@Valid @RequestBody AgendamentoRequest request)
+            throws VagaNotFoundException, UnavailableVagaException {
+        AgendamentoResponse response = fachada.agendarVaga(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
@@ -77,5 +83,16 @@ public class AgendamentoController {
     @GetMapping("/cancelamento/profissional")
     public Page<CancelamentoResponse> listarCancelamentosPorProfissionalAtual(@PageableDefault(sort = "id") Pageable pageable) {
         return fachada.listarCancelamentosPorProfissionalAtual(pageable).map(cancelamento -> new CancelamentoResponse(cancelamento, modelMapper));
+    }
+
+    @PreAuthorize("hasRole('ESTUDANTE')")
+    @PatchMapping("/{id}/modalidade")
+    public ResponseEntity<AgendamentoResponse> alterarModalidade(
+            @PathVariable Long id,
+            @Valid @RequestBody AgendamentoModalidadeRequest request) throws AgendamentoNotFoundException {
+
+        Agendamento atualizado = fachada.alterarModalidadeAgendamento(id, request.getModalidade());
+
+        return ResponseEntity.ok(new AgendamentoResponse(atualizado, modelMapper));
     }
 }

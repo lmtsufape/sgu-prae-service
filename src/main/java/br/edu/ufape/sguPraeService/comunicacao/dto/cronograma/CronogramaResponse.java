@@ -19,7 +19,6 @@ public class CronogramaResponse {
     LocalDate data;
     TipoAtendimentoResponse tipoAtendimento;
     List<VagaResponse> vagas;
-    ModalidadeAgendamento modalidade;
 
     public CronogramaResponse(Cronograma cronograma, ModelMapper modelMapper){
         if (cronograma == null) throw new IllegalArgumentException("Cronograma não pode ser nulo");

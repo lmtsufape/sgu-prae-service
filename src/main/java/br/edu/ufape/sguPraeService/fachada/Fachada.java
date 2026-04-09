@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 
 import br.edu.ufape.sguPraeService.auth.AuthServiceClient;
+import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.PageResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
@@ -18,6 +19,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimentoUpdateRequest;
 import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
+import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -565,7 +567,6 @@ public class Fachada {
         }
         cronogramaExistente.setData(cronograma.getData());
         cronogramaExistente.setTipoAtendimento(tipoAtendimento);
-        cronogramaExistente.setModalidade( cronograma.getModalidade());
         List<Vaga> novas = vagaService
                 .gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
         cronogramaExistente.trocarVagas(novas);
@@ -579,16 +580,20 @@ public class Fachada {
     // ------------------- Agendamento ------------------- //
 
     @Transactional
-    public AgendamentoResponse agendarVaga(Long vagaId) throws VagaNotFoundException, UnavailableVagaException {
+    public AgendamentoResponse agendarVaga(AgendamentoRequest request) throws VagaNotFoundException, UnavailableVagaException {
         try {
-            Vaga vaga = vagaService.buscar(vagaId);
+            // 1. Busca a vaga a partir do ID contido na requisição
+            Vaga vaga = vagaService.buscar(request.getVagaId());
+
+            // 2. Busca o estudante logado que está fazendo a requisição
             Estudante estudante = estudanteService.buscarPorUserId(authenticatedUserProvider.getUserId());
 
             if (vaga.isDisponivel()) {
                 vaga.setDisponivel(false);
-                vagaService.salvar(vaga);
+                vagaService.salvar(vaga); // Tranca a vaga para evitar concorrência
 
-                Agendamento agendamento = agendamentoService.agendar(vaga, estudante);
+                // 3. O serviço agora recebe a Vaga, o Estudante e a Modalidade escolhida
+                Agendamento agendamento = agendamentoService.agendar(vaga, estudante, request.getModalidade());
 
                 return mapToAgendamentoResponse(agendamento);
             }
@@ -656,6 +661,12 @@ public class Fachada {
 
     public CancelamentoAgendamento buscarCancelamento(Long id) throws CancelamentoNotFoundException {
         return cancelamentoService.buscar(id);
+    }
+
+    @Transactional
+    public Agendamento alterarModalidadeAgendamento(Long id, ModalidadeAgendamento novaModalidade) throws AgendamentoNotFoundException {
+        // A validação de tempo limite (2h antes) e a edição ocorrem no Service.
+        return agendamentoService.alterarModalidade(id, novaModalidade);
     }
 
     private AgendamentoResponse mapToAgendamentoResponse(Agendamento agendamento) {
