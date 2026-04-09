@@ -106,14 +106,18 @@ public class PagamentoController {
                 .map(fachada::mapToPagamentoResponse);
     }
 
+
+    @PreAuthorize("hasAnyRole('GESTOR', 'ESTUDANTE', 'PRAE_ACCESS')")
     @GetMapping("/estudante/{estudanteId}")
-    public List<PagamentoResponse> listarPorEstudante(@PathVariable Long estudanteId) {
-        return fachada.listarPagamentosPorEstudante(estudanteId).stream()
-                .map(fachada::mapToPagamentoResponse)
-                .toList();
+    public ResponseEntity<Page<PagamentoResponse>> listarPagamentosPorEstudante(
+            @PathVariable Long estudanteId,
+            @QuerydslPredicate(root = Pagamento.class) Predicate predicate,
+            Pageable pageable) {
+
+        Page<PagamentoResponse> pagamentosPaginados = fachada.listarPagamentosPorEstudante(estudanteId, predicate, pageable);
+        return ResponseEntity.ok(pagamentosPaginados);
     }
 
-    // ...
     @GetMapping("/folha")
     @Operation(summary = "Consultar Folha de Pagamento", description = "Gera a folha consolidada por aluno, filtrando por ano e mês (obrigatórios) e lote (opcional).")
     public ResponseEntity<FolhaPagamentoResponse> consultarFolha(

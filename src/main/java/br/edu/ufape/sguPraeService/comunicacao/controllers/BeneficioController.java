@@ -46,7 +46,7 @@ public class BeneficioController {
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/inativos")
     public ResponseEntity<Page<BeneficioResponse>> listarInativos(
-            @QuerydslPredicate(root = Beneficio.class) Predicate predicate, // Adiciona isso
+            @QuerydslPredicate(root = Beneficio.class) Predicate predicate,
             @PageableDefault(sort = "id") Pageable pageable) {
 
 

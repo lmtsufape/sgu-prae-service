@@ -20,6 +20,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimen
 import br.edu.ufape.sguPraeService.exceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
+import com.querydsl.core.BooleanBuilder;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -913,6 +914,25 @@ public class Fachada {
 
     public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
         return pagamentoService.listarPorEstudanteId(estudanteId);
+    }public Page<PagamentoResponse> listarPagamentosPorEstudante(Long estudanteId, Predicate predicate, Pageable pageable) {
+        QPagamento qPagamento = QPagamento.pagamento;
+
+        // BooleanBuilder é usado para mesclar a trava de segurança com os filtros da URL
+        BooleanBuilder construtorFiltros = new BooleanBuilder();
+
+        // TRAVA OBRIGATÓRIA: Só traz pagamentos do estudante informado na URL
+        construtorFiltros.and(qPagamento.beneficio.estudantes.id.eq(estudanteId));
+
+        // Adiciona os filtros dinâmicos vindos do frontend (se houverem)
+        if (predicate != null) {
+            construtorFiltros.and(predicate);
+        }
+
+        // Utiliza o método listar genérico do PagamentoService que já aceita Predicate e Pageable
+        Page<Pagamento> pagamentos = pagamentoService.listar(construtorFiltros.getValue(), pageable);
+
+        // Retorna já mapeado para o DTO de resposta
+        return pagamentos.map(this::mapToPagamentoResponse);
     }
 
     @Transactional
