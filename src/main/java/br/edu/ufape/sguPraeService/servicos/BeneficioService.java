@@ -2,6 +2,8 @@ package br.edu.ufape.sguPraeService.servicos;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import br.edu.ufape.sguPraeService.exceptions.LimiteBeneficiosExcedidoException;
 import br.edu.ufape.sguPraeService.models.Beneficio;
@@ -182,25 +184,33 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 			.count();
 	}
 
-    public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso() {
-        List<java.util.UUID> userIds = beneficioRepository.findDistinctEstudanteUserIdsWithBeneficioAtivo();
-        if (userIds.isEmpty()) return java.util.Collections.emptyList();
-        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
-        return alunos.stream()
-            .filter(a -> a.getCurso() != null && a.getCurso().getId() != null)
-            .collect(java.util.stream.Collectors.groupingBy(
-                a -> java.util.Map.of(
-                    "cursoId", a.getCurso().getId(),
-                    "cursoNome", a.getCurso().getNome()
-                ),
-                java.util.stream.Collectors.counting()
-            ))
-            .entrySet().stream()
-            .map(e -> {
-                java.util.Map<String, Object> map = new java.util.HashMap<>(e.getKey());
-                map.put("quantidadeBeneficiados", e.getValue());
-                return map;
-            })
-            .toList();
-    }
+
+	public List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds) {
+		if (userIds == null || userIds.isEmpty()) {
+			return java.util.Collections.emptyList();
+		}
+
+		List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
+
+		if (alunos == null || alunos.isEmpty()) {
+			return java.util.Collections.emptyList();
+		}
+
+		return alunos.stream()
+				.filter(a -> a.getCurso() != null && a.getCurso().getId() != null)
+				.collect(java.util.stream.Collectors.groupingBy(
+						a -> java.util.Map.of(
+								"cursoId", a.getCurso().getId(),
+								"cursoNome", a.getCurso().getNome()
+						),
+						java.util.stream.Collectors.counting()
+				))
+				.entrySet().stream()
+				.map(e -> {
+					java.util.Map<String, Object> map = new java.util.HashMap<>(e.getKey());
+					map.put("quantidadeBeneficiados", e.getValue());
+					return map;
+				})
+				.toList();
+	}
 }

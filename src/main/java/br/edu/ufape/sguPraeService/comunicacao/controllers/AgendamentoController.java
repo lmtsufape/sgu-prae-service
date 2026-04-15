@@ -31,7 +31,7 @@ public class AgendamentoController {
     private final ModelMapper modelMapper;
 
 
-    @PreAuthorize("hasRole('ESTUDANTE')") // Ajuste conforme suas regras
+    @PreAuthorize("hasRole('ESTUDANTE')")
     @PostMapping
     public ResponseEntity<AgendamentoResponse> agendar(@Valid @RequestBody AgendamentoRequest request)
             throws VagaNotFoundException, UnavailableVagaException {

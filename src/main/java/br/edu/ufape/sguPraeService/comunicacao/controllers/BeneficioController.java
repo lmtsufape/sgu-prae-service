@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
+import br.edu.ufape.sguPraeService.models.Pagamento;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -145,8 +146,10 @@ public class BeneficioController {
 
 //    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')") Rota Publica
     @GetMapping("/relatorio/financeiro")
-    public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro() {
-        RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro();
+    public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
+            @QuerydslPredicate(root = Pagamento.class) Predicate predicate) {
+
+        RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(predicate);
         return ResponseEntity.ok(relatorio);
     }
 
@@ -163,8 +166,9 @@ public class BeneficioController {
     }
 
     @GetMapping("/quantidade/beneficiados/por/curso")
-    public ResponseEntity<List<Map<String, Object>>> getQuantidadeBeneficiadosPorCurso() {
-        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso();
+    public ResponseEntity<List<Map<String, Object>>> getQuantidadeBeneficiadosPorCurso(
+            @QuerydslPredicate(root = Pagamento.class) Predicate predicate) {
+        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso(predicate);
         return ResponseEntity.ok(resposta);
     }
 

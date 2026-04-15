@@ -815,13 +815,13 @@ public class Fachada {
         return beneficioService.buscarPorPagamento(pagamentoId);
     }
 
-    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro() {
-        // 1. Coleta os dados financeiros globais usando o PagamentoService
-        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos();
+    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(Predicate predicate) {
+        // 1. Coleta os dados financeiros globais filtrados pelo PagamentoService
+        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos(predicate);
         Double totalGeral = (totalGeralBD != null) ? totalGeralBD.doubleValue() : 0.0;
 
-        // 2. Coleta a divisão de valores por Tipo de Benefício usando o PagamentoService
-        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio();
+        // 2. Coleta a divisão de valores por Tipo de Benefício
+        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio(predicate);
         List<RelatorioFinanceiroResponse.ValorPorTipoDTO> valorPorTipo = dadosPorTipo.stream()
                 .map(obj -> new RelatorioFinanceiroResponse.ValorPorTipoDTO(
                         (Long) obj[0],
@@ -829,10 +829,12 @@ public class Fachada {
                         ((BigDecimal) obj[2]).doubleValue()
                 )).toList();
 
-        // 3. Coleta os dados de estudantes e cursos usando o BeneficioService
-        Long totalEstudantes = beneficioService.contarEstudantesBeneficiados();
+        // 3. Obter os estudantes ÚNICOS atrelados aos pagamentos que passaram no filtro
+        List<java.util.UUID> userIdsAtivos = pagamentoService.obterUserIdsEstudantesComPagamento(predicate);
 
-        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso();
+        // 4. Delegar ao BeneficioService o agrupamento de Cursos usando a lista de alunos exata
+        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso(userIdsAtivos);
+
         List<RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO> beneficiadosPorCurso = dadosCursos.stream()
                 .map(map -> new RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO(
                         (Long) map.get("cursoId"),
@@ -840,17 +842,16 @@ public class Fachada {
                         (Long) map.get("quantidadeBeneficiados")
                 )).toList();
 
-        // 4. Constrói o objeto final espelhando a interface TypeScript do Frontend
+        // 5. Constrói o objeto final
         return RelatorioFinanceiroResponse.builder()
                 .totalGeral(totalGeral)
-                .quantidadePessoasAtendidas(totalEstudantes != null ? totalEstudantes.intValue() : 0)
+                .quantidadePessoasAtendidas(userIdsAtivos.size()) // Usamos o tamanho da lista filtrada
                 .quantidadeTiposBeneficio(valorPorTipo.size())
                 .quantidadeCursosDistintos(beneficiadosPorCurso.size())
                 .valorTotalPorTipoBeneficio(valorPorTipo)
                 .quantidadeBeneficiadosPorCurso(beneficiadosPorCurso)
                 .build();
     }
-
     public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
         BeneficioResponse response = new BeneficioResponse(beneficio, modelMapper);
 
@@ -1104,8 +1105,8 @@ public class Fachada {
         return folha;
     }
 
-    public BigDecimal obterValorTotalPagamentosAtivos() {
-        return pagamentoService.obterValorTotalPagamentosAtivos();
+    public BigDecimal obterValorTotalPagamentosAtivos(Predicate predicate) {
+        return pagamentoService.obterValorTotalPagamentosAtivos(predicate);
     }
 
     public PagamentoResponse mapToPagamentoResponse(Pagamento pagamento) {
@@ -1128,12 +1129,13 @@ public class Fachada {
         return response;
     }
 
-    public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso() {
-        return beneficioService.obterQuantidadeBeneficiadosPorCurso();
+    public List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(Predicate predicate) {
+        List<UUID> userIds = pagamentoService.obterUserIdsEstudantesComPagamento(predicate);
+        return beneficioService.obterQuantidadeBeneficiadosPorCurso(userIds);
     }
 
-    public List<Object[]> obterValorTotalPorTipoBeneficio() {
-        return pagamentoService.obterValorTotalPorTipoBeneficio();
+    public List<Object[]> obterValorTotalPorTipoBeneficio(Predicate predicate) {
+        return pagamentoService.obterValorTotalPorTipoBeneficio(predicate);
     }
 
     // ------------------- Armazenamento ------------------- //

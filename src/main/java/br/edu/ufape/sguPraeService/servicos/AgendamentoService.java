@@ -14,7 +14,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -31,21 +34,40 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
 
     @Override
     public Agendamento agendar(Vaga vaga, Estudante estudante, ModalidadeAgendamento modalidade) {
-        // Regra 1: Bloquear mais de um agendamento por dia
-        boolean jaPossuiAgendamento = repository.existsByEstudante_UserIdAndDataAndAtivoTrue(
+
+        //  1. TRAVA DE TIMEOUT DE 24 HORAS
+        Optional<Agendamento> ultimoAgendamento = repository.findTopByEstudante_UserIdOrderByDataCriacaoDesc(estudante.getUserId());
+
+        if (ultimoAgendamento.isPresent() && ultimoAgendamento.get().getDataCriacao() != null) {
+            LocalDateTime dataUltimaCriacao = ultimoAgendamento.get().getDataCriacao();
+
+            // Verifica se o tempo decorrido desde o último agendamento é menor que 24 horas
+            if (ChronoUnit.HOURS.between(dataUltimaCriacao, LocalDateTime.now()) < 24) {
+                LocalDateTime liberacao = dataUltimaCriacao.plusHours(24);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+
+                throw new IllegalArgumentException(
+                        "Você só pode realizar um novo agendamento a cada 24 horas. " +
+                                "Seu próximo agendamento estará liberado em: " + liberacao.format(formatter)
+                );
+            }
+        }
+
+        //  2. TRAVA DE 1 AGENDAMENTO POR DIA DO EVENTO
+        boolean jaPossuiAgendamentoNaData = repository.existsByEstudante_UserIdAndDataAndAtivoTrue(
                 estudante.getUserId(), vaga.getCronograma().getData()
         );
 
-        if (jaPossuiAgendamento) {
-            // Nota: Se vocês tiverem uma exceção customizada para regras de negócio (ex: RegraDeNegocioException), use-a aqui.
-            throw new IllegalArgumentException("Você já possui um agendamento ativo para esta data.");
+        if (jaPossuiAgendamentoNaData) {
+            throw new IllegalArgumentException("Você já possui um agendamento ativo para a data deste cronograma.");
         }
 
+        // 3. SALVAMENTO NORMAL
         Agendamento agendamento = new Agendamento();
         agendamento.setData(vaga.getCronograma().getData());
         agendamento.setVaga(vaga);
         agendamento.setEstudante(estudante);
-        agendamento.setModalidade(modalidade); // Setando a nova modalidade
+        agendamento.setModalidade(modalidade);
         return repository.save(agendamento);
     }
 

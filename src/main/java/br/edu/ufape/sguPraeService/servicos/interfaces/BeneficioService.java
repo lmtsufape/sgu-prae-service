@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import com.querydsl.core.types.Predicate;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public interface BeneficioService {
     Page<Beneficio> listar(Predicate predicate, Pageable pageable);
@@ -47,5 +49,5 @@ public interface BeneficioService {
 
     Long contarCursosDistintosComBeneficioAtivo();
 
-    List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso();
+    List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds);
 }
