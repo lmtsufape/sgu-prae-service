@@ -130,14 +130,16 @@ public class PagamentoController {
 
     @Operation(summary = "Retorna o valor total em reais de pagamentos já realizados de todos os benefícios")
     @GetMapping("/total")
-    public ResponseEntity<BigDecimal> getValorTotalPagamentos() {
-        BigDecimal total = fachada.obterValorTotalPagamentosAtivos();
+    public ResponseEntity<BigDecimal> getValorTotalPagamentos(
+            @QuerydslPredicate(root = Pagamento.class) Predicate predicate) {
+        BigDecimal total = fachada.obterValorTotalPagamentosAtivos(predicate);
         return ResponseEntity.ok(total);
     }
 
     @GetMapping("/total/tipo/beneficio")
-    public ResponseEntity<List<Map<String, Object>>> getValorTotalPorTipoBeneficio() {
-        List<Object[]> resultado = fachada.obterValorTotalPorTipoBeneficio();
+    public ResponseEntity<List<Map<String, Object>>> getValorTotalPorTipoBeneficio(
+            @QuerydslPredicate(root = Pagamento.class) Predicate predicate) {
+        List<Object[]> resultado = fachada.obterValorTotalPorTipoBeneficio(predicate);
         List<Map<String, Object>> resposta = new java.util.ArrayList<>();
         for (Object[] row : resultado) {
             Map<String, Object> map = new java.util.HashMap<>();

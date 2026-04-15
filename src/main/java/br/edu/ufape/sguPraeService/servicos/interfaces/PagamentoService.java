@@ -7,6 +7,7 @@ import com.querydsl.core.types.Predicate;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +37,9 @@ public interface PagamentoService {
 
     FolhaPagamentoResponse gerarFolhaPagamento(Integer ano, Integer mes, String numeroLote);
 
-    BigDecimal obterValorTotalPagamentosAtivos();
+    BigDecimal obterValorTotalPagamentosAtivos(Predicate predicate);
 
-    List<Object[]> obterValorTotalPorTipoBeneficio();
+    List<Object[]> obterValorTotalPorTipoBeneficio(Predicate predicate);
+
+    List<UUID> obterUserIdsEstudantesComPagamento(Predicate predicate);
 }

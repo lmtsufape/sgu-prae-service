@@ -6,12 +6,13 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+import br.edu.ufape.sguPraeService.config.FeignClientConfig;
 
 import java.util.List;
 import java.util.UUID;
 
 
-@FeignClient(name = "authServiceClient", url = "${authClient.base-url}")
+@FeignClient(name = "authServiceClient", url = "${authClient.base-url}", configuration = FeignClientConfig.class)
 public interface AuthServiceClient {
 
     @PostMapping("/aluno/batch")

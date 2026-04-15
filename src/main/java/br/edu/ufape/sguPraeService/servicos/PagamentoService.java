@@ -19,10 +19,7 @@ import com.querydsl.core.BooleanBuilder;
 import br.edu.ufape.sguPraeService.models.QPagamento;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service @RequiredArgsConstructor
@@ -169,12 +166,60 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
         return folha;
     }
 
-    public BigDecimal obterValorTotalPagamentosAtivos() {
-        return pagamentoRepository.findTotalPagamentosAtivos();
+    @Override
+    public BigDecimal obterValorTotalPagamentosAtivos(Predicate predicate) {
+        QPagamento qPagamento = QPagamento.pagamento;
+        BooleanBuilder builder = new BooleanBuilder().and(qPagamento.ativo.isTrue());
+        if (predicate != null) builder.and(predicate);
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (Pagamento p : pagamentoRepository.findAll(builder)) {
+            if (p.getValor() != null) {
+                total = total.add(p.getValor());
+            }
+        }
+        return total;
     }
 
     @Override
-    public List<Object[]> obterValorTotalPorTipoBeneficio() {
-        return pagamentoRepository.findValorTotalPorTipoBeneficio();
+    public List<Object[]> obterValorTotalPorTipoBeneficio(Predicate predicate) {
+        QPagamento qPagamento = QPagamento.pagamento;
+        BooleanBuilder builder = new BooleanBuilder().and(qPagamento.ativo.isTrue());
+        if (predicate != null) builder.and(predicate);
+
+        Map<Long, Object[]> mapa = new HashMap<>();
+        for (Pagamento p : pagamentoRepository.findAll(builder)) {
+            if (p.getBeneficio() != null && p.getBeneficio().getTipoBeneficio() != null && p.getValor() != null) {
+                Long tipoId = p.getBeneficio().getTipoBeneficio().getId();
+                String descricao = p.getBeneficio().getTipoBeneficio().getDescricao();
+
+                if (mapa.containsKey(tipoId)) {
+                    Object[] arr = mapa.get(tipoId);
+                    BigDecimal sum = (BigDecimal) arr[2];
+                    arr[2] = sum.add(p.getValor());
+                } else {
+                    mapa.put(tipoId, new Object[]{tipoId, descricao, p.getValor()});
+                }
+            }
+        }
+        return new ArrayList<>(mapa.values());
+    }
+
+    @Override
+    public List<UUID> obterUserIdsEstudantesComPagamento(Predicate predicate) {
+        QPagamento qPagamento = QPagamento.pagamento;
+        BooleanBuilder builder = new BooleanBuilder().and(qPagamento.ativo.isTrue());
+        if (predicate != null) builder.and(predicate);
+
+        List<UUID> ids = new ArrayList<>();
+        for (Pagamento p : pagamentoRepository.findAll(builder)) {
+            if (p.getBeneficio() != null && p.getBeneficio().getEstudantes() != null) {
+                UUID uid = p.getBeneficio().getEstudantes().getUserId();
+                if (!ids.contains(uid)) {
+                    ids.add(uid);
+                }
+            }
+        }
+        return ids;
     }
 }

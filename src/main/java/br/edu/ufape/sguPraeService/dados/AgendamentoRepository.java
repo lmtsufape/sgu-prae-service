@@ -23,6 +23,8 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
 
     boolean existsByEstudante_UserIdAndDataAndAtivoTrue(java.util.UUID userId, LocalDate data);
 
+    Optional<Agendamento> findTopByEstudante_UserIdOrderByDataCriacaoDesc(UUID userId);
+
     Page<Agendamento> findAllByEstudante_UserIdAndAtivoTrue(UUID userId, Pageable pageable);
 
     @Query("SELECT a FROM Agendamento a " +
