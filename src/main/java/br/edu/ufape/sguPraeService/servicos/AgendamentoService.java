@@ -35,10 +35,12 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
     @Override
     public Agendamento agendar(Vaga vaga, Estudante estudante, ModalidadeAgendamento modalidade) {
 
-        //  1. TRAVA DE TIMEOUT DE 24 HORAS
-        Optional<Agendamento> ultimoAgendamento = repository.findTopByEstudante_UserIdOrderByDataCriacaoDesc(estudante.getUserId());
+        // 1. TRAVA DE TIMEOUT DE 24 HORAS (Agora imune a nulos do banco)
+        Optional<Agendamento> ultimoAgendamento =
+                repository.findTopByEstudante_UserIdAndDataCriacaoIsNotNullOrderByDataCriacaoDesc(estudante.getUserId());
 
-        if (ultimoAgendamento.isPresent() && ultimoAgendamento.get().getDataCriacao() != null) {
+        if (ultimoAgendamento.isPresent()) {
+            // Como já garantimos no repositório que a data não é nula, podemos pegar direto
             LocalDateTime dataUltimaCriacao = ultimoAgendamento.get().getDataCriacao();
 
             // Verifica se o tempo decorrido desde o último agendamento é menor que 24 horas

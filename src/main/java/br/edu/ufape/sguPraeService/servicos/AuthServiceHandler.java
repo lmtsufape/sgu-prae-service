@@ -1,6 +1,7 @@
 package br.edu.ufape.sguPraeService.servicos;
 
 import br.edu.ufape.sguPraeService.auth.AuthServiceClient;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -102,5 +103,15 @@ public class AuthServiceHandler implements br.edu.ufape.sguPraeService.servicos.
     public List<FuncionarioResponse> fallbackBuscarTecnicos(UUID userId, Throwable t) {
         log.warn("Não foi possível buscar técnico com id {} no AuthService", userId, t);
         return Collections.emptyList();
+    }
+
+    @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarAlunosPublicos")
+    public List<AlunoPublicResponse> buscarAlunosPublicos(List<UUID> userIds) {
+        return authServiceClient.buscarAlunosPublicos(userIds);
+    }
+
+    public List<AlunoPublicResponse> fallbackBuscarAlunosPublicos(List<UUID> userIds, Throwable t) {
+        log.warn("Falha ao buscar alunos públicos em batch. Retornando lista vazia.", t);
+        return java.util.Collections.emptyList();
     }
 }

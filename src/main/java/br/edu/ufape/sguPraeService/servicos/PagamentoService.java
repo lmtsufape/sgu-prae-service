@@ -187,22 +187,22 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
         BooleanBuilder builder = new BooleanBuilder().and(qPagamento.ativo.isTrue());
         if (predicate != null) builder.and(predicate);
 
-        Map<Long, Object[]> mapa = new HashMap<>();
+        java.util.Map<Long, Object[]> agrupado = new java.util.HashMap<>();
         for (Pagamento p : pagamentoRepository.findAll(builder)) {
             if (p.getBeneficio() != null && p.getBeneficio().getTipoBeneficio() != null && p.getValor() != null) {
                 Long tipoId = p.getBeneficio().getTipoBeneficio().getId();
                 String descricao = p.getBeneficio().getTipoBeneficio().getDescricao();
 
-                if (mapa.containsKey(tipoId)) {
-                    Object[] arr = mapa.get(tipoId);
+                if (agrupado.containsKey(tipoId)) {
+                    Object[] arr = agrupado.get(tipoId);
                     BigDecimal sum = (BigDecimal) arr[2];
                     arr[2] = sum.add(p.getValor());
                 } else {
-                    mapa.put(tipoId, new Object[]{tipoId, descricao, p.getValor()});
+                    agrupado.put(tipoId, new Object[]{tipoId, descricao, p.getValor()});
                 }
             }
         }
-        return new ArrayList<>(mapa.values());
+        return new java.util.ArrayList<>(agrupado.values());
     }
 
     @Override
@@ -214,12 +214,9 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
         List<UUID> ids = new ArrayList<>();
         for (Pagamento p : pagamentoRepository.findAll(builder)) {
             if (p.getBeneficio() != null && p.getBeneficio().getEstudantes() != null) {
-                UUID uid = p.getBeneficio().getEstudantes().getUserId();
-                if (!ids.contains(uid)) {
-                    ids.add(uid);
-                }
+                ids.add(p.getBeneficio().getEstudantes().getUserId());
             }
         }
-        return ids;
+        return ids.stream().distinct().toList();
     }
 }

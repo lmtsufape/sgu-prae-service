@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.servicos.interfaces;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -44,4 +45,9 @@ public interface AuthServiceHandler {
     FuncionarioResponse fallbackBuscarTecnicoPorId(UUID userId, Throwable t);
     @SuppressWarnings("unused")
     List<FuncionarioResponse> fallbackBuscarTecnicos(UUID userId, Throwable t);
+
+    @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackBuscarAlunosPublicos")
+    List<AlunoPublicResponse> buscarAlunosPublicos(List<UUID> userIds);
+
+    List<AlunoPublicResponse> fallbackBuscarAlunosPublicos(List<UUID> userIds, Throwable t);
 }
