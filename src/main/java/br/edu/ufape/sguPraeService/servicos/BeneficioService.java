@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse;
 import br.edu.ufape.sguPraeService.exceptions.LimiteBeneficiosExcedidoException;
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.Estudante;
@@ -185,32 +186,24 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 	}
 
 
-	public List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds) {
-		if (userIds == null || userIds.isEmpty()) {
-			return java.util.Collections.emptyList();
-		}
+	public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds) {
+		if (userIds == null || userIds.isEmpty()) return java.util.Collections.emptyList();
 
-		List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
-
-		if (alunos == null || alunos.isEmpty()) {
-			return java.util.Collections.emptyList();
-		}
+		List<AlunoPublicResponse> alunos = authServiceHandler.buscarAlunosPublicos(userIds);
 
 		return alunos.stream()
-				.filter(a -> a.getCurso() != null && a.getCurso().getId() != null)
+				.filter(a -> a.getCurso() != null)
 				.collect(java.util.stream.Collectors.groupingBy(
-						a -> java.util.Map.of(
-								"cursoId", a.getCurso().getId(),
-								"cursoNome", a.getCurso().getNome()
-						),
+						a -> java.util.Map.of("id", a.getCurso().getId(), "nome", a.getCurso().getNome()),
 						java.util.stream.Collectors.counting()
 				))
 				.entrySet().stream()
 				.map(e -> {
-					java.util.Map<String, Object> map = new java.util.HashMap<>(e.getKey());
+					java.util.Map<String, Object> map = new java.util.HashMap<>();
+					map.put("cursoId", e.getKey().get("id"));
+					map.put("cursoNome", e.getKey().get("nome"));
 					map.put("quantidadeBeneficiados", e.getValue());
 					return map;
-				})
-				.toList();
+				}).toList();
 	}
 }

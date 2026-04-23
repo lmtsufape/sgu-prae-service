@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.auth;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.PageResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
@@ -14,6 +15,9 @@ import java.util.UUID;
 
 @FeignClient(name = "authServiceClient", url = "${authClient.base-url}", configuration = FeignClientConfig.class)
 public interface AuthServiceClient {
+
+    @PostMapping("/aluno/public/batch")
+    List<AlunoPublicResponse> buscarAlunosPublicos(@RequestBody List<UUID> userIds);
 
     @PostMapping("/aluno/batch")
     List<AlunoResponse> buscarAlunos(@RequestBody List<UUID> userIds);

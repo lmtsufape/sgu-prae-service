@@ -815,13 +815,90 @@ public class Fachada {
         return beneficioService.buscarPorPagamento(pagamentoId);
     }
 
-    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(Predicate predicate) {
-        // 1. Coleta os dados financeiros globais filtrados pelo PagamentoService
-        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos(predicate);
+//    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(Predicate predicate) {
+//        // 1. Coleta os dados financeiros globais filtrados pelo PagamentoService
+//        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos(predicate);
+//        Double totalGeral = (totalGeralBD != null) ? totalGeralBD.doubleValue() : 0.0;
+//
+//        // 2. Coleta a divisão de valores por Tipo de Benefício
+//        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio(predicate);
+//        List<RelatorioFinanceiroResponse.ValorPorTipoDTO> valorPorTipo = dadosPorTipo.stream()
+//                .map(obj -> new RelatorioFinanceiroResponse.ValorPorTipoDTO(
+//                        (Long) obj[0],
+//                        (String) obj[1],
+//                        ((BigDecimal) obj[2]).doubleValue()
+//                )).toList();
+//
+//        // 3. Obter os estudantes ÚNICOS atrelados aos pagamentos que passaram no filtro
+//        List<java.util.UUID> userIdsAtivos = pagamentoService.obterUserIdsEstudantesComPagamento(predicate);
+//
+//        // 4. Delegar ao BeneficioService o agrupamento de Cursos usando a lista de alunos exata
+//        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso(userIdsAtivos);
+//
+//        List<RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO> beneficiadosPorCurso = dadosCursos.stream()
+//                .map(map -> new RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO(
+//                        (Long) map.get("cursoId"),
+//                        (String) map.get("cursoNome"),
+//                        (Long) map.get("quantidadeBeneficiados")
+//                )).toList();
+//
+//        // 5. Constrói o objeto final
+//        return RelatorioFinanceiroResponse.builder()
+//                .totalGeral(totalGeral)
+//                .quantidadePessoasAtendidas(userIdsAtivos.size()) // Usamos o tamanho da lista filtrada
+//                .quantidadeTiposBeneficio(valorPorTipo.size())
+//                .quantidadeCursosDistintos(beneficiadosPorCurso.size())
+//                .valorTotalPorTipoBeneficio(valorPorTipo)
+//                .quantidadeBeneficiadosPorCurso(beneficiadosPorCurso)
+//                .build();
+//    }
+
+    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(Predicate predicate, Long cursoId) {
+        QPagamento qPagamento = QPagamento.pagamento;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qPagamento.ativo.isTrue());
+
+        if (predicate != null) {
+            builder.and(predicate);
+        }
+
+        // 1. Pegamos TODOS os UUIDs de estudantes que têm pagamento para o filtro atual
+        List<java.util.UUID> userIdsGerais = pagamentoService.obterUserIdsEstudantesComPagamento(builder);
+
+        if (userIdsGerais.isEmpty()) {
+            return construirRelatorioVazio();
+        }
+
+        // 2. FILTRO POR CURSO MÁGICO (Usando a rota pública que funciona)
+        if (cursoId != null) {
+            // Buscamos os dados públicos (com os cursos) apenas dos alunos que têm pagamentos
+            // Importante: use o método novo que chama o /public/batch
+            List<br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse> alunosBatch =
+                    authServiceHandler.buscarAlunosPublicos(userIdsGerais);
+
+            // Filtramos na memória para reter apenas os UUIDs de quem é do curso pesquisado
+            List<java.util.UUID> userIdsDoCurso = alunosBatch.stream()
+                    .filter(a -> a.getCurso() != null && a.getCurso().getId().equals(cursoId))
+                    .map(br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse::getId)
+                    .toList();
+
+            // Se, após o filtro, não sobrar ninguém, retornamos zerado
+            if (userIdsDoCurso.isEmpty()) {
+                return construirRelatorioVazio();
+            }
+
+            // Injetamos a trava no banco: some apenas os pagamentos DESTES alunos
+            builder.and(qPagamento.beneficio.estudantes.userId.in(userIdsDoCurso));
+
+            // Atualizamos a lista de ativos para a contagem final
+            userIdsGerais = userIdsDoCurso;
+        }
+
+        // 3. Calcula Totais Financeiros com o builder já restringido (se tiver curso)
+        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos(builder);
         Double totalGeral = (totalGeralBD != null) ? totalGeralBD.doubleValue() : 0.0;
 
-        // 2. Coleta a divisão de valores por Tipo de Benefício
-        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio(predicate);
+        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio(builder);
         List<RelatorioFinanceiroResponse.ValorPorTipoDTO> valorPorTipo = dadosPorTipo.stream()
                 .map(obj -> new RelatorioFinanceiroResponse.ValorPorTipoDTO(
                         (Long) obj[0],
@@ -829,11 +906,9 @@ public class Fachada {
                         ((BigDecimal) obj[2]).doubleValue()
                 )).toList();
 
-        // 3. Obter os estudantes ÚNICOS atrelados aos pagamentos que passaram no filtro
-        List<java.util.UUID> userIdsAtivos = pagamentoService.obterUserIdsEstudantesComPagamento(predicate);
-
-        // 4. Delegar ao BeneficioService o agrupamento de Cursos usando a lista de alunos exata
-        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso(userIdsAtivos);
+        // 4. Distribuição por Cursos
+        // Já temos a lista de UUIDs certinha, passamos pro serviço agrupar
+        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso(userIdsGerais);
 
         List<RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO> beneficiadosPorCurso = dadosCursos.stream()
                 .map(map -> new RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO(
@@ -842,16 +917,28 @@ public class Fachada {
                         (Long) map.get("quantidadeBeneficiados")
                 )).toList();
 
-        // 5. Constrói o objeto final
         return RelatorioFinanceiroResponse.builder()
                 .totalGeral(totalGeral)
-                .quantidadePessoasAtendidas(userIdsAtivos.size()) // Usamos o tamanho da lista filtrada
+                .quantidadePessoasAtendidas(userIdsGerais.size())
                 .quantidadeTiposBeneficio(valorPorTipo.size())
                 .quantidadeCursosDistintos(beneficiadosPorCurso.size())
                 .valorTotalPorTipoBeneficio(valorPorTipo)
                 .quantidadeBeneficiadosPorCurso(beneficiadosPorCurso)
                 .build();
     }
+
+    // Método auxiliar apenas para deixar o código limpo e evitar repetição
+    private RelatorioFinanceiroResponse construirRelatorioVazio() {
+        return RelatorioFinanceiroResponse.builder()
+                .totalGeral(0.0)
+                .quantidadePessoasAtendidas(0)
+                .quantidadeTiposBeneficio(0)
+                .quantidadeCursosDistintos(0)
+                .valorTotalPorTipoBeneficio(new java.util.ArrayList<>())
+                .quantidadeBeneficiadosPorCurso(new java.util.ArrayList<>())
+                .build();
+    }
+
     public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
         BeneficioResponse response = new BeneficioResponse(beneficio, modelMapper);
 

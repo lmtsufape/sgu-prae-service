@@ -10,6 +10,7 @@ services:
     networks:
       - sgu-networks
     environment:
+      TZ: America/Sao_Paulo
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://sgu-prae-db:5432/prae
       SPRING_DATASOURCE_USERNAME: postgres

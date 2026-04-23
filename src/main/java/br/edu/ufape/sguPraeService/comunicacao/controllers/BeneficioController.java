@@ -145,13 +145,14 @@ public class BeneficioController {
     }
 
 //    @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')") Rota Publica
-    @GetMapping("/relatorio/financeiro")
-    public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
-            @QuerydslPredicate(root = Pagamento.class) Predicate predicate) {
+@GetMapping("/relatorio/financeiro")
+public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
+        @QuerydslPredicate(root = Pagamento.class) Predicate predicate,
+        @RequestParam(required = false) Long cursoId) {
 
-        RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(predicate);
-        return ResponseEntity.ok(relatorio);
-    }
+    RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(predicate, cursoId);
+    return ResponseEntity.ok(relatorio);
+}
 
     @GetMapping("/quantidade/beneficiados")
     public ResponseEntity<Long> getQuantidadeEstudantesBeneficiados() {
