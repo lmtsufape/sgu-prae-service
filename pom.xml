@@ -90,7 +90,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.14</version> <!-- Você pode considerar atualizar se houver versões mais recentes compatíveis -->
+            <version>4.5.14</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -135,21 +135,44 @@
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
 
-        <!-- === Dependências do QueryDSL adicionadas === -->
+        <!-- MIGRATIONS DA BASE DE DADOS (FLYWAY) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- DEPENDÊNCIAS DE OBSERVABILIDADE E INTEGRIDADE -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
+
+        <!-- === Dependências do QueryDSL === -->
         <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-jpa</artifactId>
             <version>${querydsl.version}</version>
-            <classifier>jakarta</classifier> <!-- Essencial para Spring Boot 3+ -->
+            <classifier>jakarta</classifier>
         </dependency>
         <dependency>
             <groupId>com.querydsl</groupId>
             <artifactId>querydsl-apt</artifactId>
             <version>${querydsl.version}</version>
-            <classifier>jakarta</classifier> <!-- Essencial para Spring Boot 3+ -->
-            <scope>provided</scope> <!-- Apenas necessário durante a compilação -->
+            <classifier>jakarta</classifier>
+            <scope>provided</scope>
         </dependency>
-        <!-- === Fim das dependências do QueryDSL === -->
 
     </dependencies>
     <dependencyManagement>
@@ -166,7 +189,6 @@
 
     <build>
         <plugins>
-            <!-- Plugin do Spring Boot (sem alterações) -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -179,46 +201,34 @@
                     </excludes>
                 </configuration>
             </plugin>
-
-            <!-- Plugin Maven Compiler ATUALIZADO para incluir QueryDSL -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <!-- A versão pode já estar definida no seu parent POM, mas é bom garantir -->
                 <version>3.11.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <!-- Caminhos dos processadores de anotação -->
                     <annotationProcessorPaths>
-                        <!-- QueryDSL APT -->
                         <path>
                             <groupId>com.querydsl</groupId>
                             <artifactId>querydsl-apt</artifactId>
                             <version>${querydsl.version}</version>
                             <classifier>jakarta</classifier>
                         </path>
-                        <!-- Jakarta Persistence API -->
                         <path>
                             <groupId>jakarta.persistence</groupId>
                             <artifactId>jakarta.persistence-api</artifactId>
-                            <!-- A versão do Jakarta Persistence API é gerenciada pelo Spring Boot Parent -->
                             <version>${jakarta-persistence.version}</version>
                         </path>
-                        <!-- Lombok (mantido da sua configuração original) -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <!-- A versão do Lombok é gerenciada pelo Spring Boot Parent -->
                             <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
-                    <!-- Diretório de saída para as Q-classes -->
                     <generatedSourcesDirectory>${project.build.directory}/generated-sources/java</generatedSourcesDirectory>
                 </configuration>
             </plugin>
-            <!-- Fim da atualização do Maven Compiler Plugin -->
-
         </plugins>
     </build>
 
