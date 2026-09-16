@@ -1,26 +1,47 @@
 arquivo:
   diretorio-upload: /app/storage
+
 server:
   port: 8082
+  shutdown: graceful # Absorvido do config-repo/application.yml
   error:
     include-stacktrace: never
+
+# Configurações do Actuator absorvidas do config-repo/application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 spring:
   application:
     name: sgu-prae-service
+
   web:
     locale-resolver: fixed
     locale: pt_BR
+
   devtools:
     livereload:
       enabled: true
+
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 20MB
+
   datasource:
     url: jdbc:postgresql://localhost:5432/prae
     username: postgres
-    password: 55555
+    password: password # Corrigido para facilitar testes locais
 
   jpa:
     hibernate:
@@ -29,13 +50,34 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # Flyway
   flyway:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 1
     create-schemas: true
     default-schema: public
+
+  # Configuração de mensageria local e resiliência (Absorvida do sgu-auth-service.yml)
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2s
+          max-attempts: 3
+          max-interval: 10s
+          multiplier: 2
+        default-requeue-rejected: false
+
+  # Configuração do Redis (Absorvida do Gateway)
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   security:
     oauth2:
@@ -47,26 +89,6 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs
-  cloud:
-    openfeign:
-      client:
-        config:
-          default:
-            connect-timeout: 5000
-            read-timeout: 20000
-
-authClient:
-  base-url: http://gateway:8080/auth
-  client-id: prae-application
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      authServiceClient:
-        registerHealthIndicator: true
-        slidingWindowSize: 5
-        failureRateThreshold: 50
-        waitDurationInOpenState: 5s
 
 springdoc:
   api-docs:
@@ -74,37 +96,56 @@ springdoc:
   swagger-ui:
     path: /api-doc/swagger.html
 
+# O PRAE agora assume o client sgu-application para manipular usuários e roles
 keycloak:
   auth-server-url: http://localhost:9090/
   realm: sgu-ufape
+  client-id: sgu-application
+  client-secret: iIueertdxnoPmpoA1Fsy6BfjMVbEa1d5
 
 common:
   front: http://localhost:3000/, https://sgiufape.vercel.app/
+  emailEnabled: false
 
 logging:
   level:
     org:
       springframework: DEBUG
----
 
+# Desabilita completamente o Eureka para o Monolito
+eureka:
+  client:
+    enabled: false
+    registerWithEureka: false
+    fetchRegistry: false
+
+---
 # PROFILE DOCKER
 spring:
   config:
     activate:
       on-profile: docker
+
   rabbitmq:
-    host: localhost
+    host: rabbitmq # Ajustado para o nome do container no docker-compose
     port: 5672
     username: guest
     password: guest
+
+  data:
+    redis:
+      host: redis # Ajustado para o nome do container no docker-compose
+      port: 6379
+
   datasource:
-    url: jdbc:postgresql://backend-db:5432/prae
+    url: jdbc:postgresql://prae-db:5432/prae # Ajustado para o nome do container no docker-compose
     username: postgres
     password: password
 
   jpa:
     hibernate:
       ddl-auto: validate
+
   flyway:
     enabled: true
 
@@ -117,13 +158,9 @@ spring:
 keycloak:
   auth-server-url: http://keycloak:8080/
   realm: sgu-ufape
+  client-id: sgu-application
+  client-secret: iIueertdxnoPmpoA1Fsy6BfjMVbEa1d5
 
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://discovery:8761/eureka/
-    registerWithEureka: true
-    fetchRegistry: true
-  instance:
-    hostname: sgu-prae-service
-    prefer-ip-address: false
+    enabled: false

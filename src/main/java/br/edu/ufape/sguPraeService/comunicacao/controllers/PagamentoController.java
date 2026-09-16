@@ -22,6 +22,7 @@ import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -110,7 +111,7 @@ public class PagamentoController {
     @PreAuthorize("hasAnyRole('GESTOR', 'ESTUDANTE', 'PRAE_ACCESS')")
     @GetMapping("/estudante/{estudanteId}")
     public ResponseEntity<Page<PagamentoResponse>> listarPagamentosPorEstudante(
-            @PathVariable Long estudanteId,
+            @PathVariable UUID estudanteId,
             @QuerydslPredicate(root = Pagamento.class) Predicate predicate,
             Pageable pageable) {
 

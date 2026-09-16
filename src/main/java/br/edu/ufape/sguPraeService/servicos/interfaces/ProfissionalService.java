@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface ProfissionalService {
     List<Profissional> listar();
 
-    Profissional buscar(Long id) throws ProfissionalNotFoundException;
+    Profissional buscar(UUID id) throws ProfissionalNotFoundException;
 
     Profissional buscarPorUserId(UUID id) throws ProfissionalNotFoundException;
 
@@ -17,5 +17,5 @@ public interface ProfissionalService {
 
     Profissional editar(UUID userId, Profissional entity) throws ProfissionalNotFoundException;
 
-    void deletar(Long id) throws ProfissionalNotFoundException;
+    void deletar(UUID id) throws ProfissionalNotFoundException;
 }

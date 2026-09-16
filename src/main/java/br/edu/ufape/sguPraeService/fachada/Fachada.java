@@ -8,9 +8,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
-import br.edu.ufape.sguPraeService.auth.AuthServiceClient;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoRequest;
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.PageResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.auth.TokenResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.gestor.GestorRequest;
+import br.edu.ufape.sguPraeService.comunicacao.dto.notificacao.NotificacaoBroadcastRequest;
+import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalRequest;
+import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalUpdateRequest;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
@@ -20,12 +24,14 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.tipoatendimento.TipoAtendimen
 import br.edu.ufape.sguPraeService.comunicacao.mensageria.NotificacaoEvent;
 import br.edu.ufape.sguPraeService.comunicacao.mensageria.NotificacaoPublisher;
 import br.edu.ufape.sguPraeService.exceptions.*;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.*;
 import br.edu.ufape.sguPraeService.models.*;
 import br.edu.ufape.sguPraeService.models.enums.ModalidadeAgendamento;
+import br.edu.ufape.sguPraeService.servicos.interfaces.*;
 import com.querydsl.core.BooleanBuilder;
 import jakarta.ws.rs.NotAllowedException;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -34,40 +40,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
-import br.edu.ufape.sguPraeService.auth.RabbitAuthServiceClient;
 import br.edu.ufape.sguPraeService.comunicacao.dto.documento.DocumentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.VagaNotFoundException;
-import br.edu.ufape.sguPraeService.servicos.interfaces.AgendamentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.ArmazenamentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
-import br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.CancelamentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.DadosBancariosService;
-//import br.edu.ufape.sguPraeService.servicos.interfaces.DocumentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.EnderecoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.EstudanteService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.PagamentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.ProfissionalService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.TipoAtendimentoService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.TipoBeneficioService;
-import br.edu.ufape.sguPraeService.servicos.interfaces.VagaService;
-import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.DocumentoNotFoundException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import com.querydsl.core.types.Predicate;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Log4j2
 @Component
@@ -80,134 +59,232 @@ public class Fachada {
     private final EnderecoService enderecoService;
     private final DadosBancariosService dadosBancariosService;
     private final EstudanteService estudanteService;
-    private final AuthServiceHandler authServiceHandler;
     private final ModelMapper modelMapper;
-    private final RabbitAuthServiceClient rabbitAuthServiceClient;
     private final AuthenticatedUserProvider authenticatedUserProvider;
     private final AgendamentoService agendamentoService;
     private final CancelamentoService cancelamentoService;
     private final TipoBeneficioService tipoBeneficioService;
-//    private final DocumentoService documentoService;
     private final BeneficioService beneficioService;
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
-    private final AuthServiceClient authServiceClient;
     private final NotificacaoPublisher notificacaoPublisher;
+    private final KeycloakService keycloakService;
+    private final UsuarioService usuarioService;
+    private final TipoEtniaService tipoEtniaService;
+    private final GestorService gestorService;
+    private final NotificacaoSseServiceInterface notificacaoSseService;
+    private final NotificacaoRedisServiceInterface notificacaoRedisService;
 
-    @Value("${authClient.client-id}")
-    private String clientId;
+    // ================== Auth ================== //
+
+    public TokenResponse login(String username, String password) {
+        return keycloakService.login(username, password);
+    }
+
+    public TokenResponse refresh(String refreshToken) {
+        return keycloakService.refreshToken(refreshToken);
+    }
+
+    public void logout(String accessToken, String refreshToken) {
+        keycloakService.logout(accessToken, refreshToken);
+    }
+
+    public void resetPassword(String email) {
+        keycloakService.resetPassword(email);
+    }
+
+    public List<String> getUserRoles() {
+        UUID sessionId = authenticatedUserProvider.getUserId();
+        return keycloakService.getUserRoles(sessionId.toString());
+    }
+
+    // ================== Gestor ================== //
+
+    public Gestor buscarGestor(UUID id) throws GestorNotFoundException, UsuarioNotFoundException {
+        UUID sessionId = authenticatedUserProvider.getUserId();
+        boolean isAdmin = keycloakService.getUserRoles(sessionId.toString()).contains("administrador");
+        return gestorService.buscarGestor(id, isAdmin, sessionId);
+    }
+
+    public Page<Gestor> listarGestores(Predicate predicate, Pageable pageable) {
+        return gestorService.listarGestores(predicate, pageable);
+    }
+
+    // ================== Usuario ================== //
+
+    // MÉTODOS DE CRIAÇÃO (CADASTROS DISTINTOS)
+
+    @Transactional
+    public Usuario cadastrarEstudante(EstudanteRequest dto, List<MultipartFile> arquivos) throws Exception {
+        // 1. Cria a conta no Keycloak e recupera o UUID gerado
+        // Nota: O KeycloakService vai converter "ESTUDANTE" para "estudante" na hora de buscar a role
+        UUID keycloakId = keycloakService.createUser(dto.getEmail(), dto.getSenha(), "ESTUDANTE");
+
+        try {
+            // 2. Mapeia o DTO diretamente para a Entidade Estudante (Herança resolve o resto)
+            Estudante estudante = modelMapper.map(dto, Estudante.class);
+            estudante.setId(keycloakId);
+            estudante.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(dto.getTipoEtniaId()));
+//            estudante.setCurso(cursoService.buscar(dto.getCursoId()));
+
+            // 3. Processa e anexa documentos, se existirem
+            if (arquivos != null && !arquivos.isEmpty()) {
+                List<Documento> documentosSalvos = armazenamentoService.salvarArquivo(arquivos.toArray(new MultipartFile[0]));
+                estudante.adicionarDocumentos(documentosSalvos);
+            }
+
+            return estudanteService.salvarEstudante(estudante);
+
+        } catch (DataIntegrityViolationException e) {
+            keycloakService.deleteUser(keycloakId.toString()); // Rollback no Keycloak
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
+        } catch (Exception e) {
+            keycloakService.deleteUser(keycloakId.toString()); // Rollback no Keycloak
+            throw new RuntimeException("Erro inesperado ao salvar o estudante: " + e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    public Usuario cadastrarProfissional(ProfissionalRequest dto) throws Exception {
+        UUID keycloakId = keycloakService.createUser(dto.getEmail(), dto.getSenha(), "PROFISSIONAL");
+
+        try {
+            Profissional profissional = modelMapper.map(dto, Profissional.class);
+            profissional.setId(keycloakId);
+            profissional.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(dto.getTipoEtniaId()));
+
+            return profissionalService.salvar(profissional);
+
+        } catch (DataIntegrityViolationException e) {
+            keycloakService.deleteUser(keycloakId.toString()); // Rollback
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
+        } catch (Exception e) {
+            keycloakService.deleteUser(keycloakId.toString()); // Rollback
+            throw new RuntimeException("Erro ao salvar o profissional: " + e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    public Usuario cadastrarGestor(GestorRequest dto) throws Exception {
+        UUID keycloakId = keycloakService.createUser(dto.getEmail(), dto.getSenha(), "GESTOR");
+
+        try {
+            Gestor gestor = modelMapper.map(dto, Gestor.class);
+            gestor.setId(keycloakId);
+            gestor.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(dto.getTipoEtniaId()));
+
+            return usuarioService.salvar(gestor);
+
+        } catch (DataIntegrityViolationException e) {
+            keycloakService.deleteUser(keycloakId.toString()); // Rollback
+            throw ExceptionUtil.handleDataIntegrityViolationException(e);
+        } catch (Exception e) {
+            keycloakService.deleteUser(keycloakId.toString()); // Rollback
+            throw new RuntimeException("Erro ao salvar o gestor: " + e.getMessage(), e);
+        }
+    }
+
+    // MÉTODOS GERAIS DE USUÁRIO (BUSCA, EDIÇÃO, EXCLUSÃO)
+
+    public Usuario buscarUsuario(UUID id) throws UsuarioNotFoundException {
+        UUID sessionId = authenticatedUserProvider.getUserId();
+        boolean isAdmin = keycloakService.getUserRoles(sessionId.toString()).contains("administrador");
+        return usuarioService.buscarUsuario(id, isAdmin, sessionId);
+    }
+
+    public Usuario buscarUsuarioAtual() throws UsuarioNotFoundException {
+        return usuarioService.buscarUsuarioAtual();
+    }
+
+    public Page<Usuario> listarUsuarios(Predicate predicate, Pageable pageable) {
+        return usuarioService.listarUsuarios(predicate, pageable);
+    }
+
+    @Transactional
+    public Usuario editarUsuario(UsuarioPatchRequest dto) throws UsuarioNotFoundException {
+        Usuario usuario = usuarioService.buscarUsuarioAtual();
+
+        if (dto.getNome() != null) usuario.setNome(dto.getNome());
+        if (dto.getNomeSocial() != null) usuario.setNomeSocial(dto.getNomeSocial());
+        if (dto.getTelefone() != null) usuario.setTelefone(dto.getTelefone());
+
+        if (dto.getTipoEtniaId() != null) {
+            usuario.setTipoEtnia(tipoEtniaService.buscarTipoEtnia(dto.getTipoEtniaId()));
+        }
+
+        return usuarioService.salvar(usuario);
+    }
+
+    @Transactional
+    public void deletarUsuario() throws UsuarioNotFoundException {
+        UUID idSessao = authenticatedUserProvider.getUserId();
+        try {
+            keycloakService.deleteUser(idSessao.toString());
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao deletar usuário no servidor de autenticação: " + e.getMessage(), e);
+        }
+        usuarioService.deletarUsuario(idSessao);
+    }
+
+    @Transactional
+    public void deletarUsuario(UUID id) throws UsuarioNotFoundException {
+        try {
+            keycloakService.deleteUser(id.toString());
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao deletar usuário no servidor de autenticação: " + e.getMessage(), e);
+        }
+        usuarioService.deletarUsuario(id);
+    }
 
     // ------------------- Profissional ------------------- //
+
     public List<ProfissionalResponse> listarProfissionais() {
-        List<ProfissionalResponse> profissionalResponse = new ArrayList<>();
-        List<Profissional> profissionais = profissionalService.listar();
-        if (profissionais.isEmpty()) {
-            return profissionalResponse;
-        }
-        List<UUID> userIds = profissionais.stream().map(Profissional::getUserId).toList();
-        log.info("Profissionals encontrados: {}", userIds);
-        List<FuncionarioResponse> usuarios = authServiceHandler.buscarTecnicos(userIds);
-        for (int i = 0; i < profissionais.size(); i++) {
-            Profissional profissional = profissionais.get(i);
-            FuncionarioResponse usuario = usuarios.get(i);
-            ProfissionalResponse response = new ProfissionalResponse(profissional, modelMapper);
-            response.setTecnico(usuario);
-            profissionalResponse.add(response);
-        }
-        return profissionalResponse;
+        return profissionalService.listar().stream()
+                .map(profissional -> new ProfissionalResponse(profissional, modelMapper))
+                .toList();
     }
 
-    public ProfissionalResponse buscarProfissional(Long id) throws ProfissionalNotFoundException {
+    // A chave agora é UUID
+    public ProfissionalResponse buscarProfissional(UUID id) throws ProfissionalNotFoundException {
         Profissional profissional = profissionalService.buscar(id);
-        FuncionarioResponse userInfo = authServiceHandler.buscarTecnicoPorId(profissional.getUserId());
-        ProfissionalResponse response = new ProfissionalResponse(profissional, modelMapper);
-        response.setTecnico(userInfo);
-        return response;
+        return new ProfissionalResponse(profissional, modelMapper);
     }
-    
+
     public ProfissionalResponse buscarProfissionalAtual() throws ProfissionalNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
-        Profissional profissional = profissionalService.buscarPorUserId(userId);
-        FuncionarioResponse userInfo = authServiceHandler.buscarTecnicoPorId(profissional.getUserId());
-        ProfissionalResponse response = new ProfissionalResponse(profissional, modelMapper);
-        response.setTecnico(userInfo);
-        return response;
+        Profissional profissional = profissionalService.buscar(userId);
+        return new ProfissionalResponse(profissional, modelMapper);
     }
 
-    public ProfissionalResponse salvarProfissional(Profissional profissional) {
+    @Transactional
+    public ProfissionalResponse editarProfissional(ProfissionalUpdateRequest dto) throws ProfissionalNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
-        profissional.setUserId(userId);
-        Profissional novoProfissional = profissionalService.salvar(profissional);
-        FuncionarioResponse response = authServiceHandler.getTecnicoInfo();
-        rabbitAuthServiceClient.assignRoleToUser(userId.toString(), clientId, "profissional");
-        ProfissionalResponse profissionalResponse = new ProfissionalResponse(novoProfissional, modelMapper);
-        profissionalResponse.setTecnico(response);
-        return profissionalResponse;
+        Profissional profissional = profissionalService.buscar(userId);
+
+        if (dto.getEspecialidade() != null && !dto.getEspecialidade().isBlank()) {
+            profissional.setEspecialidade(dto.getEspecialidade());
+        }
+
+        Profissional atualizado = profissionalService.salvar(profissional);
+        return new ProfissionalResponse(atualizado, modelMapper);
     }
 
-    public ProfissionalResponse editarProfissional(Profissional profissional) throws ProfissionalNotFoundException {
-        UUID userId = authenticatedUserProvider.getUserId();
-        Profissional novoProfissional = profissionalService.editar(userId, profissional);
-        FuncionarioResponse response = authServiceHandler.getTecnicoInfo();
-        ProfissionalResponse profissionalResponse = new ProfissionalResponse(novoProfissional, modelMapper);
-        profissionalResponse.setTecnico(response);
-        return profissionalResponse;
-    }
-
-    public void deletarProfissional(Long id) throws ProfissionalNotFoundException {
+    public void deletarProfissional(UUID id) throws ProfissionalNotFoundException {
         profissionalService.deletar(id);
     }
 
     // ================== Estudante ================== //
 
-    @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackSalvarEstudante")
-    public EstudanteResponse salvarEstudante(Estudante estudante, List<MultipartFile> arquivos) {
-        UUID userId = authenticatedUserProvider.getUserId();
-        estudante.setUserId(userId);
-
-        if (arquivos != null && !arquivos.isEmpty()) {
-            MultipartFile[] arrayArquivos = arquivos.toArray(new MultipartFile[0]);
-
-            try {
-                List<Documento> documentosSalvos = armazenamentoService.salvarArquivo(arrayArquivos);
-
-                estudante.adicionarDocumentos(documentosSalvos);
-
-            } catch (Exception e) {
-                throw new RuntimeException("Erro ao processar documentos do estudante", e);
-            }
-        }
-
-        Estudante novoEstudante = estudanteService.salvarEstudante(estudante);
-        AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
-        rabbitAuthServiceClient.assignRoleToUser(userId.toString(), clientId, "estudante");
-        EstudanteResponse response = new EstudanteResponse(novoEstudante, modelMapper);
-        response.setAluno(userInfo);
-        return response;
-    }
-
-    // Sobrecarga para manter compatibilidade caso algum lugar chame sem arquivos
-    public EstudanteResponse salvarEstudante(Estudante estudante) {
-        return salvarEstudante(estudante, null);
-    }
-
     @Transactional
     public void adicionarDocumentosEstudante(List<MultipartFile> arquivos) throws EstudanteNotFoundException {
-        // 1. Pega o ID do token
         UUID userId = authenticatedUserProvider.getUserId();
+        Estudante estudante = estudanteService.buscarEstudante(userId);
 
-        // 2. Busca o estudante existente
-        Estudante estudante = estudanteService.buscarPorUserId(userId);
-
-        // 3. Salva os arquivos e vincula
         if (arquivos != null && !arquivos.isEmpty()) {
             MultipartFile[] arquivosArray = arquivos.toArray(new MultipartFile[0]);
             try {
                 List<Documento> documentosSalvos = armazenamentoService.salvarArquivo(arquivosArray);
-                // Apenas adicionamos à lista do estudante existente
                 estudante.adicionarDocumentos(documentosSalvos);
-
-                // Salva a atualização
                 estudanteService.salvarEstudante(estudante);
             } catch (Exception e) {
                 throw new RuntimeException("Erro ao processar novos documentos do estudante", e);
@@ -215,7 +292,7 @@ public class Fachada {
         }
     }
 
-    public List<DocumentoResponse> buscarDocumentosPorEstudante(Long estudanteId) throws EstudanteNotFoundException, IOException {
+    public List<DocumentoResponse> buscarDocumentosPorEstudante(UUID estudanteId) throws EstudanteNotFoundException, IOException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
         List<Documento> documentos = estudante.getDocumentos();
 
@@ -223,59 +300,45 @@ public class Fachada {
             return List.of();
         }
 
-        // Reaproveita o conversor do ArmazenamentoService
         return armazenamentoService.converterDocumentosParaBase64(documentos);
     }
 
-    public EstudanteResponse buscarEstudante(Long id) throws EstudanteNotFoundException {
+    public EstudanteResponse buscarEstudante(UUID id) throws EstudanteNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(id);
-        AlunoResponse userInfo = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
-        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
-        response.setAluno(userInfo);
-        return response;
+        return new EstudanteResponse(estudante, modelMapper);
     }
 
     public Page<EstudanteResponse> listarEstudantes(Predicate predicate, Pageable pageable) throws EstudanteNotFoundException {
-        Page<Estudante> estudantes = estudanteService.listarEstudantes(predicate, pageable);
-
-        if (estudantes.isEmpty()) {
-            return Page.empty();
-        }
-
-        List<UUID> userIds = estudantes.stream()
-                .map(Estudante::getUserId)
-                .toList();
-
-        List<AlunoResponse> usuarios = authServiceHandler.buscarAlunos(userIds);
-        if (usuarios.isEmpty()) {
-            return Page.empty();
-        }
-
-        Map<UUID, AlunoResponse> mapaAlunos = usuarios.stream()
-                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
-
-        List<EstudanteResponse> listaEstudantes = estudantes.getContent().stream()
-                .map(estudante -> {
-                    EstudanteResponse resp = new EstudanteResponse(estudante, modelMapper);
-                    // "lookup" no mapa para anexar o AlunoResponse correto
-                    AlunoResponse ar = mapaAlunos.get(estudante.getUserId());
-                    resp.setAluno(ar);
-                    return resp;
-                })
-                .toList();
-        return new PageImpl<>(
-                listaEstudantes,
-                pageable,
-                estudantes.getTotalElements()
-        );
+        return estudanteService.listarEstudantes(predicate, pageable)
+                .map(estudante -> new EstudanteResponse(estudante, modelMapper));
     }
 
-    @CircuitBreaker(name = "authServiceClient", fallbackMethod = "fallbackAtualizarEstudante")
-    public EstudanteResponse atualizarEstudante(EstudanteUpdateRequest estudanteUpdateRequest)
-            throws EstudanteNotFoundException {
+    public Page<EstudanteResponse> listarEstudantesComFiltrosExternos(
+            Predicate predicate, String nome, String cpf, Long cursoId, Pageable pageable) {
+
+        BooleanBuilder filtrosPrae = new BooleanBuilder(predicate);
+        QEstudante qEstudante = QEstudante.estudante;
+
+        // Ao invés de bater no Auth Service, filtramos tudo nativamente no banco do PRAE
+        if (nome != null && !nome.isBlank()) {
+            filtrosPrae.and(qEstudante.nome.containsIgnoreCase(nome));
+        }
+        if (cpf != null && !cpf.isBlank()) {
+            filtrosPrae.and(qEstudante.cpf.eq(cpf));
+        }
+        if (cursoId != null) {
+            filtrosPrae.and(qEstudante.curso.id.eq(cursoId));
+        }
+
+        return estudanteService.listarEstudantes(filtrosPrae.getValue(), pageable)
+                .map(estudante -> new EstudanteResponse(estudante, modelMapper));
+    }
+
+    @Transactional
+    public EstudanteResponse atualizarEstudante(EstudanteUpdateRequest estudanteUpdateRequest) throws EstudanteNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
         Estudante estudanteParcial = new Estudante();
-        Estudante estudante = estudanteService.buscarPorUserId(userId);
+        Estudante estudante = estudanteService.buscarEstudante(userId);
 
         if(estudanteUpdateRequest.getRendaPercapta() != null){
             estudanteParcial.setRendaPercapta(estudanteUpdateRequest.getRendaPercapta());
@@ -293,38 +356,26 @@ public class Fachada {
             estudanteParcial.setTipoDeficiencia(estudanteUpdateRequest.getTipoDeficiencia());
         }
 
-
         if(estudanteUpdateRequest.getEndereco() != null){
             EnderecoRequest enderecoDTO = estudanteUpdateRequest.getEndereco();
             Endereco enderecoAtualizado = enderecoDTO.convertToEntity(enderecoDTO, this.modelMapper);
-            estudanteParcial.setEndereco(enderecoService.editarEndereco( estudante.getEndereco().getId(), enderecoAtualizado));
+            estudanteParcial.setEndereco(enderecoService.editarEndereco(estudante.getEndereco().getId(), enderecoAtualizado));
         }
 
         Estudante estudanteAtualizado = estudanteService.atualizarEstudante(estudanteParcial, estudante);
         return new EstudanteResponse(estudanteAtualizado, modelMapper);
     }
 
-    public void deletarEstudante(Long id) throws EstudanteNotFoundException {
+    public void deletarEstudante(UUID id) throws EstudanteNotFoundException {
         estudanteService.deletarEstudante(id);
     }
 
     public Page<EstudanteResponse> listarEstudantesPorCurso(Long idCurso, Pageable pageable) {
-        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(idCurso);
+        BooleanBuilder predicate = new BooleanBuilder();
+        predicate.and(QEstudante.estudante.curso.id.eq(idCurso));
 
-        List<UUID> userIds = alunosNoCurso.stream()
-                .map(AlunoResponse::getId)
-                .collect(Collectors.toList());
-
-        Map<UUID, AlunoResponse> mapaAlunos = alunosNoCurso.stream()
-                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
-
-        Page<Estudante> pageEntidades = estudanteService.buscarPorUserIds(userIds, pageable);
-
-        return pageEntidades.map(estudante -> {
-            EstudanteResponse resp = new EstudanteResponse(estudante, modelMapper);
-            resp.setAluno(mapaAlunos.get(estudante.getUserId()));
-            return resp;
-        });
+        return estudanteService.listarEstudantes(predicate.getValue(), pageable)
+                .map(estudante -> new EstudanteResponse(estudante, modelMapper));
     }
 
     public Page<CredorResponse> listarCredoresPorCurso(Long id, Pageable pageable) {
@@ -332,40 +383,32 @@ public class Fachada {
         if (estudantes.isEmpty()) {
             return Page.empty(pageable);
         }
-        List<AlunoResponse> alunosNoCurso = authServiceHandler.buscarAlunosPorCurso(id);
 
-        return getCredorResponses(pageable, estudantes, alunosNoCurso);
+        // Aplica o filtro de curso na memória para preservar a paginação original dos ativos
+        List<CredorResponse> credores = estudantes.getContent().stream()
+                .filter(e -> e.getCurso() != null && e.getCurso().getId().equals(id))
+                .map(this::montarCredorResponse)
+                .toList();
+
+        return new PageImpl<>(credores, pageable, estudantes.getTotalElements());
     }
 
-    public Page<AlunoResponse> listarCredoresParaPublicacao(Pageable pageable) {
-        Page<Estudante> estudantes = beneficioService.listarEstudantesComBeneficioAtivo(pageable);
-        if (estudantes.isEmpty()) {
-            return Page.empty(pageable);
-        }
-        List<UUID> userIds = estudantes.stream().map(Estudante::getUserId).toList();
-
-        List<AlunoResponse> alunos  = authServiceHandler.buscarAlunos(userIds);
-        Map<UUID, AlunoResponse> mapaAlunos = alunos.stream()
-                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
-
-        List<AlunoResponse> conteudo = estudantes.getContent().stream()
-                .map(est -> mapaAlunos.get(est.getUserId()))
-                .filter(Objects::nonNull)
-                .toList();
-        return new PageImpl<>(conteudo, pageable, conteudo.size());
+    public Page<EstudanteResponse> listarCredoresParaPublicacao(Pageable pageable) {
+        return beneficioService.listarEstudantesComBeneficioAtivo(pageable)
+                .map(estudante -> new EstudanteResponse(estudante, modelMapper));
     }
 
     public Page<CredorResponse> listarCredoresComBeneficiosAtivos(Pageable pageable) {
-        return gerarCredores(pageable, beneficioService::listarEstudantesComBeneficioAtivo);
+        return beneficioService.listarEstudantesComBeneficioAtivo(pageable)
+                .map(this::montarCredorResponse);
     }
 
     public Page<CredorResponse> listarCredoresPorBeneficio(Long beneficioId, Pageable pageable) {
-        return gerarCredores(pageable, pg ->
-                beneficioService.listarEstudantesPorAuxilio(beneficioId, pg)
-        );
+        return beneficioService.listarEstudantesPorAuxilio(beneficioId, pageable)
+                .map(this::montarCredorResponse);
     }
-    public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(Long estudanteId)
-            throws EstudanteNotFoundException {
+
+    public RelatorioEstudanteAssistidoResponse gerarRelatorioEstudanteAssistido(UUID estudanteId) throws EstudanteNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
         List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudanteId);
 
@@ -379,12 +422,10 @@ public class Fachada {
                         beneficio.getValorPagamento(),
                         beneficio.getInicioBeneficio().atEndOfMonth(),
                         beneficio.getFimBeneficio().atEndOfMonth()))
-                .collect(Collectors.toList());
-
-        var aluno = authServiceHandler.buscarAlunoPorId(estudante.getUserId());
+                .toList();
 
         return new RelatorioEstudanteAssistidoResponse(
-                aluno.getNome(),
+                estudante.getNome(),
                 estudante.getRendaPercapta(),
                 estudante.getContatoFamilia(),
                 estudante.isDeficiente(),
@@ -392,84 +433,38 @@ public class Fachada {
                 beneficios);
     }
 
-    private Page<CredorResponse> getCredorResponses(Pageable pageable, Page<Estudante> estudantes, List<AlunoResponse> alunos) {
-        Map<UUID, AlunoResponse> mapaAlunos = alunos.stream()
-                .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
-
-
-        List<CredorResponse> listaCredores = estudantes.getContent().stream()
-                .map(estudante -> {
-                    AlunoResponse aluno = mapaAlunos.get(estudante.getUserId());
-
-                    EstudanteResponse er = new EstudanteResponse(estudante, modelMapper);
-                    er.setAluno(aluno);
-
-                    List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudante.getId()).stream()
-                            .filter(Beneficio::isAtivo).toList();
-
-
-                    return new CredorResponse(
-                            er,
-                            estudante.getDadosBancarios(),
-                            beneficiosAtivos
-                    );
-                })
-                .toList();
-
-
-        return new PageImpl<>(
-                listaCredores,
-                pageable,
-                estudantes.getTotalElements()
-        );
-    }
-
-    private Page<CredorResponse> gerarCredores(
-            Pageable pageable,
-            Function<Pageable, Page<Estudante>> fetchEstudantes
-    ) {
-        Page<Estudante> pageEstudantes = fetchEstudantes.apply(pageable);
-        if (pageEstudantes.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        List<UUID> userIds = pageEstudantes.getContent().stream()
-                .map(Estudante::getUserId)
-                .toList();
-        List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
-        return getCredorResponses(pageable, pageEstudantes, alunos);
-    }
-
-
-
     public EstudanteResponse buscarEstudanteAtual() throws EstudanteNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
-        Estudante estudante = estudanteService.buscarPorUserId(userId);
-        AlunoResponse userInfo = authServiceHandler.getAlunoInfo();
-        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
-        response.setAluno(userInfo);
-        return response;
+        Estudante estudante = estudanteService.buscarEstudante(userId);
+        return new EstudanteResponse(estudante, modelMapper);
     }
 
     public EstudanteResponse buscarEstudantePorUserId(UUID userId) throws EstudanteNotFoundException {
-        Estudante estudante = estudanteService.buscarPorUserId(userId);
-        AlunoResponse userInfo = authServiceHandler.buscarAlunoPorId(userId);
-        EstudanteResponse response = new EstudanteResponse(estudante, modelMapper);
-        response.setAluno(userInfo);
-        return response;
+        Estudante estudante = estudanteService.buscarEstudante(userId);
+        return new EstudanteResponse(estudante, modelMapper);
+    }
+
+    // Auxiliar Privado para montagem repetitiva do DTO
+    private CredorResponse montarCredorResponse(Estudante estudante) {
+        EstudanteResponse er = new EstudanteResponse(estudante, modelMapper);
+        List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudante.getId()).stream()
+                .filter(Beneficio::isAtivo).toList();
+
+        return new CredorResponse(er, estudante.getDadosBancarios(), beneficiosAtivos);
     }
 
     // ================== Dados Bancarios ================== //
 
-    public DadosBancarios salvarDadosBancarios(Long idEstudante, DadosBancarios dadosBancarios) {
+    @Transactional
+    public DadosBancarios salvarDadosBancarios(UUID idEstudante, DadosBancarios dadosBancarios) {
         Estudante estudante = estudanteService.buscarEstudante(idEstudante);
         DadosBancarios salvo = dadosBancariosService.salvarDadosBancarios(dadosBancarios);
         estudante.setDadosBancarios(salvo);
         estudanteService.salvarEstudante(estudante);
 
-        // Notificar o Estudante sobre o cadastro
-        String msg = String.format("Seus dados bancários foram cadastrados pelo gestor. Por favor, verifique se estão corretos para o recebimento de benefícios.");
-        notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(estudante.getUserId(), "Dados Bancários Cadastrados", msg, "SISTEMA"));
+        // Notificar o Estudante sobre o cadastro (getId() ao invés de getUserId())
+        String msg = "Seus dados bancários foram cadastrados pelo gestor. Por favor, verifique se estão corretos para o recebimento de benefícios.";
+        notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(estudante.getId(), "Dados Bancários Cadastrados", msg, "SISTEMA"));
 
         return salvo;
     }
@@ -486,6 +481,7 @@ public class Fachada {
         dadosBancariosService.deletarDadosBancarios(id);
     }
 
+    @Transactional
     public DadosBancarios atualizarDadosBancarios(Long id, DadosBancarios novosDadosBancarios) {
         DadosBancarios dadosBancariosAtualizados = dadosBancariosService.atualizarDadosBancarios(id, novosDadosBancarios);
 
@@ -494,7 +490,7 @@ public class Fachada {
             Estudante estudante = estudanteService.buscarPorDadosBancariosId(id);
             if (estudante != null) {
                 String msg = "Seus dados bancários foram atualizados pelo gestor. Por favor, acesse o sistema e verifique as novas informações.";
-                notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(estudante.getUserId(), "Dados Bancários Atualizados", msg, "SISTEMA"));
+                notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(estudante.getId(), "Dados Bancários Atualizados", msg, "SISTEMA"));
             }
         }
 
@@ -502,6 +498,7 @@ public class Fachada {
     }
 
     // ------------------- TipoAtendimento ------------------- //
+
     public Page<TipoAtendimento> listarTipoAtendimentos(Predicate predicate, Pageable pageable) {
         return tipoAtendimentoService.listar(predicate, pageable);
     }
@@ -514,9 +511,11 @@ public class Fachada {
         return tipoAtendimentoService.salvar(tipoAtendimento);
     }
 
+    @Transactional
     public TipoAtendimento editarTipoAtendimento(Long id, TipoAtendimentoUpdateRequest dto)
             throws TipoAtendimentoNotFoundException {
         TipoAtendimento tipoAtendimento = tipoAtendimentoService.buscar(id);
+
         if (dto.getNome() != null && !dto.getNome().isBlank()) {
             tipoAtendimento.setNome(dto.getNome());
         }
@@ -525,7 +524,7 @@ public class Fachada {
             tipoAtendimento.setTempoAtendimento(dto.getTempoAtendimento());
         }
 
-        if(dto.getHorarios() != null) {
+        if (dto.getHorarios() != null) {
             tipoAtendimento.setHorarios(dto.getHorarios());
         }
 
@@ -545,8 +544,8 @@ public class Fachada {
     }
 
     // ------------------- Cronograma ------------------- //
-    public Page<Cronograma> listarCronogramasPorProfissional(Pageable pageable) {
 
+    public Page<Cronograma> listarCronogramasPorProfissional(Pageable pageable) {
         return cronogramaService.listarPorProfissional(authenticatedUserProvider.getUserId(), pageable);
     }
 
@@ -564,15 +563,19 @@ public class Fachada {
 
     @Transactional
     public Cronograma salvarCronograma(Cronograma cronograma, Long tipoAtendimentoId)
-            throws TipoAtendimentoNotFoundException {
+            throws TipoAtendimentoNotFoundException, ProfissionalNotFoundException {
         UUID userId = authenticatedUserProvider.getUserId();
         TipoAtendimento tipoAtendimento = buscarTipoAtendimento(tipoAtendimentoId);
-        Profissional profissional = profissionalService.buscarPorUserId(userId);
+
+        // Agora busca o Profissional nativamente pelo ID (UUID)
+        Profissional profissional = profissionalService.buscar(userId);
+
         cronograma.setProfissional(profissional);
         cronograma.setTipoAtendimento(tipoAtendimento);
         List<Vaga> vagas = vagaService.gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
         vagas.forEach(vaga -> vaga.setCronograma(cronograma));
         cronograma.setVagas(vagas);
+
         return cronogramaService.salvar(cronograma);
     }
 
@@ -582,14 +585,18 @@ public class Fachada {
         UUID userId = authenticatedUserProvider.getUserId();
         TipoAtendimento tipoAtendimento = buscarTipoAtendimento(tipoAtendimentoId);
         Cronograma cronogramaExistente = cronogramaService.buscar(cronogramaId);
-        if (!cronogramaExistente.getProfissional().getUserId().equals(userId)) {
+
+        // Alterado de getUserId() para getId()
+        if (!cronogramaExistente.getProfissional().getId().equals(userId)) {
             throw new NotAllowedException("Você não tem permissão para editar este cronograma.");
         }
+
         cronogramaExistente.setData(cronograma.getData());
         cronogramaExistente.setTipoAtendimento(tipoAtendimento);
         List<Vaga> novas = vagaService
                 .gerarVagas(tipoAtendimento.getHorarios(), tipoAtendimento.getTempoAtendimento());
         cronogramaExistente.trocarVagas(novas);
+
         return cronogramaService.salvar(cronogramaExistente);
     }
 
@@ -605,8 +612,8 @@ public class Fachada {
             // 1. Busca a vaga a partir do ID contido na requisição
             Vaga vaga = vagaService.buscar(request.getVagaId());
 
-            // 2. Busca o estudante logado que está fazendo a requisição
-            Estudante estudante = estudanteService.buscarPorUserId(authenticatedUserProvider.getUserId());
+            // 2. Busca o estudante logado que está fazendo a requisição (usando UUID como ID nativo)
+            Estudante estudante = estudanteService.buscarEstudante(authenticatedUserProvider.getUserId());
 
             if (vaga.isDisponivel()) {
                 vaga.setDisponivel(false);
@@ -629,8 +636,10 @@ public class Fachada {
     public CancelamentoAgendamento cancelarAgendamento(Long id, CancelamentoAgendamento cancelamento)
             throws AgendamentoNotFoundException {
         Agendamento agendamento = agendamentoService.buscar(id);
-        if (!Objects.equals(agendamento.getEstudante().getUserId(), authenticatedUserProvider.getUserId())
-                && !Objects.equals(agendamento.getVaga().getCronograma().getProfissional().getUserId(),
+
+        // Verifica as permissões utilizando o getId() nativo
+        if (!Objects.equals(agendamento.getEstudante().getId(), authenticatedUserProvider.getUserId())
+                && !Objects.equals(agendamento.getVaga().getCronograma().getProfissional().getId(),
                 authenticatedUserProvider.getUserId())) {
             throw new GlobalAccessDeniedException("Você não tem permissão para acessar este recurso");
         }
@@ -638,8 +647,10 @@ public class Fachada {
         Vaga vaga = agendamento.getVaga();
         vaga.setDisponivel(true);
         vagaService.salvar(vaga);
+
         agendamento.setAtivo(false);
         agendamentoService.salvar(agendamento);
+
         cancelamento.setAgendamento(agendamento);
         return cancelamentoService.salvar(cancelamento);
     }
@@ -649,14 +660,14 @@ public class Fachada {
         return mapToAgendamentoResponse(agendamento);
     }
 
-    public Page<AgendamentoResponse> listarAgendamentosPorEstudante(Long estudanteId, Pageable pageable) {
+    public Page<AgendamentoResponse> listarAgendamentosPorEstudante(UUID estudanteId, Pageable pageable) {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
         return agendamentoService.listarAgendamentosPorEstudante(estudante, pageable)
                 .map(this::mapToAgendamentoResponse);
     }
 
-    public Page<AgendamentoResponse> listarAgendamentosPorProfissional(Long userId, Pageable pageable) {
-        Profissional profissional = profissionalService.buscar(userId);
+    public Page<AgendamentoResponse> listarAgendamentosPorProfissional(UUID profissionalId, Pageable pageable) {
+        Profissional profissional = profissionalService.buscar(profissionalId);
         return agendamentoService.listarPorProfissional(profissional, pageable)
                 .map(this::mapToAgendamentoResponse);
     }
@@ -689,19 +700,13 @@ public class Fachada {
         return agendamentoService.alterarModalidade(id, novaModalidade);
     }
 
+
     private AgendamentoResponse mapToAgendamentoResponse(Agendamento agendamento) {
-        AgendamentoResponse response = new AgendamentoResponse(agendamento, modelMapper);
-        if (agendamento.getEstudante() != null && agendamento.getEstudante().getUserId() != null) {
-            AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(agendamento.getEstudante().getUserId());
-            if (response.getEstudante() != null) {
-                response.getEstudante().setAluno(aluno);
-            }
-        }
-        return response;
+        return new AgendamentoResponse(agendamento, modelMapper);
     }
 
-
     // ------------------- TipoBeneficio ------------------- //
+
     public Page<TipoBeneficio> listarTipoBeneficios(Predicate predicate, Pageable pageable) {
         return tipoBeneficioService.listar(predicate, pageable);
     }
@@ -734,7 +739,9 @@ public class Fachada {
         return tipoBeneficioService.contarTiposAtivos();
     }
 
+
     // ------------------- Beneficio ------------------- //
+
     public Page<Beneficio> listarBeneficios(Predicate predicate, Pageable pageable) {
         return beneficioService.listar(predicate, pageable);
     }
@@ -742,6 +749,31 @@ public class Fachada {
     public Page<BeneficioResponse> listarBeneficiosInativos(Predicate predicate, Pageable pageable) {
         return beneficioService.listarInativos(predicate, pageable)
                 .map(this::mapToBeneficioResponse);
+    }
+
+    public Page<BeneficioResponse> listarBeneficiosInativosComFiltrosExternos(
+            Predicate predicate, String nome, String cpf, Long cursoId, Pageable pageable) {
+
+        BooleanBuilder filtrosPrae = new BooleanBuilder(predicate);
+        QBeneficio qBeneficio = QBeneficio.beneficio;
+
+        if (nome != null && !nome.isBlank()) {
+            filtrosPrae.and(qBeneficio.estudantes.nome.containsIgnoreCase(nome));
+        }
+        if (cpf != null && !cpf.isBlank()) {
+            filtrosPrae.and(qBeneficio.estudantes.cpf.eq(cpf));
+        }
+        if (cursoId != null) {
+            filtrosPrae.and(qBeneficio.estudantes.curso.id.eq(cursoId));
+        }
+
+        Page<Beneficio> beneficios = beneficioService.listarInativos(filtrosPrae.getValue(), pageable);
+
+        if (beneficios.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        return beneficios.map(this::mapToBeneficioResponse);
     }
 
     public Page<Beneficio> listarBeneficiosPorTipo(Long tipoId, Pageable pageable) throws BeneficioNotFoundException {
@@ -756,7 +788,8 @@ public class Fachada {
         return beneficioService.buscar(id);
     }
 
-    public Beneficio salvarBeneficios(Long estudanteId, Beneficio beneficio, MultipartFile termo, Long tipoBeneficioId)
+    @Transactional
+    public Beneficio salvarBeneficios(UUID estudanteId, Beneficio beneficio, MultipartFile termo, Long tipoBeneficioId)
             throws TipoBeneficioNotFoundException {
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
         TipoBeneficio tipoBeneficio = tipoBeneficioService.buscar(tipoBeneficioId);
@@ -767,12 +800,11 @@ public class Fachada {
         List<Documento> documentos = armazenamentoService.salvarArquivo(arquivos);
         beneficio.setTermo(documentos.getFirst());
 
-
         return beneficioService.salvar(beneficio);
-
     }
 
-    public Beneficio editarBeneficios(Long id, Long estudanteId, Beneficio beneficio, MultipartFile termo, Long tipoBeneficioId)
+    @Transactional
+    public Beneficio editarBeneficios(Long id, UUID estudanteId, Beneficio beneficio, MultipartFile termo, Long tipoBeneficioId)
             throws BeneficioNotFoundException, TipoBeneficioNotFoundException {
         Beneficio aux = buscarBeneficios(id);
         Estudante estudante = estudanteService.buscarEstudante(estudanteId);
@@ -792,7 +824,6 @@ public class Fachada {
 
     @Transactional
     public void cancelarBeneficio(Long id, BeneficioCancelamentoRequest request) throws BeneficioNotFoundException {
-
         beneficioService.cancelar(
                 id,
                 request.getMotivoEncerramento(),
@@ -802,7 +833,6 @@ public class Fachada {
 
     @Transactional
     public BeneficioResponse prorrogarBeneficio(Long id, BeneficioProrrogacaoRequest request) throws BeneficioNotFoundException {
-
         Beneficio beneficioAtualizado = beneficioService.prorrogar(
                 id,
                 request.getNovoPrazo(),
@@ -825,43 +855,16 @@ public class Fachada {
         return beneficioService.buscarPorPagamento(pagamentoId);
     }
 
-//    public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(Predicate predicate) {
-//        // 1. Coleta os dados financeiros globais filtrados pelo PagamentoService
-//        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos(predicate);
-//        Double totalGeral = (totalGeralBD != null) ? totalGeralBD.doubleValue() : 0.0;
-//
-//        // 2. Coleta a divisão de valores por Tipo de Benefício
-//        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio(predicate);
-//        List<RelatorioFinanceiroResponse.ValorPorTipoDTO> valorPorTipo = dadosPorTipo.stream()
-//                .map(obj -> new RelatorioFinanceiroResponse.ValorPorTipoDTO(
-//                        (Long) obj[0],
-//                        (String) obj[1],
-//                        ((BigDecimal) obj[2]).doubleValue()
-//                )).toList();
-//
-//        // 3. Obter os estudantes ÚNICOS atrelados aos pagamentos que passaram no filtro
-//        List<java.util.UUID> userIdsAtivos = pagamentoService.obterUserIdsEstudantesComPagamento(predicate);
-//
-//        // 4. Delegar ao BeneficioService o agrupamento de Cursos usando a lista de alunos exata
-//        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso(userIdsAtivos);
-//
-//        List<RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO> beneficiadosPorCurso = dadosCursos.stream()
-//                .map(map -> new RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO(
-//                        (Long) map.get("cursoId"),
-//                        (String) map.get("cursoNome"),
-//                        (Long) map.get("quantidadeBeneficiados")
-//                )).toList();
-//
-//        // 5. Constrói o objeto final
-//        return RelatorioFinanceiroResponse.builder()
-//                .totalGeral(totalGeral)
-//                .quantidadePessoasAtendidas(userIdsAtivos.size()) // Usamos o tamanho da lista filtrada
-//                .quantidadeTiposBeneficio(valorPorTipo.size())
-//                .quantidadeCursosDistintos(beneficiadosPorCurso.size())
-//                .valorTotalPorTipoBeneficio(valorPorTipo)
-//                .quantidadeBeneficiadosPorCurso(beneficiadosPorCurso)
-//                .build();
-//    }
+    private RelatorioFinanceiroResponse construirRelatorioVazio() {
+        return RelatorioFinanceiroResponse.builder()
+                .totalGeral(0.0)
+                .quantidadePessoasAtendidas(0)
+                .quantidadeTiposBeneficio(0)
+                .quantidadeCursosDistintos(0)
+                .valorTotalPorTipoBeneficio(new java.util.ArrayList<>())
+                .quantidadeBeneficiadosPorCurso(new java.util.ArrayList<>())
+                .build();
+    }
 
     public RelatorioFinanceiroResponse gerarRelatorioFinanceiro(Predicate predicate, Long cursoId) {
         QPagamento qPagamento = QPagamento.pagamento;
@@ -872,43 +875,19 @@ public class Fachada {
             builder.and(predicate);
         }
 
-        // 1. Pegamos TODOS os UUIDs de estudantes que têm pagamento para o filtro atual
-        List<java.util.UUID> userIdsGerais = pagamentoService.obterUserIdsEstudantesComPagamento(builder);
+        if (cursoId != null) {
+            builder.and(qPagamento.beneficio.estudantes.curso.id.eq(cursoId));
+        }
 
+        List<UUID> userIdsGerais = pagamentoService.obterIdsEstudantesComPagamento(builder.getValue());
         if (userIdsGerais.isEmpty()) {
             return construirRelatorioVazio();
         }
 
-        // 2. FILTRO POR CURSO MÁGICO (Usando a rota pública que funciona)
-        if (cursoId != null) {
-            // Buscamos os dados públicos (com os cursos) apenas dos alunos que têm pagamentos
-            // Importante: use o método novo que chama o /public/batch
-            List<br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse> alunosBatch =
-                    authServiceHandler.buscarAlunosPublicos(userIdsGerais);
-
-            // Filtramos na memória para reter apenas os UUIDs de quem é do curso pesquisado
-            List<java.util.UUID> userIdsDoCurso = alunosBatch.stream()
-                    .filter(a -> a.getCurso() != null && a.getCurso().getId().equals(cursoId))
-                    .map(br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse::getId)
-                    .toList();
-
-            // Se, após o filtro, não sobrar ninguém, retornamos zerado
-            if (userIdsDoCurso.isEmpty()) {
-                return construirRelatorioVazio();
-            }
-
-            // Injetamos a trava no banco: some apenas os pagamentos DESTES alunos
-            builder.and(qPagamento.beneficio.estudantes.userId.in(userIdsDoCurso));
-
-            // Atualizamos a lista de ativos para a contagem final
-            userIdsGerais = userIdsDoCurso;
-        }
-
-        // 3. Calcula Totais Financeiros com o builder já restringido (se tiver curso)
-        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos(builder);
+        BigDecimal totalGeralBD = pagamentoService.obterValorTotalPagamentosAtivos(builder.getValue());
         Double totalGeral = (totalGeralBD != null) ? totalGeralBD.doubleValue() : 0.0;
 
-        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio(builder);
+        List<Object[]> dadosPorTipo = pagamentoService.obterValorTotalPorTipoBeneficio(builder.getValue());
         List<RelatorioFinanceiroResponse.ValorPorTipoDTO> valorPorTipo = dadosPorTipo.stream()
                 .map(obj -> new RelatorioFinanceiroResponse.ValorPorTipoDTO(
                         (Long) obj[0],
@@ -916,10 +895,8 @@ public class Fachada {
                         ((BigDecimal) obj[2]).doubleValue()
                 )).toList();
 
-        // 4. Distribuição por Cursos
-        // Já temos a lista de UUIDs certinha, passamos pro serviço agrupar
-        List<java.util.Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso(userIdsGerais);
-
+        // Passa a responsabilidade de contar pelo curso diretamente ao BeneficioService (que foi ajustado na sua V3)
+        List<Map<String, Object>> dadosCursos = beneficioService.obterQuantidadeBeneficiadosPorCurso(userIdsGerais);
         List<RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO> beneficiadosPorCurso = dadosCursos.stream()
                 .map(map -> new RelatorioFinanceiroResponse.BeneficiadosPorCursoDTO(
                         (Long) map.get("cursoId"),
@@ -937,29 +914,8 @@ public class Fachada {
                 .build();
     }
 
-    // Método auxiliar apenas para deixar o código limpo e evitar repetição
-    private RelatorioFinanceiroResponse construirRelatorioVazio() {
-        return RelatorioFinanceiroResponse.builder()
-                .totalGeral(0.0)
-                .quantidadePessoasAtendidas(0)
-                .quantidadeTiposBeneficio(0)
-                .quantidadeCursosDistintos(0)
-                .valorTotalPorTipoBeneficio(new java.util.ArrayList<>())
-                .quantidadeBeneficiadosPorCurso(new java.util.ArrayList<>())
-                .build();
-    }
-
     public BeneficioResponse mapToBeneficioResponse(Beneficio beneficio) {
-        BeneficioResponse response = new BeneficioResponse(beneficio, modelMapper);
-
-        if (beneficio.getEstudantes() != null && beneficio.getEstudantes().getUserId() != null) {
-            AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(beneficio.getEstudantes().getUserId());
-            if (response.getEstudantes() != null) {
-                response.getEstudantes().setAluno(aluno);
-            }
-        }
-
-        return response;
+        return new BeneficioResponse(beneficio, modelMapper);
     }
 
     public Long contarEstudantesBeneficiados() {
@@ -998,6 +954,7 @@ public class Fachada {
         return pagamentoService.salvar(pagamentos);
     }
 
+    @Transactional
     public Pagamento editarPagamento(Long id, PagamentoPatchRequest dto) throws PagamentoNotFoundException {
         Pagamento pagamento = pagamentoService.buscar(id);
 
@@ -1022,104 +979,54 @@ public class Fachada {
         return pagamentoService.listarPorValor(min, max, pageable);
     }
 
-    public List<Pagamento> listarPagamentosPorEstudante(Long estudanteId) {
+    public List<Pagamento> listarPagamentosPorEstudante(UUID estudanteId) {
         return pagamentoService.listarPorEstudanteId(estudanteId);
-    }public Page<PagamentoResponse> listarPagamentosPorEstudante(Long estudanteId, Predicate predicate, Pageable pageable) {
-        QPagamento qPagamento = QPagamento.pagamento;
+    }
 
-        // BooleanBuilder é usado para mesclar a trava de segurança com os filtros da URL
+    // Alterado de Long para UUID na assinatura
+    public Page<PagamentoResponse> listarPagamentosPorEstudante(UUID estudanteId, Predicate predicate, Pageable pageable) {
+        QPagamento qPagamento = QPagamento.pagamento;
         BooleanBuilder construtorFiltros = new BooleanBuilder();
 
-        // TRAVA OBRIGATÓRIA: Só traz pagamentos do estudante informado na URL
         construtorFiltros.and(qPagamento.beneficio.estudantes.id.eq(estudanteId));
 
-        // Adiciona os filtros dinâmicos vindos do frontend (se houverem)
         if (predicate != null) {
             construtorFiltros.and(predicate);
         }
 
-        // Utiliza o método listar genérico do PagamentoService que já aceita Predicate e Pageable
-        Page<Pagamento> pagamentos = pagamentoService.listar(construtorFiltros.getValue(), pageable);
-
-        // Retorna já mapeado para o DTO de resposta
-        return pagamentos.map(this::mapToPagamentoResponse);
+        return pagamentoService.listar(construtorFiltros.getValue(), pageable)
+                .map(this::mapToPagamentoResponse);
     }
 
     @Transactional
     public Pagamento salvarPagamentoPorCpf(PagamentoCPFRequest request) {
-        log.info("Buscando aluno no Auth Service com CPF: {}", request.getCpf());
+        log.info("Buscando aluno localmente com CPF: {}", request.getCpf());
 
-        // Prepara as duas versões do CPF: com e sem formatação
+        // Prepara as versões do CPF
         String cpfOriginal = request.getCpf();
         String cpfSemFormatacao = cpfOriginal.replaceAll("[^0-9]", "");
-        String cpfFormatado = formatarCpf(cpfSemFormatacao);
+        String cpfFormatado = cpfSemFormatacao.length() == 11 ?
+                cpfSemFormatacao.replaceFirst("(\\d{3})(\\d{3})(\\d{3})(\\d{2})", "$1.$2.$3-$4") : cpfOriginal;
 
-        // Tenta buscar o aluno no Auth Service
-        PageResponse<AlunoResponse> page = null;
+        QEstudante qEstudante = QEstudante.estudante;
+        BooleanBuilder construtor = new BooleanBuilder();
 
-        // Primeira tentativa: com o CPF como veio na requisição
-        try {
-            page = authServiceClient.buscarAlunoPorCpf(cpfOriginal);
-            if (page != null && page.getContent() != null && !page.getContent().isEmpty()) {
-                log.info("Aluno encontrado com CPF original: {}", cpfOriginal);
-            }
-        } catch (Exception e) {
-            log.warn("Erro ao buscar com CPF original: {}", cpfOriginal, e);
+        // Busca com 1 única query considerando as 3 possibilidades
+        construtor.and(
+                qEstudante.cpf.eq(cpfOriginal)
+                        .or(qEstudante.cpf.eq(cpfSemFormatacao))
+                        .or(qEstudante.cpf.eq(cpfFormatado))
+        );
+
+        Page<Estudante> pageEstudantes = estudanteService.listarEstudantes(construtor.getValue(), Pageable.unpaged());
+
+        if (pageEstudantes.isEmpty()) {
+            log.error("Nenhum estudante encontrado com o CPF informado: {}", cpfOriginal);
+            throw new EstudanteNotFoundException("Aluno com CPF " + request.getCpf() + " não encontrado no sistema");
         }
 
-        // Segunda tentativa: se não encontrou e o CPF original não estava formatado, tenta com formatação
-        if ((page == null || page.getContent() == null || page.getContent().isEmpty()) && !cpfOriginal.equals(cpfFormatado)) {
-            try {
-                log.info("Tentando buscar com CPF formatado: {}", cpfFormatado);
-                page = authServiceClient.buscarAlunoPorCpf(cpfFormatado);
-                if (page != null && page.getContent() != null && !page.getContent().isEmpty()) {
-                    log.info("Aluno encontrado com CPF formatado: {}", cpfFormatado);
-                }
-            } catch (Exception e) {
-                log.warn("Erro ao buscar com CPF formatado: {}", cpfFormatado, e);
-            }
-        }
-
-        // Terceira tentativa: se não encontrou e o CPF original estava formatado, tenta sem formatação
-        if ((page == null || page.getContent() == null || page.getContent().isEmpty()) && !cpfOriginal.equals(cpfSemFormatacao)) {
-            try {
-                log.info("Tentando buscar com CPF sem formatação: {}", cpfSemFormatacao);
-                page = authServiceClient.buscarAlunoPorCpf(cpfSemFormatacao);
-                if (page != null && page.getContent() != null && !page.getContent().isEmpty()) {
-                    log.info("Aluno encontrado com CPF sem formatação: {}", cpfSemFormatacao);
-                }
-            } catch (Exception e) {
-                log.warn("Erro ao buscar com CPF sem formatação: {}", cpfSemFormatacao, e);
-            }
-        }
-
-        // Verifica se conseguiu encontrar o aluno em alguma das tentativas
-        if (page == null || page.getContent() == null || page.getContent().isEmpty()) {
-            log.error("Nenhum aluno encontrado após tentar com CPF original ({}), formatado ({}) e sem formatação ({})",
-                cpfOriginal, cpfFormatado, cpfSemFormatacao);
-            throw new EstudanteNotFoundException("Aluno com CPF " + request.getCpf() + " não encontrado no sistema de autenticação");
-        }
-
-        // Pega o primeiro aluno da lista
-        AlunoResponse aluno = page.getContent().getFirst();
-
-        if (aluno.getId() == null) {
-            log.error("Aluno encontrado mas sem ID para CPF: {}", request.getCpf());
-            throw new EstudanteNotFoundException("Aluno encontrado mas com dados inválidos");
-        }
-
-        log.info("Aluno encontrado: {} (userId: {})", aluno.getNome(), aluno.getId());
-
-        UUID userId = aluno.getId();
-        Estudante estudante;
-
-        try {
-            estudante = estudanteService.buscarPorUserId(userId);
-            log.info("Estudante encontrado no banco local: ID {}, Nome: {}", estudante.getId(), aluno.getNome());
-        } catch (Exception e) {
-            log.error("Estudante com userId {} não encontrado no banco local do PRAE", userId);
-            throw new EstudanteNotFoundException("Aluno existe no sistema mas não está cadastrado como estudante no PRAE");
-        }
+        Estudante estudante = pageEstudantes.getContent().getFirst();
+        log.info("Estudante encontrado localmente: ID {}, Nome: {}", estudante.getId(), estudante.getNome());
 
         List<Beneficio> beneficiosAtivos = beneficioService.listarPorEstudante(estudante.getId());
 
@@ -1131,13 +1038,13 @@ public class Fachada {
         Beneficio beneficioSelecionado;
         if (request.getTipoBeneficioId() != null) {
             beneficioSelecionado = beneficiosAtivos.stream()
-                .filter(b -> b.getTipoBeneficio().getId().equals(request.getTipoBeneficioId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("O estudante não possui o benefício informado ativo"));
+                    .filter(b -> b.getTipoBeneficio().getId().equals(request.getTipoBeneficioId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("O estudante não possui o benefício informado ativo"));
         } else {
             if (beneficiosAtivos.size() > 1) {
                 throw new IllegalArgumentException(
-                    "O estudante possui múltiplos benefícios ativos ("+ beneficiosAtivos.size() +"). É obrigatório informar o Tipo de benefício."
+                        "O estudante possui múltiplos benefícios ativos ("+ beneficiosAtivos.size() +"). É obrigatório informar o Tipo de benefício."
                 );
             }
             beneficioSelecionado = beneficiosAtivos.getFirst();
@@ -1157,43 +1064,30 @@ public class Fachada {
     }
 
     public FolhaPagamentoResponse gerarFolhaPagamento(Integer ano, Integer mes, String numeroLote) {
-        // 1. Gera a folha com dados locais (bancários e valores)
         FolhaPagamentoResponse folha = pagamentoService.gerarFolhaPagamento(ano, mes, numeroLote);
 
         if (folha.getItens().isEmpty()) {
             return folha;
         }
 
-        // 2. Extrai a lista de UUIDs distintos para busca em lote
         List<UUID> userIds = folha.getItens().stream()
                 .map(ItemFolhaPagamentoResponse::getUserId)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
 
-        // 3. Busca em Lote no Auth Service (1 Requisição apenas!)
-        Map<UUID, AlunoResponse> mapaAlunos;
-        try {
-            List<AlunoResponse> alunosEncontrados = authServiceHandler.buscarAlunos(userIds);
+        // Busca local, sem rede
+        Page<Estudante> estudantes = estudanteService.buscarPorUserIds(userIds, Pageable.unpaged());
+        Map<UUID, Estudante> mapaAlunos = estudantes.getContent().stream()
+                .collect(Collectors.toMap(Estudante::getId, Function.identity()));
 
-            // Transforma a lista em Mapa para acesso rápido O(1)
-            mapaAlunos = alunosEncontrados.stream()
-                    .collect(Collectors.toMap(AlunoResponse::getId, Function.identity()));
-
-        } catch (Exception e) {
-            // Em caso de falha crítica (fallback retornou lista vazia), criamos mapa vazio
-            mapaAlunos = new HashMap<>();
-        }
-
-        // 4. Preenche os dados na folha
         for (ItemFolhaPagamentoResponse item : folha.getItens()) {
-            AlunoResponse aluno = mapaAlunos.get(item.getUserId());
+            Estudante estudante = mapaAlunos.get(item.getUserId());
 
-            if (aluno != null) {
-                item.setNomeEstudante(aluno.getNome());
-                item.setCpf(aluno.getCpf());
-                item.setMatricula(aluno.getMatricula());
+            if (estudante != null) {
+                item.setNomeEstudante(estudante.getNome());
+                item.setCpf(estudante.getCpf());
+                item.setMatricula(estudante.getMatricula());
             } else {
-                // Caso o aluno não venha do Auth (ex: deletado ou erro parcial)
                 item.setNomeEstudante("Nome não disponível");
                 item.setCpf("---");
             }
@@ -1207,27 +1101,11 @@ public class Fachada {
     }
 
     public PagamentoResponse mapToPagamentoResponse(Pagamento pagamento) {
-        PagamentoResponse response = new PagamentoResponse(pagamento, modelMapper);
-
-        if (pagamento.getBeneficio() != null) {
-            Beneficio beneficio = pagamento.getBeneficio();
-            BeneficioResponse beneficioResponse = new BeneficioResponse(beneficio, modelMapper);
-
-            if (beneficio.getEstudantes() != null && beneficio.getEstudantes().getUserId() != null) {
-                AlunoResponse aluno = authServiceHandler.buscarAlunoPorId(beneficio.getEstudantes().getUserId());
-                if (beneficioResponse.getEstudantes() != null) {
-                    beneficioResponse.getEstudantes().setAluno(aluno);
-                }
-            }
-
-            response.setBeneficio(beneficioResponse);
-        }
-
-        return response;
+        return new PagamentoResponse(pagamento, modelMapper);
     }
 
-    public List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(Predicate predicate) {
-        List<UUID> userIds = pagamentoService.obterUserIdsEstudantesComPagamento(predicate);
+    public List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds) {
+        // Redireciona para o BeneficioService que agora resolve isso nativamente
         return beneficioService.obterQuantidadeBeneficiadosPorCurso(userIds);
     }
 
@@ -1235,56 +1113,65 @@ public class Fachada {
         return pagamentoService.obterValorTotalPorTipoBeneficio(predicate);
     }
 
-    // ------------------- Armazenamento ------------------- //
 
-//    // ------------------- Documentos (Upload Genérico) ------------------- //
-//
-//    /**
-//     * Realiza o upload de um documento
-//     * @param arquivo O arquivo a ser salvo
-//     * @return Documento salvo com metadados persistidos
-//     */
-//    public Documento uploadDocumento(MultipartFile arquivo) {
-//        return documentoService.salvar(arquivo);
-//    }
-//
-//    /**
-//     * Busca um documento pelo ID (apenas documentos do usuário logado)
-//     * @param id ID do documento
-//     * @return O documento encontrado
-//     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
-//     */
-//    public Documento buscarDocumento(Long id) throws DocumentoNotFoundException {
-//        return documentoService.buscar(id);
-//    }
-//
-//    /**
-//     * Lista todos os documentos do usuário logado
-//     * @return Lista de documentos do usuário
-//     */
-//    public List<Documento> listarDocumentosDoUsuario() {
-//        return documentoService.listarPorUsuario();
-//    }
-//
-//    /**
-//     * Lista todos os documentos do sistema
-//     * @return Lista de todos os documentos
-//     */
-//    public List<Documento> listarTodosDocumentos() {
-//        return documentoService.listarTodos();
-//    }
-//
-//    /**
-//     * Remove um documento do sistema (apenas se pertencer ao usuário logado)
-//     * @param id ID do documento
-//     * @throws DocumentoNotFoundException se o documento não for encontrado ou não pertencer ao usuário
-//     */
-//    public void deletarDocumento(Long id) throws DocumentoNotFoundException {
-//        documentoService.deletar(id);
-//    }
+    // ================== TipoEtnia ================== //
+
+    public TipoEtnia salvarTipoEtnia(TipoEtnia tipoEtnia) {
+        return tipoEtniaService.salvarTipoEtnia(tipoEtnia);
+    }
+
+    public TipoEtnia buscarTipoEtnia(Long id) throws TipoEtniaNotFoundException {
+        return tipoEtniaService.buscarTipoEtnia(id);
+    }
+
+    public Page<TipoEtnia> listarTiposEtnia(Predicate predicate, Pageable pageable) {
+        return tipoEtniaService.listarTiposEtnia(predicate, pageable);
+    }
+
+    public TipoEtnia atualizarTipoEtnia(Long id, TipoEtnia tipoEtnia) throws TipoEtniaNotFoundException {
+        return tipoEtniaService.atualizarTipoEtnia(id, tipoEtnia);
+    }
+
+    public void deletarTipoEtnia(Long id) throws TipoEtniaNotFoundException {
+        tipoEtniaService.deletarTipoEtnia(id);
+    }
+
+    // ------------------- Armazenamento ------------------- //
 
     public List<DocumentoResponse> converterDocumentosParaBase64(List<Documento> documentos) throws IOException {
         return armazenamentoService.converterDocumentosParaBase64(documentos);
+    }
+
+    // ================== Notificações ================== //
+
+    public Page<NotificacaoEvent> buscarNotificacoesNaoLidas(UUID userId, int page, int size) {
+        return notificacaoRedisService.buscarNotificacoesNaoLidas(userId, page, size);
+    }
+
+    public void marcarNotificacaoComoLida(UUID userId, UUID notificacaoId) {
+        notificacaoRedisService.marcarUnicaComoLida(userId, notificacaoId);
+    }
+
+    public void limparTodasNotificacoes(UUID userId) {
+        notificacaoRedisService.marcarTodasComoLidas(userId);
+    }
+
+    public SseEmitter subscreverNotificacoes(UUID userId) {
+        return notificacaoSseService.subscrever(userId);
+    }
+
+    public void limparConexoesSse(UUID userId) {
+        notificacaoSseService.removerTodosEmittersDoUsuario(userId);
+    }
+
+    public void enviarNotificacaoBroadcast(NotificacaoBroadcastRequest request) {
+        NotificacaoEvent evento = NotificacaoEvent.paraPerfil(
+                request.getPerfilDestino().toUpperCase(),
+                request.getTitulo(),
+                request.getMensagem(),
+                request.getTipo()
+        );
+        notificacaoPublisher.publicar(evento);
     }
 
     // ------------------- Métodos Auxiliares ------------------- //

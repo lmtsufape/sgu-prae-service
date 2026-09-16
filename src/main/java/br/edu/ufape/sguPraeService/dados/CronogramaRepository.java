@@ -25,7 +25,8 @@ public interface CronogramaRepository extends JpaRepository<Cronograma, Long>,
     Page<Cronograma> findAllByAtivoTrue(Pageable pageable);
     Page<Cronograma> findByAtivoTrueAndTipoAtendimento_Id(Long id, Pageable pageable);
 
-    Page<Cronograma> findAllByAtivoTrueAndProfissional_UserId(UUID profissionalUserId, Pageable pageable);
+
+    Page<Cronograma> findAllByAtivoTrueAndProfissional_Id(UUID profissionalId, Pageable pageable);
 
     boolean existsByTipoAtendimento_Id(Long tipoAtendimentoId);
 

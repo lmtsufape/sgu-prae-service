@@ -21,7 +21,7 @@ public interface BeneficioService {
 
     Page<Beneficio> listarPorEstudante(Long estudanteId, Pageable pageable);
 
-    List<Beneficio> listarPorEstudante(Long estudanteId);
+    List<Beneficio> listarPorEstudante(UUID estudanteId);
 
     Beneficio buscar(Long id) throws BeneficioNotFoundException;
 
@@ -58,4 +58,6 @@ public interface BeneficioService {
     Beneficio cancelar(Long id, MotivoEncerramento motivoEncerramento, String parecerTermino) throws BeneficioNotFoundException;
 
     void processarBeneficiosVencidos();
+
+    List<UUID> obterUserIdsEstudantesComBeneficioAtivo();
 }

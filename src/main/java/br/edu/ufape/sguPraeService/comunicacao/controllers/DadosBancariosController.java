@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/dadosBancarios")
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class DadosBancariosController {
 
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @PostMapping("/{idEstudante}")
-    public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@PathVariable Long idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
+    public ResponseEntity<DadosBancariosResponse> criarDadosBancarios(@PathVariable UUID idEstudante, @RequestBody DadosBancariosRequest dadosBancariosRequest) {
         DadosBancarios dadosBancarios = dadosBancariosRequest.convertToEntity(dadosBancariosRequest, modelMapper);
         DadosBancarios novoDadosBancarios = fachada.salvarDadosBancarios(idEstudante, dadosBancarios);
         return new ResponseEntity<>(new DadosBancariosResponse(novoDadosBancarios, modelMapper), HttpStatus.CREATED);

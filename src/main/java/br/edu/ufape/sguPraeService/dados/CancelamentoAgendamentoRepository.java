@@ -7,17 +7,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-
 import java.util.UUID;
 
 public interface CancelamentoAgendamentoRepository extends JpaRepository<CancelamentoAgendamento, Long> {
-  Page<CancelamentoAgendamento> findAllByAgendamento_Estudante_UserId(UUID agendamentoEstudanteUserId, Pageable pageable);
+  // ATUALIZADO: userId -> Id
+  Page<CancelamentoAgendamento> findAllByAgendamento_Estudante_Id(UUID estudanteId, Pageable pageable);
 
   @Query("SELECT a FROM CancelamentoAgendamento a " +
           "JOIN a.agendamento ag " +
           "JOIN ag.vaga v " +
           "JOIN v.cronograma c " +
           "JOIN c.profissional p " +
-          "WHERE p.userId = :userId")
-  Page<CancelamentoAgendamento> findAllByProfissionalUserId(@Param("userId") UUID userId, Pageable pageable);
+          "WHERE p.id = :id")
+  Page<CancelamentoAgendamento> findAllByProfissionalId(@Param("id") UUID id, Pageable pageable);
 }

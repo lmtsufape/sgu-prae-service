@@ -54,7 +54,7 @@ public class NotificationScheduler {
                 agendamento.setConfirmacaoEnviada(true);
                 agendamentoRepository.save(agendamento);
 
-                UUID idAluno = agendamento.getEstudante().getUserId();
+                UUID idAluno = agendamento.getEstudante().getId();
                 String msg = String.format("Seu agendamento para hoje às %s está 100%% confirmado. O prazo para alterações foi encerrado.",
                         agendamento.getVaga().getHoraInicio());
 
@@ -80,7 +80,7 @@ public class NotificationScheduler {
                 long mesesRestantes = ChronoUnit.MONTHS.between(mesAtual, beneficio.getFimBeneficio());
 
                 if (mesesRestantes > 0) {
-                    UUID idAluno = beneficio.getEstudantes().getUserId();
+                    UUID idAluno = beneficio.getEstudantes().getId();
                     String nomeBeneficio = beneficio.getTipoBeneficio().getDescricao();
 
                     String msg = String.format("Atenção: Restam %d mês(es) para o término do seu benefício %s (Válido até %s).",

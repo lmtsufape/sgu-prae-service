@@ -1,5 +1,6 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
+import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalUpdateRequest;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.profissional.ProfissionalRequest;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 
@@ -28,18 +30,18 @@ public class ProfissionalController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProfissionalResponse> buscar(@PathVariable Long id) throws ProfissionalNotFoundException {
+    public ResponseEntity<ProfissionalResponse> buscar(@PathVariable UUID id) throws ProfissionalNotFoundException {
         return ResponseEntity.ok(fachada.buscarProfissional(id));
     }
 
-    @PreAuthorize("(hasAnyRole('TECNICO', 'PROFESSOR')) and hasRole('PRAE_ACCESS')")
-    @PostMapping
-    public ResponseEntity<ProfissionalResponse> salvar(@Valid @RequestBody ProfissionalRequest entity) {
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(modelMapper.map(fachada.salvarProfissional(entity.convertToEntity(entity, modelMapper)),
-                        ProfissionalResponse.class));
-    }
+//    @PreAuthorize("(hasAnyRole('TECNICO', 'PROFESSOR')) and hasRole('PRAE_ACCESS')")
+//    @PostMapping
+//    public ResponseEntity<ProfissionalResponse> salvar(@Valid @RequestBody ProfissionalRequest entity) {
+//
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body(modelMapper.map(fachada.salvarProfissional(entity.convertToEntity(entity, modelMapper)),
+//                        ProfissionalResponse.class));
+//    }
 
     @PreAuthorize("hasRole('PROFISSIONAL')")
     @GetMapping("/current")
@@ -50,14 +52,14 @@ public class ProfissionalController {
 
     @PreAuthorize("hasRole('PROFISSIONAL')")
     @PatchMapping
-    public ResponseEntity<ProfissionalResponse> editar(@Valid @RequestBody ProfissionalRequest entity)
-            throws ProfissionalNotFoundException {
-        ProfissionalResponse response = fachada.editarProfissional(entity.convertToEntity(entity, modelMapper));
+    public ResponseEntity<ProfissionalResponse> editar(@Valid @RequestBody ProfissionalUpdateRequest dto) throws ProfissionalNotFoundException {
+        // Passamos o DTO diretamente para a Fachada
+        ProfissionalResponse response = fachada.editarProfissional(dto);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) throws ProfissionalNotFoundException {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) throws ProfissionalNotFoundException {
         fachada.deletarProfissional(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
