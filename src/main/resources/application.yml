@@ -3,8 +3,23 @@ arquivo:
 
 server:
   port: 8082
+  shutdown: graceful # Absorvido do config-repo/application.yml
   error:
     include-stacktrace: never
+
+# Configurações do Actuator absorvidas do config-repo/application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 spring:
   application:
@@ -42,6 +57,28 @@ spring:
     create-schemas: true
     default-schema: public
 
+  # Configuração de mensageria local e resiliência (Absorvida do sgu-auth-service.yml)
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 2s
+          max-attempts: 3
+          max-interval: 10s
+          multiplier: 2
+        default-requeue-rejected: false
+
+  # Configuração do Redis (Absorvida do Gateway)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
   security:
     oauth2:
       client:
@@ -75,6 +112,13 @@ logging:
     org:
       springframework: DEBUG
 
+# Desabilita completamente o Eureka para o Monolito
+eureka:
+  client:
+    enabled: false
+    registerWithEureka: false
+    fetchRegistry: false
+
 ---
 # PROFILE DOCKER
 spring:
@@ -83,13 +127,18 @@ spring:
       on-profile: docker
 
   rabbitmq:
-    host: localhost
+    host: rabbitmq # Ajustado para o nome do container no docker-compose
     port: 5672
     username: guest
     password: guest
 
+  data:
+    redis:
+      host: redis # Ajustado para o nome do container no docker-compose
+      port: 6379
+
   datasource:
-    url: jdbc:postgresql://backend-db:5432/prae
+    url: jdbc:postgresql://prae-db:5432/prae # Ajustado para o nome do container no docker-compose
     username: postgres
     password: password
 
@@ -114,10 +163,4 @@ keycloak:
 
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://discovery:8761/eureka/
-    registerWithEureka: true
-    fetchRegistry: true
-  instance:
-    hostname: sgu-prae-service
-    prefer-ip-address: false
+    enabled: false

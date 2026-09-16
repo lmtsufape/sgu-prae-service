@@ -1,6 +1,6 @@
 package br.edu.ufape.sguPraeService.servicos;
 
-import br.edu.ufape.sguPraeService.config.AuthenticatedUserProvider;
+import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
 import br.edu.ufape.sguPraeService.dados.UsuarioRepository;
 
 

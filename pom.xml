@@ -29,21 +29,11 @@
 
     <properties>
         <java.version>24</java.version>
-        <spring-cloud.version>2025.0.0</spring-cloud.version>
         <querydsl.version>5.1.0</querydsl.version>
+        <!-- A propriedade spring-cloud.version foi removida -->
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <!-- O bloco dependencyManagement do Spring Cloud foi removido, deixando o POM mais leve -->
 
     <dependencies>
         <!-- BASE SPRING BOOT -->
@@ -186,13 +176,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- CLOUD (EUREKA) -->
-        <!-- O Config Client foi removido daqui para atender a Issue #80 -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-
         <!-- TESTES -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -251,7 +234,6 @@
                         </path>
                     </annotationProcessorPaths>
                     <generatedSourcesDirectory>${project.build.directory}/generated-sources/java</generatedSourcesDirectory>
-                    <!-- Trazido do Auth: Evita bugs na geração de código do QueryDSL -->
                     <compilerArgs>
                         <arg>-Aquerydsl.entityAccessors=false</arg>
                         <arg>-Aquerydsl.useFields=false</arg>
