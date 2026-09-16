@@ -3,6 +3,7 @@ package br.edu.ufape.sguPraeService.comunicacao.dto.beneficio;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.UUID;
 
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
@@ -46,7 +47,7 @@ public class BeneficioRequest {
 
     @NotNull(message = "O id do estudante é obrigatória")
     @Positive(message = "Id do estudante inválido")
-    private Long estudanteId;
+    private UUID estudanteId;
 
 
     public Beneficio convertToEntity(BeneficioRequest beneficioRequest, ModelMapper modelMapper) {

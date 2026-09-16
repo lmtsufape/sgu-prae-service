@@ -66,6 +66,8 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long>,
 
         bindings.bind(root.beneficio.id).first((path, value) -> path.eq(value));
         bindings.bind(root.beneficio.tipoBeneficio.id).first((path, value) -> path.eq(value));
+
+        // Acesso mantido, já que agora estudantes.id é o UUID
         bindings.bind(root.beneficio.estudantes.id).first((path, value) -> path.eq(value));
 
         bindings.excluding(root.ativo);

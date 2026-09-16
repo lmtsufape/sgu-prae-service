@@ -16,14 +16,14 @@ import org.springframework.data.querydsl.binding.QuerydslBinderCustomizer;
 import org.springframework.data.querydsl.binding.QuerydslBindings;
 import org.springframework.lang.NonNull;
 
-
-public interface EstudanteRepository extends JpaRepository<Estudante, Long>,
+public interface EstudanteRepository extends JpaRepository<Estudante, UUID>,
         QuerydslPredicateExecutor<Estudante>,
         QuerydslBinderCustomizer<QEstudante> {
 
-    Optional<Estudante> findByUserId(UUID userId);
+    // REMOVIDO: findByUserId (o JpaRepository já nos dá o findById(UUID) nativamente!)
 
-    Page<Estudante> findByUserIdIn(List<UUID> userIds, Pageable pageable);
+    // ATUALIZADO: UserIdIn -> IdIn
+    Page<Estudante> findByIdIn(List<UUID> ids, Pageable pageable);
 
     Page<Estudante> findAllByAtivoTrue(Pageable pageable);
 

@@ -22,13 +22,14 @@ public class ProfissionalService implements br.edu.ufape.sguPraeService.servicos
     }
 
     @Override
-    public Profissional buscar(Long id) throws ProfissionalNotFoundException {
+    public Profissional buscar(UUID id) throws ProfissionalNotFoundException {
         return repository.findById(id).orElseThrow(ProfissionalNotFoundException::new);
     }
 
     @Override
     public Profissional buscarPorUserId(UUID id) throws ProfissionalNotFoundException {
-        return repository.findByUserId(id).orElseThrow(ProfissionalNotFoundException::new);
+        // ATUALIZADO: Como userId virou PK, chamamos apenas o findById nativo
+        return repository.findById(id).orElseThrow(ProfissionalNotFoundException::new);
     }
 
     @Override
@@ -44,7 +45,8 @@ public class ProfissionalService implements br.edu.ufape.sguPraeService.servicos
     @Override
     public Profissional editar(UUID userId, Profissional entity) throws ProfissionalNotFoundException {
         try{
-            Profissional profissional = repository.findByUserId(userId).orElseThrow(ProfissionalNotFoundException::new);
+            // ATUALIZADO: Usando findById nativo em vez de findByUserId
+            Profissional profissional = repository.findById(userId).orElseThrow(ProfissionalNotFoundException::new);
             modelMapper.map(entity, profissional);
             return repository.save(profissional);
         }catch (DataIntegrityViolationException e){
@@ -54,7 +56,7 @@ public class ProfissionalService implements br.edu.ufape.sguPraeService.servicos
     }
 
     @Override
-    public void deletar(Long id) throws ProfissionalNotFoundException {
+    public void deletar(UUID id) throws ProfissionalNotFoundException {
         Profissional profissional = buscar(id);
         profissional.setAtivo(false);
         repository.save(profissional);

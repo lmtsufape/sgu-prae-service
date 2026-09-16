@@ -14,11 +14,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ProfissionalRepository extends JpaRepository<Profissional, Long>,
+
+public interface ProfissionalRepository extends JpaRepository<Profissional, UUID>,
         QuerydslPredicateExecutor<Profissional>,
         QuerydslBinderCustomizer<QProfissional> {
 
-    Optional<Profissional> findByUserId(UUID userId);
 
     @Override
     default void customize(QuerydslBindings bindings, @NonNull QProfissional root) {

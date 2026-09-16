@@ -1,21 +1,22 @@
 package br.edu.ufape.sguPraeService.comunicacao.dto.profissional;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.UsuarioResponse;
 import br.edu.ufape.sguPraeService.models.Profissional;
-
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.modelmapper.ModelMapper;
 
-@Getter @Setter
-public class ProfissionalResponse {
+@Getter @Setter @NoArgsConstructor
+public class ProfissionalResponse extends UsuarioResponse {
 
-    Long id;
-    FuncionarioResponse tecnico;
-    String especialidade;
+    // Herda ID (UUID), nome, cpf, email, etc.
+    private String siape;
+    private String especialidade;
 
     public ProfissionalResponse(Profissional profissional, ModelMapper modelMapper){
-        if (profissional == null) throw new IllegalArgumentException("Profissional não pode ser nulo");
-        else modelMapper.map(profissional, this);
+        super(profissional, modelMapper); // Mapeia os dados do pai (Usuario)
+        this.siape = profissional.getSiape();
+        this.especialidade = profissional.getEspecialidade();
     }
 }

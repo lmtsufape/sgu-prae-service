@@ -1,70 +1,71 @@
- package br.edu.ufape.sguPraeService.servicos;
- 
- import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
- import br.edu.ufape.sguPraeService.models.Cronograma;
- import br.edu.ufape.sguPraeService.dados.CronogramaRepository;
- import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
- import jakarta.ws.rs.NotAllowedException;
- import lombok.RequiredArgsConstructor;
- import org.springframework.data.domain.Page;
- import org.springframework.data.domain.Pageable;
- import org.springframework.stereotype.Service;
- import com.querydsl.core.types.Predicate;
- import com.querydsl.core.BooleanBuilder;
- import br.edu.ufape.sguPraeService.models.QCronograma;
+package br.edu.ufape.sguPraeService.servicos;
 
- import java.util.UUID;
+import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
+import br.edu.ufape.sguPraeService.models.Cronograma;
+import br.edu.ufape.sguPraeService.dados.CronogramaRepository;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
+import jakarta.ws.rs.NotAllowedException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.BooleanBuilder;
+import br.edu.ufape.sguPraeService.models.QCronograma;
 
- @Service
- @RequiredArgsConstructor
- public class CronogramaService implements br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService {
-     private final CronogramaRepository repository;
-     private final AuthenticatedUserProvider authenticatedUserProvider;
+import java.util.UUID;
 
-     @Override
-     public Page<Cronograma> listar(Predicate predicate, Pageable pageable) {
-         QCronograma qCronograma = QCronograma.cronograma;
-         BooleanBuilder filtroBase = new BooleanBuilder();
-         filtroBase.and(qCronograma.ativo.isTrue());
+@Service
+@RequiredArgsConstructor
+public class CronogramaService implements br.edu.ufape.sguPraeService.servicos.interfaces.CronogramaService {
+    private final CronogramaRepository repository;
+    private final AuthenticatedUserProvider authenticatedUserProvider;
 
-         Predicate predicadoFinal = filtroBase.and(predicate);
-         return repository.findAll(predicadoFinal, pageable);
-     }
+    @Override
+    public Page<Cronograma> listar(Predicate predicate, Pageable pageable) {
+        QCronograma qCronograma = QCronograma.cronograma;
+        BooleanBuilder filtroBase = new BooleanBuilder();
+        filtroBase.and(qCronograma.ativo.isTrue());
 
-     @Override
-     public Page<Cronograma> listarPorTipoAtendimento(Long id, Pageable pageable) {
-         return repository.findByAtivoTrueAndTipoAtendimento_Id(id, pageable);
-     }
+        Predicate predicadoFinal = filtroBase.and(predicate);
+        return repository.findAll(predicadoFinal, pageable);
+    }
 
-     @Override
-     public Page<Cronograma> listarPorProfissional(UUID userId, Pageable pageable) {
-         return repository.findAllByAtivoTrueAndProfissional_UserId(userId, pageable);
-     }
- 
-     @Override
-     public Cronograma buscar(Long id) throws CronogramaNotFoundException {
-         return repository.findById(id).orElseThrow(CronogramaNotFoundException::new);
-     }
- 
-     @Override
-     public Cronograma salvar(Cronograma entity) {
-         return repository.save(entity);
-     }
+    @Override
+    public Page<Cronograma> listarPorTipoAtendimento(Long id, Pageable pageable) {
+        return repository.findByAtivoTrueAndTipoAtendimento_Id(id, pageable);
+    }
 
-     public boolean existeCronogramaPorTipoAtendimento(Long tipoAtendimentoId) {
-            return repository.existsByTipoAtendimento_Id(tipoAtendimentoId);
-     }
- 
+    @Override
+    public Page<Cronograma> listarPorProfissional(UUID userId, Pageable pageable) {
+        // ATUALIZADO: Usando a nova assinatura do método (Profissional_Id)
+        return repository.findAllByAtivoTrueAndProfissional_Id(userId, pageable);
+    }
 
-     @Override
-     public void deletar(Long id){
-         UUID userId = authenticatedUserProvider.getUserId();
-         Cronograma cronograma = buscar(id);
-         if (!cronograma.getProfissional().getUserId().equals(userId)) {
-             throw new NotAllowedException("Você não tem permissão para deletar este cronograma.");
-         }
-         cronograma.setAtivo(false);
-         repository.save(cronograma);
-     }
- }
- 
+    @Override
+    public Cronograma buscar(Long id) throws CronogramaNotFoundException {
+        return repository.findById(id).orElseThrow(CronogramaNotFoundException::new);
+    }
+
+    @Override
+    public Cronograma salvar(Cronograma entity) {
+        return repository.save(entity);
+    }
+
+    public boolean existeCronogramaPorTipoAtendimento(Long tipoAtendimentoId) {
+        return repository.existsByTipoAtendimento_Id(tipoAtendimentoId);
+    }
+
+
+    @Override
+    public void deletar(Long id){
+        UUID userId = authenticatedUserProvider.getUserId();
+        Cronograma cronograma = buscar(id);
+
+        if (!cronograma.getProfissional().getId().equals(userId)) {
+            throw new NotAllowedException("Você não tem permissão para deletar este cronograma.");
+        }
+        cronograma.setAtivo(false);
+        repository.save(cronograma);
+    }
+}

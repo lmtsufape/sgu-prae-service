@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.models.Pagamento;
@@ -172,7 +173,7 @@ public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
     @GetMapping("/quantidade/beneficiados/por/curso")
     public ResponseEntity<List<Map<String, Object>>> getQuantidadeBeneficiadosPorCurso(
             @QuerydslPredicate(root = Pagamento.class) Predicate predicate) {
-        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso(predicate);
+        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso((List<UUID>) predicate);
         return ResponseEntity.ok(resposta);
     }
 

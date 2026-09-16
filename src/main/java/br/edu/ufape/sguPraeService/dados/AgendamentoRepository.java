@@ -21,20 +21,20 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long>,
         QuerydslPredicateExecutor<Agendamento>,
         QuerydslBinderCustomizer<QAgendamento> {
 
-    boolean existsByEstudante_UserIdAndDataAndAtivoTrue(java.util.UUID userId, LocalDate data);
-
     List<Agendamento> findByConfirmacaoEnviadaFalseAndAtivoTrue();
 
-    Optional<Agendamento> findTopByEstudante_UserIdAndDataCriacaoIsNotNullOrderByDataCriacaoDesc(UUID userId);
+    boolean existsByEstudante_IdAndDataAndAtivoTrue(java.util.UUID id, LocalDate data);
 
-    Page<Agendamento> findAllByEstudante_UserIdAndAtivoTrue(UUID userId, Pageable pageable);
+    Optional<Agendamento> findTopByEstudante_IdAndDataCriacaoIsNotNullOrderByDataCriacaoDesc(UUID id);
+
+    Page<Agendamento> findAllByEstudante_IdAndAtivoTrue(UUID id, Pageable pageable);
 
     @Query("SELECT a FROM Agendamento a " +
             "JOIN a.vaga v " +
             "JOIN v.cronograma c " +
             "JOIN c.profissional p " +
-            "WHERE p.userId = :userId and  a.ativo = true")
-    Page<Agendamento> findAllByProfissionalUserId(@Param("userId") UUID userId, Pageable pageable);
+            "WHERE p.id = :id and a.ativo = true") // Mudou de p.userId para p.id
+    Page<Agendamento> findAllByProfissionalId(@Param("id") UUID id, Pageable pageable);
 
     @Override
     default void customize(QuerydslBindings bindings, @NonNull QAgendamento root) {
