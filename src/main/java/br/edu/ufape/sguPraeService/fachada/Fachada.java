@@ -13,6 +13,7 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoReques
 import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.PageResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.agendamento.AgendamentoResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
+import br.edu.ufape.sguPraeService.comunicacao.dto.curso.CursoPatchRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.*;
 import br.edu.ufape.sguPraeService.comunicacao.dto.pagamento.*;
@@ -40,11 +41,13 @@ import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.FuncionarioResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CancelamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CronogramaNotFoundException;
+import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CursoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.EstudanteNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.PagamentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.ProfissionalNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.TipoAtendimentoNotFoundException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.VagaNotFoundException;
+import br.edu.ufape.sguPraeService.servicos.CursoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AgendamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.ArmazenamentoService;
 import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
@@ -90,6 +93,7 @@ public class Fachada {
     private final PagamentoService pagamentoService;
     private final ArmazenamentoService armazenamentoService;
     private final AuthServiceClient authServiceClient;
+    private final CursoService cursoService;
 
     @Value("${authClient.client-id}")
     private String clientId;
@@ -1277,6 +1281,46 @@ public class Fachada {
         return armazenamentoService.converterDocumentosParaBase64(documentos);
     }
 
+    // ------------------- Curso ------------------- //
+
+    public Curso salvarCurso(Curso curso){
+        return cursoService.salvar(curso);
+    }
+
+    public Curso buscarCurso(Long id) throws CursoNotFoundException {
+        return cursoService.buscar(id);
+    }
+
+    public Page<Curso> listarCursos(Predicate predicate, Pageable pageable) {
+        return cursoService.listar(predicate, pageable);
+    }
+
+    public Curso editarCurso(Long id, CursoPatchRequest dto) throws CursoNotFoundException {
+        Curso curso = cursoService.buscar(id);
+
+        if (dto.getNome() != null) {
+            String nome = dto.getNome().trim();
+            if (nome.isEmpty()) {
+                throw new IllegalArgumentException("Nome do curso não pode ser vazio.");
+            }
+            curso.setNome(nome);
+        }
+
+        if (dto.getNumeroPeriodos() != null) {
+            if (dto.getNumeroPeriodos() <= 0) {
+                throw new IllegalArgumentException("Número de períodos deve ser maior que zero.");
+            }
+            curso.setNumeroPeriodos(dto.getNumeroPeriodos());
+        }
+
+        return cursoService.salvar(curso);
+    }
+
+    public void deletarCurso(Long id) throws CursoNotFoundException {
+        cursoService.deletar(id);
+    }
+
+    
     // ------------------- Métodos Auxiliares ------------------- //
 
     /**
