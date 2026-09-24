@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 @Service @RequiredArgsConstructor
 public class CursoService implements br.edu.ufape.sguPraeService.servicos.interfaces.CursoService {
@@ -72,6 +71,4 @@ public class CursoService implements br.edu.ufape.sguPraeService.servicos.interf
         curso.setAtivo(false);
         cursoRepository.save(curso);
     }
-
-
 }

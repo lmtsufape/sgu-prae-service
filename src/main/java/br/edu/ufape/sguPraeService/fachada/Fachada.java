@@ -400,7 +400,8 @@ public class Fachada {
         estudanteService.deletarEstudante(id);
     }
 
-    public Page<EstudanteResponse> listarEstudantesPorCurso(Long idCurso, Pageable pageable) {
+    public Page<EstudanteResponse> listarEstudantesPorCurso(Long idCurso, Pageable pageable) throws CursoNotFoundException {
+        cursoService.buscar(idCurso);
         BooleanBuilder predicate = new BooleanBuilder();
         predicate.and(QEstudante.estudante.curso.id.eq(idCurso));
 

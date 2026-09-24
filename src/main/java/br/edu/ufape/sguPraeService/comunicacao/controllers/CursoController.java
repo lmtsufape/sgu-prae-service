@@ -1,9 +1,9 @@
 package br.edu.ufape.sguPraeService.comunicacao.controllers;
 
-
 import br.edu.ufape.sguPraeService.comunicacao.dto.curso.CursoPatchRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.curso.CursoRequest;
 import br.edu.ufape.sguPraeService.comunicacao.dto.curso.CursoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.estudante.EstudanteResponse;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.CursoNotFoundException;
 import br.edu.ufape.sguPraeService.fachada.Fachada;
 import br.edu.ufape.sguPraeService.models.Curso;
@@ -22,12 +22,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 
-@RestController@RequiredArgsConstructor
+@RestController
+@RequiredArgsConstructor
 @RequestMapping("/curso")
 public class CursoController {
     private final Fachada fachada;
     private final ModelMapper modelMapper;
-
 
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PostMapping
@@ -38,7 +38,8 @@ public class CursoController {
 
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PatchMapping("/{id}")
-    public ResponseEntity<CursoResponse> editar(@PathVariable Long id, @RequestBody CursoPatchRequest patch) throws CursoNotFoundException {
+    public ResponseEntity<CursoResponse> editar(@PathVariable Long id, @RequestBody CursoPatchRequest patch)
+            throws CursoNotFoundException {
         Curso atualizado = fachada.editarCurso(id, patch);
         return new ResponseEntity<>(new CursoResponse(atualizado, modelMapper), HttpStatus.OK);
     }
@@ -51,14 +52,11 @@ public class CursoController {
 
     @GetMapping
     public Page<CursoResponse> listar(@QuerydslPredicate(root = Curso.class) Predicate predicate,
-                                      @PageableDefault(value = 2)
-                                      @SortDefault(sort = "id", direction = Sort.Direction.ASC)
-                                      Pageable pageable) {
+            @PageableDefault(value = 2) @SortDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
 
         return fachada.listarCursos(predicate, pageable)
                 .map(curso -> new CursoResponse(curso, modelMapper));
     }
-
 
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     @DeleteMapping("/{id}")
@@ -66,4 +64,12 @@ public class CursoController {
         fachada.deletarCurso(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GESTOR', 'PROFISSIONAL')")
+    @GetMapping("/{id}/estudantes")
+    public Page<EstudanteResponse> listarEstudantesPorCurso(@PathVariable Long id,
+            @PageableDefault(sort = "id") Pageable pageable) throws CursoNotFoundException {
+        return fachada.listarEstudantesPorCurso(id, pageable);
+    }
+
 }
