@@ -89,8 +89,9 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
         return pagamentoRepository.findByValorBetween(min, max, pageable);
     }
 
+
     @Override
-    public List<Pagamento> listarPorEstudanteId(Long estudanteId) {
+    public List<Pagamento> listarPorEstudanteId(UUID estudanteId) {
         return beneficioRepository.findAllByAtivoTrueAndEstudantes_Id(estudanteId).stream()
                 .flatMap(aux -> aux.getPagamentos().stream())
                 .filter(Pagamento::isAtivo)
@@ -113,8 +114,9 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
         folha.setMesReferencia(mes);
         folha.setNumeroLote(numeroLote);
 
-        // 2. Agrupamento por ID do Estudante (Entidade)
-        Map<Long, List<Pagamento>> pagamentosMap = pagamentos.stream()
+        // 2. Agrupamento por ID (UUID) do Estudante
+        // ATUALIZADO: Usando o ID (UUID) nativo
+        Map<UUID, List<Pagamento>> pagamentosMap = pagamentos.stream()
                 .collect(Collectors.groupingBy(p -> p.getBeneficio().getEstudantes().getId()));
 
         List<ItemFolhaPagamentoResponse> itensFolha = new ArrayList<>();
@@ -124,8 +126,8 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
             ItemFolhaPagamentoResponse item = new ItemFolhaPagamentoResponse();
             Estudante estudante = lista.get(0).getBeneficio().getEstudantes();
 
-            // Setamos o UUID para a Fachada usar depois
-            item.setUserId(estudante.getUserId());
+            // ATUALIZADO: Pegando a PK nativa
+            item.setUserId(estudante.getId());
 
             // Dados Bancários locais
             if (estudante.getDadosBancarios() != null) {
@@ -206,7 +208,7 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
     }
 
     @Override
-    public List<UUID> obterUserIdsEstudantesComPagamento(Predicate predicate) {
+    public List<UUID> obterIdsEstudantesComPagamento(Predicate predicate) {
         QPagamento qPagamento = QPagamento.pagamento;
         BooleanBuilder builder = new BooleanBuilder().and(qPagamento.ativo.isTrue());
         if (predicate != null) builder.and(predicate);
@@ -214,7 +216,7 @@ public class PagamentoService implements br.edu.ufape.sguPraeService.servicos.in
         List<UUID> ids = new ArrayList<>();
         for (Pagamento p : pagamentoRepository.findAll(builder)) {
             if (p.getBeneficio() != null && p.getBeneficio().getEstudantes() != null) {
-                ids.add(p.getBeneficio().getEstudantes().getUserId());
+                ids.add(p.getBeneficio().getEstudantes().getId());
             }
         }
         return ids.stream().distinct().toList();

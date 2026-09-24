@@ -1,6 +1,5 @@
 package br.edu.ufape.sguPraeService.models;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

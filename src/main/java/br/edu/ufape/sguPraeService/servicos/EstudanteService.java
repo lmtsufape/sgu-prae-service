@@ -35,21 +35,23 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
 
     }
 
+    // ATUALIZADO: Parâmetro Long id virou UUID id
     @Override
-    public Estudante buscarEstudante(Long id) throws EstudanteNotFoundException {
+    public Estudante buscarEstudante(UUID id) throws EstudanteNotFoundException {
         return estudanteRepository.findById(id)
                 .orElseThrow(EstudanteNotFoundException::new);
     }
 
     @Override
     public Estudante buscarPorUserId(UUID userId) throws EstudanteNotFoundException {
-        return (Estudante) estudanteRepository.findByUserId(userId)
+        // ATUALIZADO: Como userId virou PK, chamamos apenas o findById nativo
+        return estudanteRepository.findById(userId)
                 .orElseThrow(EstudanteNotFoundException::new);
     }
 
     @Override
     public Page<Estudante> buscarPorUserIds(List<UUID> userIds, Pageable pageable) {
-        return estudanteRepository.findByUserIdIn(userIds, pageable);
+        return estudanteRepository.findByIdIn(userIds, pageable);
     }
 
     @Override
@@ -74,11 +76,15 @@ public class EstudanteService implements br.edu.ufape.sguPraeService.servicos.in
 
     }
 
+
     @Override
-    public void deletarEstudante(Long id) throws EstudanteNotFoundException {
+    public void deletarEstudante(UUID id) throws EstudanteNotFoundException {
         Estudante estudante = estudanteRepository.findById(id).orElseThrow(EstudanteNotFoundException::new);
         estudante.setAtivo(false);
         estudanteRepository.save(estudante);
     }
 
+    public Estudante buscarPorDadosBancariosId(Long id) {
+        return estudanteRepository.findByDadosBancarios_Id(id).orElse(null);
+    }
 }

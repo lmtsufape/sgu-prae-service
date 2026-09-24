@@ -10,10 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import br.edu.ufape.sguPraeService.models.QBeneficio;
 import com.querydsl.core.types.dsl.StringPath;
@@ -28,7 +25,9 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
 
   List<Beneficio> findByAtivoTrue();
 
-  long countByEstudantesIdAndAtivoTrue(Long estudanteId);
+  List<Beneficio> findAllByAtivoTrueAndStatusTrue();
+
+  long countByEstudantesIdAndAtivoTrue(UUID estudantes_id);
 
   Page<Beneficio> findByMotivoEncerramentoNotNull(Pageable pageable);
 
@@ -38,7 +37,7 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
 
   List<Beneficio> findByPagamentos_Id(Long pagamentoId);
 
-  List<Beneficio> findAllByAtivoTrueAndEstudantes_Id(Long estudanteId);
+  List<Beneficio> findAllByAtivoTrueAndEstudantes_Id(UUID estudantes_id);
 
   Page<Beneficio> findAllByAtivoTrueAndEstudantes_Id(Long estudanteId, Pageable pageable);
 
@@ -54,13 +53,13 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
   @Query("SELECT COUNT(DISTINCT b.estudantes.id) FROM Beneficio b WHERE b.ativo = true")
   Long countDistinctEstudantesAtivos();
 
-  @Query("SELECT DISTINCT b.estudantes.userId FROM Beneficio b WHERE b.ativo = true")
-  List<java.util.UUID> findDistinctEstudanteUserIdsWithBeneficioAtivo();
+  // ATUALIZADO: userId -> id
+  @Query("SELECT DISTINCT b.estudantes.id FROM Beneficio b WHERE b.ativo = true")
+  List<java.util.UUID> findDistinctEstudanteIdsWithBeneficioAtivo();
 
   @Override
   default void customize(QuerydslBindings bindings, @NonNull QBeneficio root) {
     bindings.bind(String.class).first((StringPath path, String value) -> path.containsIgnoreCase(value));
-
 
     bindings.excluding(root.termo, root.pagamentos, root.estudantes.documentos);
 
@@ -69,9 +68,8 @@ public interface BeneficioRepository extends JpaRepository<Beneficio, Long>,
     bindings.bind(root.tipoBeneficio.id).first((path, value) -> path.eq(value));
     bindings.bind(root.motivoEncerramento).first((path, value) -> path.eq(value));
 
-    //Permitir explicitamente o filtro pelo status ativo/inativo
+    // Permitir explicitamente o filtro pelo status ativo/inativo
     bindings.bind(root.ativo).first((path, value) -> path.eq(value));
-
 
     bindings.bind(root.inicioBeneficio).all((path, value) -> {
       if (value.isEmpty()) return Optional.empty();

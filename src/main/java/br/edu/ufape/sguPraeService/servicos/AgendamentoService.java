@@ -1,7 +1,8 @@
 package br.edu.ufape.sguPraeService.servicos;
 
-
 import br.edu.ufape.sguPraeService.auth.AuthenticatedUserProvider;
+import br.edu.ufape.sguPraeService.comunicacao.mensageria.NotificacaoEvent;
+import br.edu.ufape.sguPraeService.comunicacao.mensageria.NotificacaoPublisher;
 import br.edu.ufape.sguPraeService.dados.AgendamentoRepository;
 import br.edu.ufape.sguPraeService.exceptions.GlobalAccessDeniedException;
 import br.edu.ufape.sguPraeService.exceptions.notFoundExceptions.AgendamentoNotFoundException;
@@ -18,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -25,7 +27,7 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
     private final AgendamentoRepository repository;
     private final ModelMapper modelMapper;
     private final AuthenticatedUserProvider authenticatedUserProvider;
-
+    private final NotificacaoPublisher notificacaoPublisher;
 
     @Override
     public Agendamento salvar(Agendamento entity) {
@@ -34,50 +36,51 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
 
     @Override
     public Agendamento agendar(Vaga vaga, Estudante estudante, ModalidadeAgendamento modalidade) {
-
-        // 1. TRAVA DE TIMEOUT DE 24 HORAS (Agora imune a nulos do banco)
         Optional<Agendamento> ultimoAgendamento =
-                repository.findTopByEstudante_UserIdAndDataCriacaoIsNotNullOrderByDataCriacaoDesc(estudante.getUserId());
+                repository.findTopByEstudante_IdAndDataCriacaoIsNotNullOrderByDataCriacaoDesc(estudante.getId());
 
         if (ultimoAgendamento.isPresent()) {
-            // Como já garantimos no repositório que a data não é nula, podemos pegar direto
             LocalDateTime dataUltimaCriacao = ultimoAgendamento.get().getDataCriacao();
-
-            // Verifica se o tempo decorrido desde o último agendamento é menor que 24 horas
             if (ChronoUnit.HOURS.between(dataUltimaCriacao, LocalDateTime.now()) < 24) {
                 LocalDateTime liberacao = dataUltimaCriacao.plusHours(24);
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
-
                 throw new IllegalArgumentException(
-                        "Você só pode realizar um novo agendamento a cada 24 horas. " +
+                        "Você pode realizar um novo agendamento a cada 24 horas. " +
                                 "Seu próximo agendamento estará liberado em: " + liberacao.format(formatter)
                 );
             }
         }
 
-        //  2. TRAVA DE 1 AGENDAMENTO POR DIA DO EVENTO
-        boolean jaPossuiAgendamentoNaData = repository.existsByEstudante_UserIdAndDataAndAtivoTrue(
-                estudante.getUserId(), vaga.getCronograma().getData()
+        boolean jaPossuiAgendamentoNaData = repository.existsByEstudante_IdAndDataAndAtivoTrue(
+                estudante.getId(), vaga.getCronograma().getData()
         );
 
         if (jaPossuiAgendamentoNaData) {
-            throw new IllegalArgumentException("Você já possui um agendamento ativo para a data deste cronograma.");
+            throw new IllegalArgumentException("Você possui um agendamento ativo para a data deste cronograma.");
         }
 
-        // 3. SALVAMENTO NORMAL
         Agendamento agendamento = new Agendamento();
         agendamento.setData(vaga.getCronograma().getData());
         agendamento.setVaga(vaga);
         agendamento.setEstudante(estudante);
         agendamento.setModalidade(modalidade);
-        return repository.save(agendamento);
+        Agendamento salvo = repository.save(agendamento);
+
+        // Notificar o Profissional do novo agendamento
+        UUID idProfissional = salvo.getVaga().getCronograma().getProfissional().getId();
+        String dataFormatada = salvo.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String msgProfissional = String.format("Um novo atendimento foi agendado para o dia %s às %s na modalidade %s.",
+                dataFormatada, salvo.getVaga().getHoraInicio(), modalidade);
+        notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(idProfissional, "Novo Agendamento", msgProfissional, "AGENDAMENTO"));
+
+        return salvo;
     }
 
     @Override
     public Agendamento buscar(Long id) throws AgendamentoNotFoundException {
         Agendamento agendamento = repository.findById(id).orElseThrow(AgendamentoNotFoundException::new);
-        if(!Objects.equals(agendamento.getEstudante().getUserId(), authenticatedUserProvider.getUserId())
-                && !Objects.equals(agendamento.getVaga().getCronograma().getProfissional().getUserId(), authenticatedUserProvider.getUserId())){
+        if(!Objects.equals(agendamento.getEstudante().getId(), authenticatedUserProvider.getUserId())
+                && !Objects.equals(agendamento.getVaga().getCronograma().getProfissional().getId(), authenticatedUserProvider.getUserId())){
             throw new GlobalAccessDeniedException("Você não tem permissão para acessar este recurso");
         }
         return agendamento;
@@ -99,38 +102,46 @@ public class AgendamentoService implements br.edu.ufape.sguPraeService.servicos.
 
     @Override
     public Page<Agendamento> listarAgendamentosPorEstudante(Estudante estudante, Pageable pageable) {
-        return repository.findAllByEstudante_UserIdAndAtivoTrue(estudante.getUserId(), pageable);
+        return repository.findAllByEstudante_IdAndAtivoTrue(estudante.getId(), pageable);
     }
+
     @Override
     public Page<Agendamento> listarAgendamentosEstudanteAtual(Pageable pageable) {
-        return repository.findAllByEstudante_UserIdAndAtivoTrue(authenticatedUserProvider.getUserId(), pageable);
+        return repository.findAllByEstudante_IdAndAtivoTrue(authenticatedUserProvider.getUserId(), pageable);
     }
+
     @Override
     public Page<Agendamento> listarPorProfissional(Profissional profissional, Pageable pageable) {
-        return repository.findAllByProfissionalUserId(profissional.getUserId(), pageable);
+        return repository.findAllByProfissionalId(profissional.getId(), pageable);
     }
+
     @Override
     public Page<Agendamento> listarPorProfissionalAtual(Pageable pageable) {
-        return repository.findAllByProfissionalUserId(authenticatedUserProvider.getUserId(), pageable);
+        return repository.findAllByProfissionalId(authenticatedUserProvider.getUserId(), pageable);
     }
 
     @Override
     public Agendamento alterarModalidade(Long id, ModalidadeAgendamento novaModalidade) throws AgendamentoNotFoundException {
-        Agendamento agendamento = buscar(id); // O buscar() já verifica se o estudante dono é quem está acessando (segurança)
+        Agendamento agendamento = buscar(id);
 
-        // Junta a data do cronograma com a hora da vaga para criar o "Timestamp" exato do atendimento
-        LocalDateTime dataHoraAgendamento = LocalDateTime.of(
-                agendamento.getData(),
-                agendamento.getVaga().getHoraInicio()
-        );
-
-        // Regra 2: Prazo limite de 2 horas antes
+        LocalDateTime dataHoraAgendamento = LocalDateTime.of(agendamento.getData(), agendamento.getVaga().getHoraInicio());
         if (LocalDateTime.now().plusHours(2).isAfter(dataHoraAgendamento)) {
             throw new IllegalArgumentException("A modalidade só pode ser alterada com até 2 horas de antecedência do horário agendado.");
         }
 
         agendamento.setModalidade(novaModalidade);
-        return salvar(agendamento);
-    }
+        Agendamento salvo = salvar(agendamento);
 
+        // Notificar Estudante e Profissional sobre a alteração
+        UUID idAluno = salvo.getEstudante().getId();
+        UUID idProfissional = salvo.getVaga().getCronograma().getProfissional().getId();
+
+        String dataFormatada = salvo.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String msg = String.format("A modalidade do agendamento do dia %s foi alterada para %s.", dataFormatada, novaModalidade);
+
+        notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(idAluno, "Agendamento Alterado", msg, "AGENDAMENTO"));
+        notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(idProfissional, "Agendamento Alterado", msg, "AGENDAMENTO"));
+
+        return salvo;
+    }
 }

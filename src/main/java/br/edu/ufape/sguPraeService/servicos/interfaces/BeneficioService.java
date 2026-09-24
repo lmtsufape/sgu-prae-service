@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.querydsl.core.types.Predicate;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -19,7 +21,7 @@ public interface BeneficioService {
 
     Page<Beneficio> listarPorEstudante(Long estudanteId, Pageable pageable);
 
-    List<Beneficio> listarPorEstudante(Long estudanteId);
+    List<Beneficio> listarPorEstudante(UUID estudanteId);
 
     Beneficio buscar(Long id) throws BeneficioNotFoundException;
 
@@ -50,4 +52,12 @@ public interface BeneficioService {
     Long contarCursosDistintosComBeneficioAtivo();
 
     List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds);
+
+    Beneficio prorrogar(Long id, YearMonth novoPrazo, String observacoes) throws BeneficioNotFoundException;
+
+    Beneficio cancelar(Long id, MotivoEncerramento motivoEncerramento, String parecerTermino) throws BeneficioNotFoundException;
+
+    void processarBeneficiosVencidos();
+
+    List<UUID> obterUserIdsEstudantesComBeneficioAtivo();
 }

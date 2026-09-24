@@ -1,15 +1,21 @@
 package br.edu.ufape.sguPraeService.servicos;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoPublicResponse;
+import br.edu.ufape.sguPraeService.comunicacao.mensageria.NotificacaoEvent;
+import br.edu.ufape.sguPraeService.comunicacao.mensageria.NotificacaoPublisher;
 import br.edu.ufape.sguPraeService.exceptions.LimiteBeneficiosExcedidoException;
 import br.edu.ufape.sguPraeService.models.Beneficio;
 import br.edu.ufape.sguPraeService.models.Estudante;
+import br.edu.ufape.sguPraeService.models.enums.MotivoEncerramento;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,15 +27,14 @@ import lombok.RequiredArgsConstructor;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.BooleanBuilder;
 import br.edu.ufape.sguPraeService.models.QBeneficio;
-import br.edu.ufape.sguPraeService.servicos.interfaces.AuthServiceHandler;
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
 
 @Service
 @RequiredArgsConstructor
 public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.interfaces.BeneficioService {
+
 	private final BeneficioRepository beneficioRepository;
 	private final ModelMapper modelMapper;
-	private final AuthServiceHandler authServiceHandler;
+	private final NotificacaoPublisher notificacaoPublisher;
 
 	@Override
 	public Page<Beneficio> listar(Predicate predicate, Pageable pageable) {
@@ -46,7 +51,9 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		QBeneficio qBeneficio = QBeneficio.beneficio;
 		BooleanBuilder filtro = new BooleanBuilder();
 		filtro.and(qBeneficio.ativo.isFalse());
-		filtro.and(predicate);
+		if (predicate != null) {
+			filtro.and(predicate);
+		}
 		return beneficioRepository.findAll(filtro, pageable);
 	}
 
@@ -56,12 +63,13 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 	}
 
 	@Override
-	public List<Beneficio> listarPorEstudante(Long estudanteId) {
+	public List<Beneficio> listarPorEstudante(UUID estudanteId) {
 		return beneficioRepository.findAllByAtivoTrueAndEstudantes_Id(estudanteId);
 	}
 
 	@Override
 	public Page<Beneficio> listarPorEstudante(Long estudanteId, Pageable pageable) {
+		// Nota: A interface exige Long aqui. Avalie padronizar para UUID futuramente na interface e repositório.
 		return beneficioRepository.findAllByAtivoTrueAndEstudantes_Id(estudanteId, pageable);
 	}
 
@@ -73,6 +81,7 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 	@Override
 	public Beneficio salvar(Beneficio entity) {
 		if (entity.getId() == null) {
+			// Extrai e converte a chave conforme o esperado pelo repositório (dependendo se a PK já migrou 100% pra UUID nos controllers)
 			long qtdAtivos = beneficioRepository.countByEstudantesIdAndAtivoTrue(entity.getEstudantes().getId());
 			if (qtdAtivos >= 2) {
 				throw new LimiteBeneficiosExcedidoException("O estudante já possui o limite máximo de 2 benefícios ativos.");
@@ -100,6 +109,10 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		Beneficio beneficio = buscar(id);
 		beneficio.setAtivo(false);
 		beneficioRepository.save(beneficio);
+
+		UUID idAluno = beneficio.getEstudantes().getId();
+		String msg = String.format("Seu benefício %s foi cancelado pelo sistema.", beneficio.getTipoBeneficio().getDescricao());
+		notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(idAluno, "Benefício Cancelado", msg, "BENEFICIO"));
 	}
 
 	@Override
@@ -115,20 +128,17 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		LocalDate inicioMes = agora.withDayOfMonth(1);
 		LocalDate fimMes = agora.withDayOfMonth(agora.lengthOfMonth());
 
-
 		BooleanExpression isAtivo = qBeneficio.ativo.isTrue();
-
 		BooleanExpression temPagamentoNesteMes = qBeneficio.pagamentos.any().data.between(inicioMes, fimMes);
-
 		BooleanExpression jaPago = isAtivo.and(temPagamentoNesteMes);
 
 		return beneficioRepository.findAll(jaPago, pageable);
 	}
 
-    @Override
-    public Page<Beneficio> listarPorTipo(Long tipoId, Pageable pageable) {
-        return beneficioRepository.findByTipoBeneficioId(tipoId, pageable);
-    }
+	@Override
+	public Page<Beneficio> listarPorTipo(Long tipoId, Pageable pageable) {
+		return beneficioRepository.findByTipoBeneficioId(tipoId, pageable);
+	}
 
 	@Override
 	public Page<Beneficio> listarBeneficiosPendentesMesAtual(Predicate predicate, Pageable pageable) {
@@ -139,15 +149,15 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		LocalDate fimMes = agora.withDayOfMonth(agora.lengthOfMonth());
 
 		BooleanExpression isAtivo = qBeneficio.ativo.isTrue();
-
 		BooleanExpression temPagamentoNesteMes = qBeneficio.pagamentos.any().data.between(inicioMes, fimMes);
-
 		BooleanExpression ehPendente = isAtivo.and(temPagamentoNesteMes.not());
 
 		BooleanBuilder filtroFinal = new BooleanBuilder();
 		filtroFinal.and(ehPendente);
-		filtroFinal.and(predicate);
 
+		if (predicate != null) {
+			filtroFinal.and(predicate);
+		}
 
 		return beneficioRepository.findAll(filtroFinal, pageable);
 	}
@@ -167,43 +177,119 @@ public class BeneficioService implements br.edu.ufape.sguPraeService.servicos.in
 		return beneficioRepository.findEstudantesByBeneficioId(id, pageable);
 	}
 
+	@Override
 	public Long contarEstudantesBeneficiados() {
 		return beneficioRepository.countDistinctEstudantesAtivos();
 	}
 
-    @Override
-	public Long contarCursosDistintosComBeneficioAtivo() {
-		List<java.util.UUID> userIds = beneficioRepository.findDistinctEstudanteUserIdsWithBeneficioAtivo();
-		if (userIds.isEmpty()) return 0L;
-		List<AlunoResponse> alunos = authServiceHandler.buscarAlunos(userIds);
-		return alunos.stream()
-			.map(AlunoResponse::getCurso)
-			.filter(java.util.Objects::nonNull)
-			.map(AlunoResponse.Curso::getId)
-			.filter(java.util.Objects::nonNull)
-			.distinct()
-			.count();
+	@Override
+	public List<UUID> obterUserIdsEstudantesComBeneficioAtivo() {
+		return beneficioRepository.findDistinctEstudanteIdsWithBeneficioAtivo();
 	}
 
+	@Override
+	public Long contarCursosDistintosComBeneficioAtivo() {
+		// Substitui a chamada ao Feign pela filtragem direta das instâncias de curso dos estudantes
+		List<Beneficio> beneficiosAtivos = beneficioRepository.findAllByAtivoTrueAndStatusTrue();
 
-	public List<java.util.Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds) {
-		if (userIds == null || userIds.isEmpty()) return java.util.Collections.emptyList();
+		return beneficiosAtivos.stream()
+				.map(Beneficio::getEstudantes)
+				.filter(java.util.Objects::nonNull)
+				.map(Estudante::getCurso)
+				.filter(java.util.Objects::nonNull)
+				.map(br.edu.ufape.sguPraeService.models.Curso::getId)
+				.distinct()
+				.count();
+	}
 
-		List<AlunoPublicResponse> alunos = authServiceHandler.buscarAlunosPublicos(userIds);
+	@Override
+	public List<Map<String, Object>> obterQuantidadeBeneficiadosPorCurso(List<UUID> userIds) {
+		if (userIds == null || userIds.isEmpty()) {
+			return java.util.Collections.emptyList();
+		}
 
-		return alunos.stream()
-				.filter(a -> a.getCurso() != null)
-				.collect(java.util.stream.Collectors.groupingBy(
-						a -> java.util.Map.of("id", a.getCurso().getId(), "nome", a.getCurso().getNome()),
-						java.util.stream.Collectors.counting()
+		// Filtramos os estudantes baseados nos UUIDs repassados, validando a existência do curso nativamente
+		List<Estudante> estudantes = beneficioRepository.findAllByAtivoTrueAndStatusTrue().stream()
+				.map(Beneficio::getEstudantes)
+				.filter(e -> userIds.contains(e.getId()) && e.getCurso() != null)
+				.distinct()
+				.toList();
+
+		return estudantes.stream()
+				.collect(Collectors.groupingBy(
+						Estudante::getCurso,
+						Collectors.counting()
 				))
 				.entrySet().stream()
-				.map(e -> {
-					java.util.Map<String, Object> map = new java.util.HashMap<>();
-					map.put("cursoId", e.getKey().get("id"));
-					map.put("cursoNome", e.getKey().get("nome"));
-					map.put("quantidadeBeneficiados", e.getValue());
+				.map(entry -> {
+					Map<String, Object> map = new HashMap<>();
+					map.put("cursoId", entry.getKey().getId());
+					map.put("cursoNome", entry.getKey().getNome());
+					map.put("quantidadeBeneficiados", entry.getValue());
 					return map;
-				}).toList();
+				}).collect(Collectors.toList());
+	}
+
+	@Override
+	public Beneficio prorrogar(Long id, YearMonth novoPrazo, String observacoes) throws BeneficioNotFoundException {
+		Beneficio beneficio = buscar(id);
+
+		if (!beneficio.isAtivo()) {
+			throw new IllegalArgumentException("Não é possível prorrogar um benefício que já foi encerrado/inativado.");
+		}
+
+		beneficio.setFimBeneficio(novoPrazo);
+		beneficio.setObservacaoProrrogacao(observacoes);
+
+		Beneficio beneficioAtualizado = beneficioRepository.save(beneficio);
+
+		UUID idAluno = beneficioAtualizado.getEstudantes().getId();
+		String msg = String.format("Seu benefício %s foi prorrogado até %s.",
+				beneficioAtualizado.getTipoBeneficio().getDescricao(), novoPrazo);
+		notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(idAluno, "Benefício Prorrogado", msg, "BENEFICIO"));
+
+		return beneficioAtualizado;
+	}
+
+	@Override
+	public Beneficio cancelar(Long id, MotivoEncerramento motivoEncerramento, String parecerTermino) throws BeneficioNotFoundException {
+		Beneficio beneficio = buscar(id);
+
+		beneficio.setMotivoEncerramento(motivoEncerramento);
+		beneficio.setParecerTermino(parecerTermino);
+		beneficio.setFimBeneficio(java.time.YearMonth.now());
+		beneficio.setAtivo(false);
+
+		Beneficio salvo = beneficioRepository.save(beneficio);
+
+		UUID idAluno = salvo.getEstudantes().getId();
+		String msg = String.format("Seu benefício %s foi cancelado. Motivo: %s",
+				salvo.getTipoBeneficio().getDescricao(), motivoEncerramento);
+		notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(idAluno, "Benefício Cancelado", msg, "BENEFICIO"));
+
+		return salvo;
+	}
+
+	@Override
+	@Transactional
+	public void processarBeneficiosVencidos() {
+		List<Beneficio> beneficiosAtivos = beneficioRepository.findAllByAtivoTrueAndStatusTrue();
+		YearMonth mesAtual = YearMonth.now();
+
+		for (Beneficio beneficio : beneficiosAtivos) {
+			if (beneficio.getFimBeneficio() != null && beneficio.getFimBeneficio().isBefore(mesAtual)) {
+
+				beneficio.setAtivo(false);
+				beneficio.setStatus(false);
+				beneficio.setMotivoEncerramento(MotivoEncerramento.CONCLUSAO_BENEFICIO);
+				beneficioRepository.save(beneficio);
+
+				UUID idAluno = beneficio.getEstudantes().getId();
+				String nomeBeneficio = beneficio.getTipoBeneficio().getDescricao();
+				String msg = String.format("O prazo de validade do seu benefício %s chegou ao fim. O benefício foi encerrado no sistema.", nomeBeneficio);
+
+				notificacaoPublisher.publicar(NotificacaoEvent.paraUsuario(idAluno, "Benefício Encerrado", msg, "BENEFICIO"));
+			}
+		}
 	}
 }

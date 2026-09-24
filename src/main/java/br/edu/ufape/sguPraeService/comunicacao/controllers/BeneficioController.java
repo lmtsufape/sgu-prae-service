@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import br.edu.ufape.sguPraeService.comunicacao.dto.beneficio.*;
 import br.edu.ufape.sguPraeService.models.Pagamento;
@@ -48,10 +49,13 @@ public class BeneficioController {
     @GetMapping("/inativos")
     public ResponseEntity<Page<BeneficioResponse>> listarInativos(
             @QuerydslPredicate(root = Beneficio.class) Predicate predicate,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String cpf,
+            @RequestParam(required = false, name = "curso.id") Long cursoId,
             @PageableDefault(sort = "id") Pageable pageable) {
 
-
-        return ResponseEntity.ok(fachada.listarBeneficiosInativos(predicate, pageable));
+        Page<BeneficioResponse> page = fachada.listarBeneficiosInativosComFiltrosExternos(predicate, nome, cpf, cursoId, pageable);
+        return ResponseEntity.ok(page);
     }
 
     @GetMapping("/estudante/{estudanteId}")
@@ -148,7 +152,7 @@ public class BeneficioController {
 @GetMapping("/relatorio/financeiro")
 public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
         @QuerydslPredicate(root = Pagamento.class) Predicate predicate,
-        @RequestParam(required = false) Long cursoId) {
+        @RequestParam(required = false, name = "curso.id") Long cursoId) {
 
     RelatorioFinanceiroResponse relatorio = fachada.gerarRelatorioFinanceiro(predicate, cursoId);
     return ResponseEntity.ok(relatorio);
@@ -169,7 +173,7 @@ public ResponseEntity<RelatorioFinanceiroResponse> gerarRelatorioFinanceiro(
     @GetMapping("/quantidade/beneficiados/por/curso")
     public ResponseEntity<List<Map<String, Object>>> getQuantidadeBeneficiadosPorCurso(
             @QuerydslPredicate(root = Pagamento.class) Predicate predicate) {
-        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso(predicate);
+        List<Map<String, Object>> resposta = fachada.obterQuantidadeBeneficiadosPorCurso((List<UUID>) predicate);
         return ResponseEntity.ok(resposta);
     }
 
