@@ -33,7 +33,7 @@ public interface PagamentoService {
 
     Page<Pagamento> listarPorValor(BigDecimal min, BigDecimal max, Pageable pageable);
 
-    List<Pagamento> listarPorEstudanteId(Long estudanteId);
+    List<Pagamento> listarPorEstudanteId(UUID estudanteId);
 
     FolhaPagamentoResponse gerarFolhaPagamento(Integer ano, Integer mes, String numeroLote);
 
@@ -41,5 +41,5 @@ public interface PagamentoService {
 
     List<Object[]> obterValorTotalPorTipoBeneficio(Predicate predicate);
 
-    List<UUID> obterUserIdsEstudantesComPagamento(Predicate predicate);
+    List<UUID> obterIdsEstudantesComPagamento(Predicate predicate);
 }

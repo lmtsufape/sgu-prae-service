@@ -1,9 +1,9 @@
 package br.edu.ufape.sguPraeService.comunicacao.dto.estudante;
 
-
 import br.edu.ufape.sguPraeService.comunicacao.dto.dadosBancarios.DadosBancariosResponse;
 import br.edu.ufape.sguPraeService.comunicacao.dto.endereco.EnderecoResponse;
-import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.AlunoResponse;
+import br.edu.ufape.sguPraeService.comunicacao.dto.usuario.UsuarioResponse;
+//import br.edu.ufape.sguPraeService.comunicacao.dto.curso.CursoResponse;
 import br.edu.ufape.sguPraeService.models.Estudante;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,13 +12,14 @@ import lombok.Setter;
 import org.modelmapper.ModelMapper;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class EstudanteResponse {
+public class EstudanteResponse extends UsuarioResponse {
 
-    private Long id;
-    private AlunoResponse aluno;
+    // Herda ID (UUID), nome, cpf, email, etc. de UsuarioResponse
+
+    private String matricula;
+//    private CursoResponse curso;
     private BigDecimal rendaPercapta;
     private String contatoFamilia;
     private boolean deficiente;
@@ -26,8 +27,22 @@ public class EstudanteResponse {
     private EnderecoResponse endereco;
     private DadosBancariosResponse dadosBancarios;
 
-    public EstudanteResponse(Estudante estudante,  ModelMapper modelMapper) {
-        if (estudante == null) throw new IllegalArgumentException("Estudante não pode ser nulo");
-        modelMapper.map(estudante, this);
+    public EstudanteResponse(Estudante estudante, ModelMapper modelMapper) {
+        super(estudante, modelMapper); // Mapeia os dados do Usuario
+        this.matricula = estudante.getMatricula();
+        this.rendaPercapta = estudante.getRendaPercapta();
+        this.contatoFamilia = estudante.getContatoFamilia();
+        this.deficiente = estudante.isDeficiente();
+        this.tipoDeficiencia = estudante.getTipoDeficiencia();
+
+//        if (estudante.getCurso() != null) {
+//            this.curso = new CursoResponse(estudante.getCurso(), modelMapper);
+//        }
+        if (estudante.getEndereco() != null) {
+            this.endereco = new EnderecoResponse(estudante.getEndereco(), modelMapper);
+        }
+        if (estudante.getDadosBancarios() != null) {
+            this.dadosBancarios = new DadosBancariosResponse(estudante.getDadosBancarios(), modelMapper);
+        }
     }
 }

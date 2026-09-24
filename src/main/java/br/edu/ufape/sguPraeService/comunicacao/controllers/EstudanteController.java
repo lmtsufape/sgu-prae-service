@@ -53,7 +53,7 @@ public class EstudanteController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EstudanteResponse> buscarEstudante(@PathVariable Long id) throws EstudanteNotFoundException {
+    public ResponseEntity<EstudanteResponse> buscarEstudante(@PathVariable UUID id) throws EstudanteNotFoundException {
         return ResponseEntity.ok(fachada.buscarEstudante(id));
     }
 
@@ -68,13 +68,13 @@ public class EstudanteController {
 //        return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
 //    }
 
-    @PreAuthorize("hasRole('ALUNO')")
-    @PostMapping
-    public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest)  {
-        Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
-        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante);
-        return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
-    }
+//    @PreAuthorize("hasRole('ALUNO')")
+//    @PostMapping
+//    public ResponseEntity<EstudanteResponse> criarEstudante(@Valid @RequestBody EstudanteRequest estudanteRequest)  {
+//        Estudante estudante = estudanteRequest.convertToEntity(estudanteRequest, modelMapper);
+//        EstudanteResponse novoEstudante = fachada.salvarEstudante(estudante);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(novoEstudante);
+//    }
 
     @PreAuthorize("hasRole('ESTUDANTE')")
     @PatchMapping
@@ -84,7 +84,7 @@ public class EstudanteController {
     }
 
     @DeleteMapping("/{id}/")
-    public ResponseEntity<Void> deletarEstudante(@PathVariable Long id) throws EstudanteNotFoundException{
+    public ResponseEntity<Void> deletarEstudante(@PathVariable UUID id) throws EstudanteNotFoundException{
         fachada.deletarEstudante(id);
         return ResponseEntity.noContent().build();
     }
@@ -106,9 +106,9 @@ public class EstudanteController {
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/credores/publicacao")
     public ResponseEntity<Page<PublicacaoResponse>> listarCredoresParaPublicacao( @PageableDefault(sort = "id") Pageable pageable) {
-        Page<AlunoResponse> pageAlunos = fachada.listarCredoresParaPublicacao(pageable);
-        Page<PublicacaoResponse> pagePublicacoes = pageAlunos.map(alunoResponse ->
-                new PublicacaoResponse(alunoResponse, modelMapper)
+        Page<EstudanteResponse> pageAlunos = fachada.listarCredoresParaPublicacao(pageable);
+        Page<PublicacaoResponse> pagePublicacoes = pageAlunos.map(estudanteResponse ->
+                new PublicacaoResponse(estudanteResponse.getId(), modelMapper.toString())
         );
         return ResponseEntity.ok(pagePublicacoes);
     }
@@ -121,7 +121,7 @@ public class EstudanteController {
     @PreAuthorize("hasRole('GESTOR') and hasRole('PRAE_ACCESS')")
     @GetMapping("/{id}/relatorio")
     public ResponseEntity<RelatorioEstudanteAssistidoResponse> gerarRelatorioAssistido(
-            @PathVariable Long id
+            @PathVariable UUID id
     ) throws EstudanteNotFoundException {
         RelatorioEstudanteAssistidoResponse relatorio = fachada.gerarRelatorioEstudanteAssistido(id);
         return ResponseEntity.ok(relatorio);
@@ -151,7 +151,7 @@ public class EstudanteController {
     }
 
     @GetMapping("/{id}/documentos")
-    public ResponseEntity<List<DocumentoResponse>> buscarDocumentosDoEstudante(@PathVariable Long id)
+    public ResponseEntity<List<DocumentoResponse>> buscarDocumentosDoEstudante(@PathVariable UUID id)
             throws EstudanteNotFoundException, IOException {
 
         List<DocumentoResponse> documentos = fachada.buscarDocumentosPorEstudante(id);

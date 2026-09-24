@@ -14,7 +14,7 @@ public interface EstudanteService {
     @Transactional
     Estudante salvarEstudante(Estudante estudante);
 
-    Estudante buscarEstudante(Long id) throws EstudanteNotFoundException;
+    Estudante buscarEstudante(UUID id) throws EstudanteNotFoundException;
 
     Estudante buscarPorUserId(UUID userId) throws EstudanteNotFoundException;
 
@@ -24,7 +24,7 @@ public interface EstudanteService {
 
     Estudante atualizarEstudante(Estudante estudante, Estudante existente) throws EstudanteNotFoundException;
 
-    void deletarEstudante(Long id) throws EstudanteNotFoundException;
+    void deletarEstudante(UUID id) throws EstudanteNotFoundException;
 
     Estudante buscarPorDadosBancariosId(Long id);
 

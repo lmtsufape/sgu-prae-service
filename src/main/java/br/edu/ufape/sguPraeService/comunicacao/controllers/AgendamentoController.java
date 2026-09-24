@@ -22,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -50,7 +52,7 @@ public class AgendamentoController {
     }
 
     @GetMapping("/estudante/{estudanteId}")
-    public Page<AgendamentoResponse> listarAgendamentosPorEstudante(@PathVariable Long estudanteId, @PageableDefault(sort = "id") Pageable pageable) {
+    public Page<AgendamentoResponse> listarAgendamentosPorEstudante(@PathVariable UUID estudanteId, @PageableDefault(sort = "id") Pageable pageable) {
         return fachada.listarAgendamentosPorEstudante(estudanteId, pageable);
     }
 
@@ -60,7 +62,7 @@ public class AgendamentoController {
     }
 
     @GetMapping("/profissional/{profissionalId}")
-    public Page<AgendamentoResponse> listarAgendamentosPorProfissional(@PathVariable Long profissionalId, @PageableDefault(sort = "id") Pageable pageable) {
+    public Page<AgendamentoResponse> listarAgendamentosPorProfissional(@PathVariable UUID profissionalId, @PageableDefault(sort = "id") Pageable pageable) {
         return fachada.listarAgendamentosPorProfissional(profissionalId, pageable);
     }
 
