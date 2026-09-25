@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   sgu-prae-service:
     image: sgu-prae-service
@@ -15,19 +13,17 @@ services:
     depends_on:
       prae-db:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
       rabbitmq:
-        condition: service_started
-      redis:
-        condition: service_started
-      keycloak: # <-- PRAE agora espera o Keycloak
         condition: service_healthy
     volumes:
       - ./storage:/app/storage
 
   prae-db:
     image: postgres:16.0
-    restart: always
     container_name: prae-db
+    restart: always
     environment:
       POSTGRES_DB: prae
       POSTGRES_USER: postgres
@@ -39,30 +35,84 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - "5435:5432"
+      - "5432:5432"
     networks:
       - sgu-networks
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - prae-pg-data:/var/lib/postgresql/data
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: sgu-rabbitmq
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.0
+    container_name: sgu-keycloak
+    ports:
+      - "9090:8080"
+    networks:
+      - sgu-networks
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: password
+      KC_DB_SCHEMA: public
+    command: start-dev --import-realm
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
+
+  keycloak-db:
+    image: postgres:16.0
+    container_name: keycloak-db
     restart: always
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      TZ: America/Sao_Paulo
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sgu-networks
+    volumes:
+      - keycloak-pg-data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: sgu-rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - sgu-networks
 
   redis:
     image: redis:7-alpine
     container_name: sgu-redis
-    restart: always
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     networks:
@@ -70,33 +120,23 @@ services:
     volumes:
       - redis-data:/data
 
-  keycloak: # <-- Novo bloco do Keycloak adicionado
-    image: quay.io/keycloak/keycloak:26.0.4
-    container_name: sgu-keycloak
-    restart: always
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_HEALTH_ENABLED=true
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
     ports:
-      - "9090:8080" # Porta 9090 mapeada externamente para bater com o application.yml
-    command: start-dev # Roda em modo de desenvolvimento (ideal para testes locais)
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000'" ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
+      - "8025:8025"
+      - "1025:1025"
     networks:
       - sgu-networks
-    # volumes: <-- Descomentar isso para importar o Realm automático
-    #   - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
 
 volumes:
-  pg-data:
+  prae-pg-data:
+    driver: local
+  keycloak-pg-data:
     driver: local
   redis-data:
     driver: local
 
 networks:
   sgu-networks:
+    driver: bridge

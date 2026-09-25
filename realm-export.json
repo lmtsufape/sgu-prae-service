@@ -1,0 +1,47 @@
+{
+  "id": "sgu-ufape",
+  "realm": "sgu-ufape",
+  "displayName": "SGU UFAPE",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMINISTRADOR",
+        "description": "Administrador maximo do sistema"
+      },
+      {
+        "name": "GESTOR",
+        "description": "Gestor da PRAE"
+      },
+      {
+        "name": "PROFISSIONAL",
+        "description": "Profissionais de atendimento"
+      },
+      {
+        "name": "ESTUDANTE",
+        "description": "Estudante assistido"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "sgu-application",
+      "name": "Sistema de Gestao Universitario da UFAPE",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "iIueertdxnoPmpoA1Fsy6BfjMVbEa1d5",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true
+    }
+  ]
+}

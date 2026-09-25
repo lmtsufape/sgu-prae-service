@@ -13,8 +13,6 @@ import java.util.UUID;
 @Repository
 public interface DocumentoRepository extends JpaRepository<Documento, Long> {
 
-    List<Documento> findByUserId(UUID userId);
-    Optional<Documento> findByIdAndUserId(Long id, UUID userId);
 
     @Query("SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END FROM Documento d WHERE d.path LIKE %:filename% AND (" +
             "(EXISTS (SELECT 1 FROM Beneficio b WHERE b.termo = d AND b.ativo = true)) OR " +
