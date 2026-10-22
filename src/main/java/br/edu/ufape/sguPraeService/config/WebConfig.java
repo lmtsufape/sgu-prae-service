@@ -55,16 +55,34 @@ public class WebConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK))
                 )
                 .authorizeHttpRequests(authz -> authz
-                        // Rotas Abertas do Sistema Antigo
-                        .requestMatchers("/api-doc/**", "/swagger-ui/**").permitAll()
+                        // Rotas de Documentação (Swagger)
+                        .requestMatchers("/api-doc/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // Rotas de Autenticação Base (AuthController)
                         .requestMatchers("/login", "/refresh", "/logout", "/reset-password").permitAll()
-                        .requestMatchers("/public/**").permitAll() // <-- Rota pública genérica trazida do Gateway
 
-                        // Rotas de Cadastro de acordo com a Issue #85 (Estudante é público, o resto é fechado)
-                        .requestMatchers(HttpMethod.POST, "/cadastro/estudante").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/curso").permitAll() // Necessário para o front listar cursos no cadastro do estudante
+                        // Rotas de Domínio Genérico / Legado
+                        .requestMatchers("/public/**").permitAll()
 
-                        // Todas as outras rotas exigem token
+                        // ==========================================
+                        // ROTAS DE CADASTRO E PREENCHIMENTO PÚBLICO
+                        // ==========================================
+                        // CORREÇÃO CRÍTICA: Rota exata do UsuarioController
+                        .requestMatchers(HttpMethod.POST, "/usuario/estudante").permitAll()
+
+                        // Necessário para o front listar opções nos selects do cadastro
+                        .requestMatchers(HttpMethod.GET, "/curso").permitAll()
+
+                        // ==========================================
+                        // ROTAS DO PAINEL DE TRANSPARÊNCIA (Públicas)
+                        // ==========================================
+                        // Libera os relatórios e totalizadores do BeneficioController
+                        .requestMatchers(HttpMethod.GET, "/beneficio/relatorio/financeiro").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/beneficio/quantidade/beneficiados").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/beneficio/quantidade/cursos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/beneficio/quantidade/beneficiados/por/curso").permitAll()
+
+                        // Todas as outras rotas exigem token JWT e Validação de Roles (@PreAuthorize)
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(auth -> auth.jwt(token ->
