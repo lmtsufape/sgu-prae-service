@@ -3,11 +3,10 @@ arquivo:
 
 server:
   port: 8082
-  shutdown: graceful # Absorvido do config-repo/application.yml
+  shutdown: graceful
   error:
     include-stacktrace: never
 
-# Configurações do Actuator absorvidas do config-repo/application.yml
 management:
   endpoints:
     web:
@@ -38,10 +37,11 @@ spring:
       max-file-size: 5MB
       max-request-size: 20MB
 
+  # Banco de Dados: Preparado para injeção via variáveis de ambiente
   datasource:
-    url: jdbc:postgresql://localhost:5432/prae
-    username: postgres
-    password: password # Corrigido para facilitar testes locais
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/prae}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:password}
 
   jpa:
     hibernate:
@@ -57,12 +57,11 @@ spring:
     create-schemas: true
     default-schema: public
 
-  # Configuração de mensageria local e resiliência (Absorvida do sgu-auth-service.yml)
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
     listener:
       simple:
         retry:
@@ -73,11 +72,10 @@ spring:
           multiplier: 2
         default-requeue-rejected: false
 
-  # Configuração do Redis (Absorvida do Gateway)
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   security:
     oauth2:
@@ -88,7 +86,7 @@ spring:
             user-name-attribute: preferred_username
       resourceserver:
         jwt:
-          jwk-set-uri: ${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs
+          jwk-set-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/certs
 
 springdoc:
   api-docs:
@@ -96,15 +94,15 @@ springdoc:
   swagger-ui:
     path: /api-doc/swagger.html
 
-# O PRAE agora assume o client sgu-application para manipular usuários e roles
+# Configuração Base do Keycloak
 keycloak:
-  auth-server-url: http://localhost:9090/
-  realm: sgu-ufape
-  client-id: sgu-application
-  client-secret: iIueertdxnoPmpoA1Fsy6BfjMVbEa1d5
+  auth-server-url: ${KEYCLOAK_URL:http://localhost:9090}
+  realm: ${KEYCLOAK_REALM:sgu-ufape}
+  client-id: ${KEYCLOAK_CLIENT_ID:sgu-application}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET:iIueertdxnoPmpoA1Fsy6BfjMVbEa1d5}
 
 common:
-  front: http://localhost:3000/, https://sgiufape.vercel.app/
+  front: ${FRONTEND_URL:http://localhost:3000/, https://sgiufape.vercel.app/}
   emailEnabled: false
 
 logging:
@@ -112,7 +110,6 @@ logging:
     org:
       springframework: DEBUG
 
-# Desabilita completamente o Eureka para o Monolito
 eureka:
   client:
     enabled: false
@@ -120,47 +117,31 @@ eureka:
     fetchRegistry: false
 
 ---
-# PROFILE DOCKER
+# ==========================================
+# PROFILE DOCKER (Para rodar no docker-compose)
+# ==========================================
 spring:
   config:
     activate:
       on-profile: docker
 
   rabbitmq:
-    host: rabbitmq # Ajustado para o nome do container no docker-compose
-    port: 5672
-    username: guest
-    password: guest
+    host: rabbitmq
 
   data:
     redis:
-      host: redis # Ajustado para o nome do container no docker-compose
-      port: 6379
+      host: redis
 
   datasource:
-    url: jdbc:postgresql://prae-db:5432/prae # Ajustado para o nome do container no docker-compose
-    username: postgres
-    password: password
+    url: jdbc:postgresql://prae-db:5432/prae
 
+  # Opcional, pois no profile docker as propriedades padrão do flyway/jpa são herdadas
   jpa:
     hibernate:
       ddl-auto: validate
-
   flyway:
     enabled: true
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${keycloak.auth-server-url}realms/${keycloak.realm}/protocol/openid-connect/certs
-
 keycloak:
-  auth-server-url: http://keycloak:8080/
-  realm: sgu-ufape
-  client-id: sgu-application
-  client-secret: iIueertdxnoPmpoA1Fsy6BfjMVbEa1d5
-
-eureka:
-  client:
-    enabled: false
+  # Na rede do Docker local o acesso é feito pelo nome do serviço e a porta interna
+  auth-server-url: http://keycloak:8080
