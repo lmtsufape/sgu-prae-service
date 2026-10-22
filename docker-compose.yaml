@@ -49,6 +49,7 @@ services:
     networks:
       - sgu-networks
     environment:
+      KC_HEALTH_ENABLED: "true"
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_DB: postgres
@@ -63,11 +64,11 @@ services:
       keycloak-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      test: [ "CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'" ]
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 30s
     volumes:
       - ./realm-export.json:/opt/keycloak/data/import/realm-export.json
 

@@ -54,10 +54,10 @@ public class KeycloakService implements br.edu.ufape.sguPraeService.servicos.int
     public void init() {
         this.keycloak = KeycloakBuilder.builder()
                 .serverUrl(keycloakServerUrl)
-                .realm("master")
-                .clientId("admin-cli")
-                .username("admin")
-                .password("admin")
+                .realm(realm) // Lendo da variável do application.yml (sgu-ufape)
+                .clientId(clientId) // sgu-application
+                .clientSecret(clientSecret) // Lendo do yml
+                .grantType("client_credentials") // Autenticação de máquina (Service Account)
                 .build();
     }
 
